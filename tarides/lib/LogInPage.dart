@@ -35,7 +35,7 @@ class _LogInPageState extends State<LogInPage> {
                     TextSpan(
                       text: 'Rides',
                       style: TextStyle(
-                        color: Colors.red,
+                        color: Colors.black,
                         fontSize: 50,
                         fontWeight: FontWeight.bold,
                       ),
