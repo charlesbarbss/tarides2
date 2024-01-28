@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tarides/CreateAccount.dart';
-import 'package:tarides/ForgotPassword.dart';
+import 'package:tarides/Auth/CreateAccount.dart';
+import 'package:tarides/Auth/forgotPassword.dart';
+
+import '../homePage.dart';
 
 class LogInPage extends StatefulWidget {
   const LogInPage({super.key});
@@ -9,9 +12,34 @@ class LogInPage extends StatefulWidget {
   State<LogInPage> createState() => _LogInPageState();
 }
 
-bool _obscureText = true;
-
 class _LogInPageState extends State<LogInPage> {
+  bool _obscureText = true;
+
+  final emailController = TextEditingController();
+  final passController = TextEditingController();
+
+  void _logIn() {
+    // print('pasok');
+    FirebaseAuth.instance
+        .signInWithEmailAndPassword(
+            email: emailController.text, password: passController.text)
+        .then((value) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) =>  HomePage(email: emailController.text,)),
+      );
+    }).onError((error, stackTrace) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Invalid username or password.',
+          ),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,7 +75,10 @@ class _LogInPageState extends State<LogInPage> {
                 height: 50,
               ),
               TextFormField(
-                controller: null,
+                controller: emailController,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
                 decoration: InputDecoration(
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
@@ -83,7 +114,7 @@ class _LogInPageState extends State<LogInPage> {
                 style: TextStyle(
                   color: Colors.white,
                 ),
-                controller: null,
+                controller: passController,
                 decoration: InputDecoration(
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
@@ -132,7 +163,7 @@ class _LogInPageState extends State<LogInPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => CreateAccount(),
-                        ), 
+                        ),
                       );
                     },
                     child: Text(
@@ -144,12 +175,12 @@ class _LogInPageState extends State<LogInPage> {
                     width: 20,
                   ),
                   TextButton(
-                    onPressed: (){
-                       Navigator.push(
+                    onPressed: () {
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ForgotPassword(),
-                        ), 
+                        ),
                       );
                     },
                     child: Text(
@@ -171,9 +202,7 @@ class _LogInPageState extends State<LogInPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                onPressed: () {
-                  // Put the action of the button here
-                },
+                onPressed: _logIn,
                 child: Text(
                   'LogIn',
                   style: TextStyle(color: Colors.white),

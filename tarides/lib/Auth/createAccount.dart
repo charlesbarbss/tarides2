@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-// import 'package:image_picker/image_picker.dart';
+import 'package:tarides/image_picker.dart';
 
 class CreateAccount extends StatefulWidget {
   const CreateAccount({super.key});
@@ -10,34 +13,38 @@ class CreateAccount extends StatefulWidget {
   State<CreateAccount> createState() => _CreateAccountState();
 }
 
-File? Image;
-final lastNameController = TextEditingController();
-final firstNameController = TextEditingController();
-final emailController = TextEditingController();
-final phoneNumberController = TextEditingController();
-final locationController = TextEditingController();
-final dateController = TextEditingController();
-
 enum Gender {
   male,
   female,
 }
 
-Gender? selectedGender;
-
-IconData? maleIcon = Icons.male;
-IconData? femaleIcon = Icons.female;
-
-String capitalize(String s) {
-  if (s == null || s.isEmpty) {
-    return s;
-  }
-  return s[0].toUpperCase() + s.substring(1);
-}
-
-DateTime? newSelectedDate;
-
 class _CreateAccountState extends State<CreateAccount> {
+  final lastNameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneNumberController = TextEditingController();
+  final locationController = TextEditingController();
+  final dateController = TextEditingController();
+  final passwordController = TextEditingController();
+  final usernameController = TextEditingController();
+  File? selectUserImage;
+
+  bool _obscureText = true;
+
+  Gender? selectedGender;
+
+  IconData? maleIcon = Icons.male;
+  IconData? femaleIcon = Icons.female;
+
+  String capitalize(String s) {
+    if (s == null || s.isEmpty) {
+      return s;
+    }
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
+  DateTime? newSelectedDate;
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -69,8 +76,67 @@ class _CreateAccountState extends State<CreateAccount> {
 
   @override
   Widget build(BuildContext context) {
+    void _createAccount() async {
+      if (lastNameController.text.trim().isEmpty ||
+          firstNameController.text.trim().isEmpty ||
+          emailController.text.trim().isEmpty ||
+          usernameController.text.trim().isEmpty ||
+          phoneNumberController.text.trim().isEmpty ||
+          locationController.text.trim().isEmpty ||
+          dateController.text.trim().isEmpty ||
+          passwordController.text.trim().isEmpty ||
+          selectUserImage == null ||
+          selectedGender == null) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Invalid input'),
+            content: const Text('Please Complete the Form'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                },
+                child: const Text(
+                  'Exit',
+                ),
+              ),
+            ],
+          ),
+        );
+      } else {
+        final userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+        final userId = userCredential.user!.uid;
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('user_image')
+            .child('$userId.jpg');
+        await storageRef.putFile(selectUserImage!);
+
+        // Get the download URL of the uploaded image
+        final imageUrl = await storageRef.getDownloadURL();
+        await FirebaseFirestore.instance.collection('user').add({
+          'username': usernameController.text.trim(), // Add this line
+          'lastName': lastNameController.text,
+          'firstName': firstNameController.text,
+          'email': emailController.text,
+          'phoneNumber': phoneNumberController.text,
+          'location': locationController.text,
+          'birthday': dateController.text,
+          'gender': selectedGender.toString(),
+          'password': passwordController.text,
+          'imageUrl': imageUrl,
+        }).then((value) => Navigator.pop(context));
+        // print('Account Created Successfully');
+      }
+    }
+
     return Scaffold(
-      backgroundColor:  Colors.black,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           'Create Account',
@@ -83,18 +149,49 @@ class _CreateAccountState extends State<CreateAccount> {
           padding: EdgeInsets.all(10),
           child: Column(
             children: [
-              // Center(
-              //   child: PickerImage(
-              //     onImagePick: (File pickedImage) {
-              //       setState(() {});
-              //     },
-              //   ),
-              // ),
+              Center(
+                child: PickerImage(onImagePick: (File pickedImage) {
+                  setState(() {
+                    selectUserImage = pickedImage;
+                  });
+                }),
+              ),
               SizedBox(
                 height: 10,
               ),
+              TextFormField(
+                    controller: usernameController,
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                    decoration: InputDecoration(
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x3fffFFFFF0),
+                        ),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(15.0),
+                        ),
+                      ),
+                      enabledBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0x3fffFFFFF0),
+                        ),
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(15.0),
+                        ),
+                      ),
+                      labelStyle: TextStyle(
+                        color: Colors.white,
+                      ),
+                      labelText: 'Username',
+                    ),
+                  ),
+                  SizedBox(height: 10,),
               Row(
                 children: [
+                  
+                 
                   Expanded(
                     child: TextFormField(
                       controller: lastNameController,
@@ -119,7 +216,7 @@ class _CreateAccountState extends State<CreateAccount> {
                           ),
                         ),
                         labelStyle: TextStyle(
-                          color:  Colors.white,
+                          color: Colors.white,
                         ),
                         labelText: 'Last Name',
                       ),
@@ -152,10 +249,9 @@ class _CreateAccountState extends State<CreateAccount> {
                           ),
                         ),
                         labelStyle: TextStyle(
-                          color:  Colors.white,
+                          color: Colors.white,
                         ),
                         labelText: 'First Name',
-                        
                       ),
                     ),
                   ),
@@ -187,10 +283,9 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                   ),
                   labelStyle: TextStyle(
-                    color:  Colors.white,
+                    color: Colors.white,
                   ),
                   labelText: 'Email',
-                  
                 ),
               ),
               SizedBox(
@@ -223,11 +318,11 @@ class _CreateAccountState extends State<CreateAccount> {
                           ),
                         ),
                         labelStyle: TextStyle(
-                          color:  Colors.white,
+                          color: Colors.white,
                         ),
                         prefixIcon: const Icon(
                           Icons.calendar_today,
-                          color:  Colors.white,
+                          color: Colors.white,
                         ),
                         prefixIconColor: Colors.white,
                         suffixIcon: dateController.text.isEmpty
@@ -310,7 +405,6 @@ class _CreateAccountState extends State<CreateAccount> {
                                   )
                                 : null,
                         prefixIconColor: Colors.white,
-                        
                         labelText: 'Gender',
                       ),
                     ),
@@ -321,7 +415,7 @@ class _CreateAccountState extends State<CreateAccount> {
                 height: 10,
               ),
               TextFormField(
-                onTap: () async {},
+             
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -350,7 +444,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                   prefixIcon: const Icon(
                     Icons.phone,
-                    color:  Colors.white,
+                    color: Colors.white,
                   ),
                   prefixIconColor: Colors.white,
                   labelStyle: TextStyle(
@@ -391,11 +485,78 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                   ),
                   labelStyle: TextStyle(
-                    color:  Colors.white,
+                    color: Colors.white,
                   ),
                   labelText: 'Location',
                 ),
-              )
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              TextFormField(
+                controller: passwordController,
+                obscureText: _obscureText,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+                decoration: InputDecoration(
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3ffffffff0),
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    ),
+                  ),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3ffffffff0),
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    ),
+                  ),
+                  labelStyle: TextStyle(
+                    color:  Colors.white,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.lock,
+                    color: Colors.white,
+                  ),
+                  prefixIconColor: Colors.white,
+                  suffixIcon: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                    child: Icon(
+                        _obscureText ? Icons.visibility : Icons.visibility_off),
+                  ),
+                  suffixIconColor:  Colors.white,
+                  labelText: 'Password',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                  textStyle: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onPressed: () {
+                  _createAccount();
+                },
+                child: Text(
+                  'Submit',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ),
         ),
