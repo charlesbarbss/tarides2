@@ -11,7 +11,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
   runApp(const MyApp());
 }
 
@@ -20,9 +19,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LogInPage(),
+      home: LogInPage(),
     );
   }
 }
