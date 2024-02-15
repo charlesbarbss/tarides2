@@ -233,7 +233,9 @@ class _RidesScreenState extends State<RidesScreen> {
                   color: Colors.amber,
                   label: 'Ready',
                   textColor: Colors.black,
-                  onPressed: () {},
+                  onPressed: () {
+                    showhangtightDialog();
+                  },
                 ),
               ),
               const SizedBox(
@@ -243,6 +245,43 @@ class _RidesScreenState extends State<RidesScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  showhangtightDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: SizedBox(
+            width: 300,
+            height: 225,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/Group.png',
+                    height: 100,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextWidget(
+                    text:
+                        'Hang tight! The host is mapping out the perfect course for your cycling showdown.',
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontFamily: 'Bold',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
