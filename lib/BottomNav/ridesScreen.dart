@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tarides/BottomNav/rides_pages/main_rides_page.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 
@@ -234,6 +235,11 @@ class _RidesScreenState extends State<RidesScreen> {
                   label: 'Ready',
                   textColor: Colors.black,
                   onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const MainRidesScreen()),
+                    );
                     showhangtightDialog();
                   },
                 ),
