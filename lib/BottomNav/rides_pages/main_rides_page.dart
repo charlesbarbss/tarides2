@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tarides/BottomNav/rides_pages/race_logs_page.dart';
 import 'package:tarides/widgets/button_widget.dart';
+import 'package:tarides/widgets/dialog_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 
 class MainRidesScreen extends StatefulWidget {
@@ -177,8 +179,28 @@ class _MainRidesScreenState extends State<MainRidesScreen> {
                         width: 350,
                         color: Colors.red,
                         radius: 15,
-                        label: 'Ready',
-                        onPressed: () {},
+                        label: 'Finish',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) {
+                              return DialogWidget(
+                                image: 'assets/images/star 1.png',
+                                title: 'WINNER!',
+                                caption: 'CONGRATUALATIONS!',
+                                onpressed: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const RaceLogsPage()),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
