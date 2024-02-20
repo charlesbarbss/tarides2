@@ -9,6 +9,8 @@ class UserController extends ChangeNotifier {
   late Users user;
   bool isLoading = false;
 
+late List<Users> users = <Users>[];
+
   void setEmail(String email) {
     this.email = email;
   }
@@ -30,6 +32,27 @@ class UserController extends ChangeNotifier {
 
     final documentSnapshot = querySnapshot.docs.first;
     user = Users.fromDocument(documentSnapshot);
+    isLoading = false;
+    notifyListeners();
+  }
+
+void getAllUsers() async {
+    isLoading = true;
+    notifyListeners();
+
+    final querySnapshot =
+        await FirebaseFirestore.instance.collection('user').get();
+
+    if (querySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('Users not found');
+    }
+
+    users = querySnapshot.docs.map((snapshot) {
+      return Users.fromDocument(snapshot);
+    }).toList();
+
     isLoading = false;
     notifyListeners();
   }

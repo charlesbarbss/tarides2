@@ -11,10 +11,12 @@ class CreateCommunity2 extends StatefulWidget {
       {super.key,
       required this.email,
       required this.communityName,
-      required this.isPrivate});
+      required this.isPrivate,
+      required this.communityDescription});
   final String email;
   final String communityName;
   final bool isPrivate;
+  final String communityDescription;
   @override
   State<CreateCommunity2> createState() => _CreateCommunity2State();
 }
@@ -35,23 +37,23 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
 
   void submitCreateGroup() async {
     if (postController.text.isEmpty) {
-     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text('Please fill in the form'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Ok'),
-            ),
-          ],
-        );
-      },
-    );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Please fill in the form'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
     } else {
       await FirebaseFirestore.instance.collection('community').add({
         'communityName': widget.communityName,
@@ -59,15 +61,16 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
         'isPrivate': widget.isPrivate,
         'communityAdmin': userController.user.username,
         'communityMember': [userController.user.username],
+        'communityDescription': widget.communityDescription,
       });
 
-      // await FirebaseFirestore.instance
-      //     .collection('users')
-      //     .doc(widget.user.user.id)
-      //     .update({
-      //   'communityId': widget.idCommunity,
-      //   'isCommunity': true,
-      // });
+      await FirebaseFirestore.instance
+          .collection('user')
+          .doc(userController.user.id)
+          .update({
+        'communityId': communityId,
+        'isCommunity': true,
+      });
 
       await FirebaseFirestore.instance.collection('post').add({
         'postId': postId,
@@ -80,15 +83,12 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
         'isHeart': false,
       });
 
-      
-     
       // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (ctx) => HomePage(
                   email: widget.email,
-                  
                 )),
       );
     }

@@ -5,14 +5,18 @@ class Community {
       {required this.communityName,
       required this.communityId,
       required this.isPrivate,
+      required this.communityDescription,
       required this.communityAdmin,
-      required this.communityMember});
+      required this.communityMember,
+      });
 
   final String communityName;
   final String communityId;
   final bool isPrivate;
+   final String communityDescription;
   final String communityAdmin;
   final List<String> communityMember;
+
   
   factory Community.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
   final data = document.data() as Map<String, dynamic>;
@@ -24,8 +28,10 @@ class Community {
     communityId: data['communityId'] as String? ?? '',
     communityName: data['communityName'] as String? ?? '',
     isPrivate: data['isPrivate'] as bool? ?? false,
+     communityDescription: data['communityDescription'] as String,
     communityAdmin: data['communityAdmin'] as String? ?? '',
     communityMember: members,
+   
   );
 }
 }

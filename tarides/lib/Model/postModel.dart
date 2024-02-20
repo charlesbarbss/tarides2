@@ -6,12 +6,11 @@ class Post {
     required this.communityId,
     required this.usersName,
     required this.caption,
-    required this.heart,
     required this.commment,
-    required this.timestamp,
+    required this.heart,
     required this.isHeart,
+    required this.timestamp,
   });
-
   final String postId;
   final String communityId;
   final String usersName;
@@ -23,15 +22,23 @@ class Post {
 
   factory Post.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() as Map<String, dynamic>;
+    final List<dynamic> commentData = data['comment'] ?? [];
+    final List<String> comments = commentData.map((comment) {
+      return comment as String;
+    }).toList();
+    final List<dynamic> heartData = data['heart'] ?? [];
+    final List<String> hearts = heartData.map((heart) {
+      return heart as String;
+    }).toList();
     return Post(
-      postId: data['postId'] as String? ?? '',
-      communityId: data['communityId'] as String? ?? '',
-      usersName: data['usersName'] as String? ?? '',
-      caption: data['caption'] as String? ?? '',
-      heart: List<String>.from(data['heart'] as List? ?? []),
-      commment: List<String>.from(data['commment'] as List? ?? []),
-      timestamp: data['timestamp'] as Timestamp? ?? Timestamp.now(),
-      isHeart: data['isHeart'] as bool? ?? false,
+      postId: data['postId'] as String,
+      communityId: data['communityId'] as String,
+      usersName: data['usersName'] as String,
+      caption: data['caption'] as String,
+      commment: comments,
+      heart: hearts,
+      isHeart: data['isHeart'] is bool ? data['isHeart'] as bool : false,
+      timestamp: data['timestamp'] as Timestamp,
     );
   }
 }

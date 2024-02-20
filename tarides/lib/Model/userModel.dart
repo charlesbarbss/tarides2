@@ -13,6 +13,9 @@ class Users {
     required this.location,
     required this.password,
     required this.phoneNumber,
+    required this.isCommunity,
+    required this.isAchievement,
+    required this.communityId,
   });
 
   final String id;
@@ -26,6 +29,9 @@ class Users {
   final String location;
   final String password;
   final String phoneNumber;
+  late bool isCommunity;
+  final bool isAchievement;
+  late String communityId;
 
   factory Users.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() as Map<String, dynamic>;
@@ -41,6 +47,9 @@ class Users {
       location: data['location'] as String? ?? '',
       password: data['password'] as String? ?? '',
       phoneNumber: data['phoneNumber'] as String? ?? '',
+      isCommunity: data['isCommunity'] as bool? ?? false,
+      isAchievement: data['isAchievement'] as bool? ?? false,
+      communityId: data['communityId'] as String? ?? '',
     );
   }
 }

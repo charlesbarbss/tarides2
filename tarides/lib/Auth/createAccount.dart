@@ -130,6 +130,9 @@ class _CreateAccountState extends State<CreateAccount> {
           'gender': selectedGender.toString(),
           'password': passwordController.text,
           'imageUrl': imageUrl,
+          'isCommunity': false,
+          'isAchievement': false,
+          'communityId': '',
         }).then((value) => Navigator.pop(context));
         // print('Account Created Successfully');
       }

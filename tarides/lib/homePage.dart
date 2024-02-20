@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedPageIndex = 0;
+  int _selectedPageIndex = 2;
 
   UserController userController = UserController();
 
@@ -41,7 +41,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Widget activePage = CommunityScreen(email: widget.email,);
+    Widget activePage = CommunityScreen(
+      email: widget.email,
+    );
 
     if (_selectedPageIndex == 1) {
       activePage = RidesScreen();
