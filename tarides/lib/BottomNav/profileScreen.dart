@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:tarides/Auth/logInPage.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/ProfileTabs/achievementsTab.dart';
 import 'package:tarides/ProfileTabs/profileTab.dart';
@@ -18,7 +20,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       length: 3,
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(automaticallyImplyLeading: false,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+                icon: Icon(Icons.logout),
+                onPressed: () async {
+                  await FirebaseAuth.instance.signOut().then(
+                        (value) => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LogInPage(),
+                          ),
+                        ),
+                      );
+                }),
+          ],
           backgroundColor: Colors.black,
           title: Text(
             'Profile',
