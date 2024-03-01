@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/CommunityTabs/EventsTab.dart';
 import 'package:tarides/CommunityTabs/PostTab.dart';
@@ -43,7 +42,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               appBar: AppBar(
                 automaticallyImplyLeading: false,
                 backgroundColor: Colors.black,
-                title: Text(
+                title: const Text(
                   'Community',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -101,7 +100,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                               .community!.isPrivate ==
                                           true)
                                     IconButton(
-                                      icon: Icon(Icons.notifications),
+                                      icon: const Icon(Icons.notifications),
                                       onPressed: () {
                                         Navigator.push(
                                           context,
@@ -125,7 +124,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
               body: Column(
                 children: [
-                  TabBar(
+                  const TabBar(
                     dividerColor: Colors.white,
                     indicatorColor: Colors.red,
                     tabs: [
@@ -150,7 +149,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           email: widget.email,
                           communityId: userController.user.communityId,
                         ),
-                        EventsTab(),
+                        const EventsTab(),
                       ],
                     ),
                   ),
