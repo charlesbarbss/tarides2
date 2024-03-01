@@ -4,20 +4,18 @@ import 'package:tarides/BottomNav/communityScreeen.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
-import 'package:tarides/Model/postModel.dart';
-import 'package:tarides/Model/userModel.dart';
 
 class PostTab extends StatefulWidget {
-  const PostTab({super.key, required this.email, required this.communityId});
-
   final String email;
   final String communityId;
+  const PostTab({super.key, required this.email, required this.communityId});
+
   @override
   State<PostTab> createState() => _PostTabState();
 }
 
 class _PostTabState extends State<PostTab> {
-  bool _isHeartFilled = false;
+  final bool _isHeartFilled = false;
 
   final postId = FirebaseFirestore.instance.collection('post').doc().id;
 
@@ -55,17 +53,17 @@ class _PostTabState extends State<PostTab> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Create a Post'),
+          title: const Text('Create a Post'),
           content: Form(
             child: TextFormField(
               controller: createPostController,
               minLines: 1,
               maxLines: 5,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black,
               ),
-              decoration: InputDecoration(
-                focusedBorder: const OutlineInputBorder(
+              decoration: const InputDecoration(
+                focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                     color: Colors.black,
                   ),
@@ -73,7 +71,7 @@ class _PostTabState extends State<PostTab> {
                     Radius.circular(15.0),
                   ),
                 ),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                     color: Colors.black,
                   ),
@@ -92,8 +90,9 @@ class _PostTabState extends State<PostTab> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                textStyle: TextStyle(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                textStyle: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -110,7 +109,7 @@ class _PostTabState extends State<PostTab> {
                   'isHeart': false,
                 }).then((value) => Navigator.pop(context));
               },
-              child: Text(
+              child: const Text(
                 'Post',
                 style: TextStyle(color: Colors.white),
               ),
@@ -126,8 +125,8 @@ class _PostTabState extends State<PostTab> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        child: Icon(Icons.add),
         backgroundColor: Colors.red,
+        child: const Icon(Icons.add),
       ),
       backgroundColor: Colors.black,
       body: AnimatedBuilder(
@@ -142,7 +141,7 @@ class _PostTabState extends State<PostTab> {
             child: Column(
               children: [
                 if (userController.user.isCommunity == false)
-                  Center(
+                  const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -179,12 +178,12 @@ class _PostTabState extends State<PostTab> {
                               children: [
                                 Text(
                                   communityController.community!.communityName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 25,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 30,
                                 ),
                                 Expanded(
@@ -192,7 +191,7 @@ class _PostTabState extends State<PostTab> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       IconButton(
-                                        icon: Icon(Icons.exit_to_app),
+                                        icon: const Icon(Icons.exit_to_app),
                                         color: Colors.red,
                                         onPressed: () async {
                                           Navigator.push(
@@ -222,7 +221,7 @@ class _PostTabState extends State<PostTab> {
                                 ),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 5,
                             ),
                             Row(
@@ -231,44 +230,41 @@ class _PostTabState extends State<PostTab> {
                                   communityController.community!.isPrivate
                                       ? 'Private Group'
                                       : 'Public Group',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.white, fontSize: 15),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 5,
                                 ),
                                 communityController.community!.isPrivate
-                                    ? Icon(Icons.lock, color: Colors.white)
-                                    : Icon(Icons.lock_open,
+                                    ? const Icon(Icons.lock,
+                                        color: Colors.white)
+                                    : const Icon(Icons.lock_open,
                                         color: Colors.white),
-                                SizedBox(width: 5),
-                                SizedBox(
+                                const SizedBox(width: 5),
+                                const SizedBox(
                                   width: 20,
                                 ),
                                 Text(
-                                  'No of Memebers: ' +
-                                      (communityController.community
-                                                  ?.communityMember.length ??
-                                              0)
-                                          .toString(),
-                                  style: TextStyle(
+                                  'No of Memebers: ${communityController.community?.communityMember.length ?? 0}',
+                                  style: const TextStyle(
                                       color: Colors.white, fontSize: 15),
                                 ),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 10,
                             ),
                             Column(
                               children: [
-                                Text(
+                                const Text(
                                   'Group Post',
                                   style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
                                 AnimatedBuilder(
@@ -289,7 +285,7 @@ class _PostTabState extends State<PostTab> {
                                                 Container(
                                                   height: 200,
                                                   width: 400,
-                                                  color: Color.fromARGB(
+                                                  color: const Color.fromARGB(
                                                       31, 153, 150, 150),
                                                   child: Column(
                                                     crossAxisAlignment:
@@ -330,7 +326,7 @@ class _PostTabState extends State<PostTab> {
                                                               ),
                                                             ),
                                                           ),
-                                                          SizedBox(
+                                                          const SizedBox(
                                                             width: 5,
                                                           ),
                                                           Column(
@@ -344,13 +340,13 @@ class _PostTabState extends State<PostTab> {
                                                                     userController
                                                                         .user
                                                                         .username,
-                                                                    style: TextStyle(
+                                                                    style: const TextStyle(
                                                                         color: Colors
                                                                             .white,
                                                                         fontWeight:
                                                                             FontWeight.bold),
                                                                   ),
-                                                                  SizedBox(
+                                                                  const SizedBox(
                                                                     width: 10,
                                                                   ),
                                                                   Text(
@@ -359,7 +355,7 @@ class _PostTabState extends State<PostTab> {
                                                                             i]
                                                                         .timestamp),
                                                                     style:
-                                                                        TextStyle(
+                                                                        const TextStyle(
                                                                       color: Colors
                                                                           .white,
                                                                     ),
@@ -370,19 +366,19 @@ class _PostTabState extends State<PostTab> {
                                                                 userController
                                                                     .user.email,
                                                                 style:
-                                                                    TextStyle(
+                                                                    const TextStyle(
                                                                   color: Colors
                                                                       .white,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
-                                                          SizedBox(
+                                                          const SizedBox(
                                                             width: 10,
                                                           ),
                                                         ],
                                                       ),
-                                                      SizedBox(
+                                                      const SizedBox(
                                                         height: 10,
                                                       ),
                                                       Padding(
@@ -393,7 +389,7 @@ class _PostTabState extends State<PostTab> {
                                                         child: Text(
                                                           postController
                                                               .posts[i].caption,
-                                                          style: TextStyle(
+                                                          style: const TextStyle(
                                                               color:
                                                                   Colors.white,
                                                               fontWeight:
@@ -406,7 +402,7 @@ class _PostTabState extends State<PostTab> {
                                                             MainAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          SizedBox(
+                                                          const SizedBox(
                                                             width: 10,
                                                           ),
                                                           IconButton(
@@ -453,7 +449,6 @@ class _PostTabState extends State<PostTab> {
                                                                             .user
                                                                             .username);
                                                                   }
-                                                                  ;
                                                                 },
                                                               );
 
@@ -536,7 +531,7 @@ class _PostTabState extends State<PostTab> {
                                                     ],
                                                   ),
                                                 ),
-                                                SizedBox(
+                                                const SizedBox(
                                                   height: 10,
                                                 ),
                                               ],
@@ -544,7 +539,7 @@ class _PostTabState extends State<PostTab> {
                                         ],
                                       );
                                     }),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
                               ],
