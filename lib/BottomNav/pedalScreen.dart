@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tarides/services/add_favs.dart';
+import 'package:tarides/services/add_pedal.dart';
 import 'package:tarides/utils/distance_calculations.dart';
+import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 import 'package:google_maps_webservice/places.dart' as location;
@@ -142,7 +144,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: '0:00:00',
+                                                      text:
+                                                          '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -159,7 +162,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: '0.0',
+                                                      text:
+                                                          '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -262,6 +266,15 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                             radius: 15,
                                             label: 'FINISH',
                                             onPressed: () {
+                                              addPedal(
+                                                  pickUp.latitude,
+                                                  pickUp.longitude,
+                                                  pickup,
+                                                  dropOff.latitude,
+                                                  dropOff.latitude,
+                                                  drop,
+                                                  '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
+                                                  '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs');
                                               setState(() {
                                                 isclicked = false;
                                               });
@@ -498,9 +511,12 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 height: 50,
                                                 label: 'Start',
                                                 onPressed: () {
-                                                  setState(() {
-                                                    isclicked = true;
-                                                  });
+                                                  if (pickup != '' &&
+                                                      drop != '') {
+                                                    setState(() {
+                                                      isclicked = true;
+                                                    });
+                                                  }
                                                 },
                                               ),
                                             ],
