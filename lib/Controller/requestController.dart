@@ -7,6 +7,8 @@ import 'package:tarides/Model/userModel.dart';
 class RequestContoller extends ChangeNotifier {
   bool isLoading = false;
   late List<Request> request = <Request>[];
+  late List<Users> user;
+  late List<Users> users = <Users>[];
 
   void getAllReqeust() async {
     isLoading = true;
@@ -23,6 +25,34 @@ class RequestContoller extends ChangeNotifier {
     request = requestQuerySnapshot.docs.map((documentSnapshot) {
       return Request.fromDocument(documentSnapshot);
     }).toList();
+
+    final userQuerySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('username',
+            whereIn: request.map((req) => req.usersName).toList())
+        .get();
+
+    if (userQuerySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('No users1 found');
+    }
+    user = userQuerySnapshot.docs.map((usersDocumentSnapshot) {
+      return Users.fromDocument(usersDocumentSnapshot);
+    }).toList();
+    isLoading = false;
+    notifyListeners();
+
+    for (final req in request) {
+      for (final user in user) {
+        if (req.usersName == user.username) {
+          users.add(user);
+          notifyListeners();
+
+          print('Match found!');
+        }
+      }
+    }
 
     isLoading = false;
     notifyListeners();

@@ -6,6 +6,7 @@ import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/Model/postModel.dart';
 import 'package:tarides/Model/userModel.dart';
+import 'package:tarides/homePage.dart';
 
 class PostTab extends StatefulWidget {
   const PostTab({super.key, required this.email, required this.communityId});
@@ -198,9 +199,8 @@ class _PostTabState extends State<PostTab> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                                builder: (context) =>
-                                                    CommunityScreen(
-                                                        email: widget.email)),
+                                                builder: (context) => HomePage(
+                                                    email: widget.email)),
                                           );
                                           final userDoc =
                                               await FirebaseFirestore.instance
@@ -214,7 +214,25 @@ class _PostTabState extends State<PostTab> {
                                               .update({
                                             'communityId': '',
                                             'isCommunity': false,
+                                            
                                           });
+
+                                          final communityDoc = await FirebaseFirestore
+                                      .instance
+                                      .collection('community')
+                                      .where('communityId',
+                                          isEqualTo: communityController
+                                              .community!.communityId)
+                                      .where('communityMember',
+                                          arrayContains:
+                                              userController.user.username)
+                                      .get();
+
+                                  await communityDoc.docs.first.reference
+                                      .update({
+                                    'communityMember': FieldValue.arrayRemove(
+                                        [userController.user.username]),
+                                  });
                                         },
                                       ),
                                     ],
@@ -319,8 +337,8 @@ class _PostTabState extends State<PostTab> {
                                                               child: ClipOval(
                                                                 child: Image
                                                                     .network(
-                                                                  userController
-                                                                      .user
+                                                                  postController
+                                                                      .users[i]
                                                                       .imageUrl,
                                                                   height: 130,
                                                                   width: 130,
@@ -341,9 +359,10 @@ class _PostTabState extends State<PostTab> {
                                                               Row(
                                                                 children: [
                                                                   Text(
-                                                                    userController
-                                                                        .user
-                                                                        .username,
+                                                                    postController
+                                                                        .posts[
+                                                                            i]
+                                                                        .usersName,
                                                                     style: TextStyle(
                                                                         color: Colors
                                                                             .white,
@@ -367,8 +386,10 @@ class _PostTabState extends State<PostTab> {
                                                                 ],
                                                               ),
                                                               Text(
-                                                                userController
-                                                                    .user.email,
+                                                                postController
+                                                                    .users[i]
+                                                                    .email,
+                                                              
                                                                 style:
                                                                     TextStyle(
                                                                   color: Colors
@@ -426,7 +447,7 @@ class _PostTabState extends State<PostTab> {
                                                                 () {
                                                                   if (postController
                                                                           .posts[
-                                                                              0]
+                                                                              i]
                                                                           .isHeart ==
                                                                       true) {
                                                                     postController
@@ -531,6 +552,20 @@ class _PostTabState extends State<PostTab> {
                                                               }
                                                             },
                                                           ),
+                                                          SizedBox(
+                                                            width: 1,
+                                                          ),
+                                                          Text(
+                                                            postController
+                                                                .posts[i]
+                                                                .heart
+                                                                .length
+                                                                .toString(),
+                                                            style: TextStyle(
+                                                                color:
+                                                                    Colors.grey,
+                                                                fontSize: 15),
+                                                          ),
                                                         ],
                                                       ),
                                                     ],
@@ -553,7 +588,7 @@ class _PostTabState extends State<PostTab> {
                         ),
                       );
                     },
-                  )
+                  ),
               ],
             ),
           );
