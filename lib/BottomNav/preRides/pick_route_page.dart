@@ -6,6 +6,7 @@ import 'package:google_api_headers/google_api_headers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tarides/BottomNav/preRides/map_page.dart';
 import 'package:tarides/services/add_favs.dart';
 import 'package:tarides/services/add_pedal.dart';
 import 'package:tarides/utils/distance_calculations.dart';
@@ -33,7 +34,9 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
 
   late LatLng pickUp;
   GoogleMapController? mapController;
-  late LatLng dropOff;
+  late LatLng dropOff1;
+  late LatLng dropOff2;
+  late LatLng dropOff3;
 
   addMyMarker1(lat1, long1) async {
     markers.add(Marker(
@@ -51,8 +54,26 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
         infoWindow: const InfoWindow(title: 'Drop-off Location')));
   }
 
+  addMyMarker123(lat1, long1) async {
+    markers.add(Marker(
+      icon: BitmapDescriptor.defaultMarker,
+      markerId: const MarkerId("dropOff1"),
+      position: LatLng(lat1, long1),
+    ));
+  }
+
+  addMyMarker124(lat1, long1) async {
+    markers.add(Marker(
+      icon: BitmapDescriptor.defaultMarker,
+      markerId: const MarkerId("dropOff2"),
+      position: LatLng(lat1, long1),
+    ));
+  }
+
   late String pickup = '';
-  late String drop = '';
+  late String drop1 = '';
+  late String drop2 = '';
+  late String drop3 = '';
   bool isclicked = false;
   @override
   Widget build(BuildContext context) {
@@ -163,7 +184,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       ),
                                                       TextWidget(
                                                         text:
-                                                            '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
+                                                            '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff1.latitude, dropOff1.longitude), 0.30).toStringAsFixed(2)}hrs',
                                                         fontSize: 28,
                                                         color: Colors.white,
                                                         fontFamily: 'Bold',
@@ -181,7 +202,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       ),
                                                       TextWidget(
                                                         text:
-                                                            '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
+                                                            '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff1.latitude, dropOff1.longitude).toStringAsFixed(2)}KM',
                                                         fontSize: 28,
                                                         color: Colors.white,
                                                         fontFamily: 'Bold',
@@ -291,11 +312,11 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                     pickUp.latitude,
                                                     pickUp.longitude,
                                                     pickup,
-                                                    dropOff.latitude,
-                                                    dropOff.latitude,
-                                                    drop,
-                                                    '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
-                                                    '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs');
+                                                    dropOff1.latitude,
+                                                    dropOff1.latitude,
+                                                    drop1,
+                                                    '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff1.latitude, dropOff1.longitude).toStringAsFixed(2)}KM',
+                                                    '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff1.latitude, dropOff1.longitude), 0.30).toStringAsFixed(2)}hrs');
                                                 setState(() {
                                                   isclicked = false;
                                                 });
@@ -363,7 +384,9 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                     const SizedBox(),
                                                     ButtonWidget(
                                                       color: pickup == '' &&
-                                                              drop == ''
+                                                              drop1 == '' &&
+                                                              drop2 == '' &&
+                                                              drop3 == ''
                                                           ? Colors.grey
                                                           : Colors.red,
                                                       fontSize: 12,
@@ -373,7 +396,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       label: 'Save route',
                                                       onPressed: () {
                                                         if (pickup != '' &&
-                                                            drop != '') {
+                                                            drop1 != '') {
                                                           showsaverouteDialog();
                                                         }
                                                       },
@@ -512,7 +535,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                         ),
                                                         label: TextWidget(
                                                           text:
-                                                              '1st Destination: $drop',
+                                                              '1st Destination: $drop1',
                                                           fontSize: 12,
                                                           color: Colors.grey,
                                                         ),
@@ -583,7 +606,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                         ),
                                                         label: TextWidget(
                                                           text:
-                                                              '2nd Destination: $drop',
+                                                              '2nd Destination: $drop2',
                                                           fontSize: 12,
                                                           color: Colors.grey,
                                                         ),
@@ -654,7 +677,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                         ),
                                                         label: TextWidget(
                                                           text:
-                                                              '3rd Destination: $drop',
+                                                              '3rd Destination: $drop3',
                                                           fontSize: 12,
                                                           color: Colors.grey,
                                                         ),
@@ -676,11 +699,15 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   label: 'Confirm',
                                                   onPressed: () {
                                                     if (pickup != '' &&
-                                                        drop != '') {
-                                                      setState(() {
-                                                        isclicked = true;
-                                                      });
-                                                    }
+                                                        drop1 != '' &&
+                                                        drop2 != '' &&
+                                                        drop3 != '') {}
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              const MapPage()),
+                                                    );
                                                   },
                                                 ),
                                               ],
@@ -695,6 +722,8 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                           .instance
                                                           .currentUser!
                                                           .uid)
+                                                  .where('type',
+                                                      isNotEqualTo: 'pedal')
                                                   .snapshots(),
                                               builder: (BuildContext context,
                                                   AsyncSnapshot<QuerySnapshot>
@@ -729,14 +758,14 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       return GestureDetector(
                                                         onTap: () {
                                                           setState(() {
-                                                            drop =
+                                                            drop1 =
                                                                 data.docs[index]
                                                                     ['end'];
                                                             pickup =
                                                                 data.docs[index]
                                                                     ['start'];
 
-                                                            dropOff = LatLng(
+                                                            dropOff1 = LatLng(
                                                                 data.docs[index]
                                                                     ['endLat'],
                                                                 data.docs[index]
@@ -984,7 +1013,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
             TextButton(
                 onPressed: () {
                   addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff.latitude, dropOff.latitude, drop);
+                      dropOff1.latitude, dropOff1.latitude, drop1, 'pedal');
                   Navigator.pop(context);
                 },
                 child: Container(
@@ -1078,9 +1107,9 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
         detail.result.geometry!.location.lng);
 
     setState(() {
-      drop = detail.result.name;
+      drop1 = detail.result.name;
 
-      dropOff = LatLng(detail.result.geometry!.location.lat,
+      dropOff1 = LatLng(detail.result.geometry!.location.lat,
           detail.result.geometry!.location.lng);
     });
 
@@ -1107,17 +1136,17 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
             detail.result.geometry!.location.lng),
         18.0));
 
-    double miny = (pickUp.latitude <= dropOff.latitude)
+    double miny = (pickUp.latitude <= dropOff1.latitude)
         ? pickUp.latitude
-        : dropOff.latitude;
-    double minx = (pickUp.longitude <= dropOff.longitude)
+        : dropOff1.latitude;
+    double minx = (pickUp.longitude <= dropOff1.longitude)
         ? pickUp.longitude
-        : dropOff.longitude;
-    double maxy = (pickUp.latitude <= dropOff.latitude)
-        ? dropOff.latitude
+        : dropOff1.longitude;
+    double maxy = (pickUp.latitude <= dropOff1.latitude)
+        ? dropOff1.latitude
         : pickUp.latitude;
-    double maxx = (pickUp.longitude <= dropOff.longitude)
-        ? dropOff.longitude
+    double maxx = (pickUp.longitude <= dropOff1.longitude)
+        ? dropOff1.longitude
         : pickUp.longitude;
 
     double southWestLatitude = miny;
