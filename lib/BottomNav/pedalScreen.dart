@@ -530,6 +530,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                           .instance
                                                           .currentUser!
                                                           .uid)
+                                                  .where('type',
+                                                      isEqualTo: 'pedal')
                                                   .snapshots(),
                                               builder: (BuildContext context,
                                                   AsyncSnapshot<QuerySnapshot>
@@ -749,7 +751,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
             TextButton(
                 onPressed: () {
                   addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff.latitude, dropOff.latitude, drop);
+                      dropOff.latitude, dropOff.latitude, drop, 'pedal');
                   Navigator.pop(context);
                 },
                 child: Container(

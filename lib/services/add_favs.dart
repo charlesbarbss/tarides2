@@ -8,6 +8,7 @@ Future addFav(
   double endLat,
   double endLong,
   String end,
+  String type,
 ) async {
   final docUser = FirebaseFirestore.instance.collection('Favs').doc();
 
@@ -20,6 +21,7 @@ Future addFav(
     'end': end,
     'dateTime': DateTime.now(),
     'userId': FirebaseAuth.instance.currentUser!.uid,
+    'type': type,
   };
 
   await docUser.set(json);
