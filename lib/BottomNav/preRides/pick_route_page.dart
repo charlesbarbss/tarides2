@@ -479,7 +479,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                 ),
                                                 GestureDetector(
                                                   onTap: () {
-                                                    searchDropoff();
+                                                    searchDroppoff1();
                                                   },
                                                   child: Container(
                                                     height: 35,
@@ -550,7 +550,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                 ),
                                                 GestureDetector(
                                                   onTap: () {
-                                                    searchDropoff();
+                                                    searchDroppoff2();
                                                   },
                                                   child: Container(
                                                     height: 35,
@@ -621,7 +621,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                 ),
                                                 GestureDetector(
                                                   onTap: () {
-                                                    searchDropoff();
+                                                    searchDropoff3();
                                                   },
                                                   child: Container(
                                                     height: 35,
@@ -690,26 +690,38 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                 const SizedBox(
                                                   height: 30,
                                                 ),
-                                                ButtonWidget(
-                                                  color: Colors.amber,
-                                                  fontSize: 18,
-                                                  width: 300,
-                                                  radius: 15,
-                                                  height: 50,
-                                                  label: 'Confirm',
-                                                  onPressed: () {
-                                                    if (pickup != '' &&
+                                                pickup != '' &&
                                                         drop1 != '' &&
                                                         drop2 != '' &&
-                                                        drop3 != '') {}
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const MapPage()),
-                                                    );
-                                                  },
-                                                ),
+                                                        drop3 != ''
+                                                    ? ButtonWidget(
+                                                        color: Colors.amber,
+                                                        fontSize: 18,
+                                                        width: 300,
+                                                        radius: 15,
+                                                        height: 50,
+                                                        label: 'Confirm',
+                                                        onPressed: () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        MapPage(
+                                                                          poly:
+                                                                              _poly,
+                                                                          loc1:
+                                                                              pickUp,
+                                                                          loc2:
+                                                                              dropOff1,
+                                                                          loc3:
+                                                                              dropOff2,
+                                                                          loc4:
+                                                                              dropOff3,
+                                                                        )),
+                                                          );
+                                                        })
+                                                    : const SizedBox()
                                               ],
                                             ),
                                           ),
@@ -1081,7 +1093,81 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
     });
   }
 
-  searchDropoff() async {
+  searchDroppoff1() async {
+    location.Prediction? p = await PlacesAutocomplete.show(
+        mode: Mode.overlay,
+        context: context,
+        apiKey: kGoogleApiKey,
+        language: 'en',
+        strictbounds: false,
+        types: [""],
+        decoration: InputDecoration(
+            hintText: 'Search Pick-up Location',
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(color: Colors.white))),
+        components: [location.Component(location.Component.country, "ph")]);
+
+    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
+        apiKey: kGoogleApiKey,
+        apiHeaders: await const GoogleApiHeaders().getHeaders());
+
+    location.PlacesDetailsResponse detail =
+        await places.getDetailsByPlaceId(p!.placeId!);
+
+    addMyMarker12(detail.result.geometry!.location.lat,
+        detail.result.geometry!.location.lng);
+
+    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+        LatLng(detail.result.geometry!.location.lat,
+            detail.result.geometry!.location.lng),
+        18.0));
+
+    setState(() {
+      drop1 = detail.result.name;
+      dropOff1 = LatLng(detail.result.geometry!.location.lat,
+          detail.result.geometry!.location.lng);
+    });
+  }
+
+  searchDroppoff2() async {
+    location.Prediction? p = await PlacesAutocomplete.show(
+        mode: Mode.overlay,
+        context: context,
+        apiKey: kGoogleApiKey,
+        language: 'en',
+        strictbounds: false,
+        types: [""],
+        decoration: InputDecoration(
+            hintText: 'Search Pick-up Location',
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(color: Colors.white))),
+        components: [location.Component(location.Component.country, "ph")]);
+
+    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
+        apiKey: kGoogleApiKey,
+        apiHeaders: await const GoogleApiHeaders().getHeaders());
+
+    location.PlacesDetailsResponse detail =
+        await places.getDetailsByPlaceId(p!.placeId!);
+
+    addMyMarker123(detail.result.geometry!.location.lat,
+        detail.result.geometry!.location.lng);
+
+    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+        LatLng(detail.result.geometry!.location.lat,
+            detail.result.geometry!.location.lng),
+        18.0));
+
+    setState(() {
+      drop2 = detail.result.name;
+      dropOff2 = LatLng(detail.result.geometry!.location.lat,
+          detail.result.geometry!.location.lng);
+    });
+  }
+
+  searchDropoff3() async {
     location.Prediction? p = await PlacesAutocomplete.show(
         mode: Mode.overlay,
         context: context,
@@ -1103,13 +1189,13 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
     location.PlacesDetailsResponse detail =
         await places.getDetailsByPlaceId(p!.placeId!);
 
-    addMyMarker12(detail.result.geometry!.location.lat,
+    addMyMarker124(detail.result.geometry!.location.lat,
         detail.result.geometry!.location.lng);
 
     setState(() {
-      drop1 = detail.result.name;
+      drop3 = detail.result.name;
 
-      dropOff1 = LatLng(detail.result.geometry!.location.lat,
+      dropOff3 = LatLng(detail.result.geometry!.location.lat,
           detail.result.geometry!.location.lng);
     });
 
