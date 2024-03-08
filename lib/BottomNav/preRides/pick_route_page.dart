@@ -9,6 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tarides/BottomNav/preRides/map_page.dart';
 import 'package:tarides/services/add_favs.dart';
 import 'package:tarides/services/add_pedal.dart';
+import 'package:tarides/services/add_ride.dart';
 import 'package:tarides/utils/distance_calculations.dart';
 import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
@@ -702,12 +703,36 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                         height: 50,
                                                         label: 'Confirm',
                                                         onPressed: () {
+                                                          addRide(
+                                                              pickUp.latitude,
+                                                              pickUp.longitude,
+                                                              pickup,
+                                                              dropOff1.latitude,
+                                                              dropOff1
+                                                                  .longitude,
+                                                              drop1,
+                                                              dropOff2.latitude,
+                                                              dropOff2
+                                                                  .longitude,
+                                                              drop2,
+                                                              dropOff3.latitude,
+                                                              dropOff3
+                                                                  .longitude,
+                                                              drop3,
+                                                              '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
+                                                              '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude), 0.30).toStringAsFixed(2)}hrs',
+                                                              'Team 1',
+                                                              'Team 2');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
                                                                 builder:
                                                                     (context) =>
                                                                         MapPage(
+                                                                          distance:
+                                                                              '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
+                                                                          time:
+                                                                              '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude), 0.30).toStringAsFixed(2)}hrs',
                                                                           poly:
                                                                               _poly,
                                                                           loc1:
@@ -735,7 +760,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                           .currentUser!
                                                           .uid)
                                                   .where('type',
-                                                      isNotEqualTo: 'pedal')
+                                                      isNotEqualTo: 'rides')
                                                   .snapshots(),
                                               builder: (BuildContext context,
                                                   AsyncSnapshot<QuerySnapshot>
@@ -1025,7 +1050,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
             TextButton(
                 onPressed: () {
                   addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff1.latitude, dropOff1.latitude, drop1, 'pedal');
+                      dropOff3.latitude, dropOff3.latitude, drop3, 'rides');
                   Navigator.pop(context);
                 },
                 child: Container(

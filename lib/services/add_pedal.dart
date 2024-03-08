@@ -24,6 +24,7 @@ Future addPedal(
     'userId': FirebaseAuth.instance.currentUser!.uid,
     'distance': distance,
     'time': time,
+    'status': 'Not Started'
   };
 
   await docUser.set(json);
