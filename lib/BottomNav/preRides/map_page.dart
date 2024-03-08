@@ -14,10 +14,14 @@ class MapPage extends StatefulWidget {
   final LatLng loc3;
   final LatLng loc4;
   final Polyline poly;
+  String distance;
+  String time;
 
-  const MapPage(
+  MapPage(
       {super.key,
       required this.loc1,
+      required this.distance,
+      required this.time,
       required this.loc2,
       required this.loc3,
       required this.loc4,
@@ -284,7 +288,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '0:00:00',
+                                                  text: widget.time,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -301,7 +305,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '0.0',
+                                                  text: widget.distance,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
