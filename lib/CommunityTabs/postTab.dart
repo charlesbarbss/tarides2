@@ -196,43 +196,79 @@ class _PostTabState extends State<PostTab> {
                                         icon: Icon(Icons.exit_to_app),
                                         color: Colors.red,
                                         onPressed: () async {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
+                                          if (communityController
+                                                  .community!.communityAdmin !=
+                                              userController.user.username) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
                                                 builder: (context) => HomePage(
-                                                    email: widget.email)),
-                                          );
-                                          final userDoc =
-                                              await FirebaseFirestore.instance
-                                                  .collection('user')
-                                                  .where('username',
-                                                      isEqualTo: userController
-                                                          .user.username)
-                                                  .get();
+                                                    email: widget.email),
+                                              ),
+                                            );
+                                            final userDoc =
+                                                await FirebaseFirestore.instance
+                                                    .collection('user')
+                                                    .where('username',
+                                                        isEqualTo:
+                                                            userController
+                                                                .user.username)
+                                                    .get();
 
-                                          await userDoc.docs.first.reference
-                                              .update({
-                                            'communityId': '',
-                                            'isCommunity': false,
-                                            
-                                          });
+                                            await userDoc.docs.first.reference
+                                                .update({
+                                              'communityId': '',
+                                              'isCommunity': false,
+                                            });
 
-                                          final communityDoc = await FirebaseFirestore
-                                      .instance
-                                      .collection('community')
-                                      .where('communityId',
-                                          isEqualTo: communityController
-                                              .community!.communityId)
-                                      .where('communityMember',
-                                          arrayContains:
-                                              userController.user.username)
-                                      .get();
+                                            final communityDoc =
+                                                await FirebaseFirestore
+                                                    .instance
+                                                    .collection('community')
+                                                    .where(
+                                                        'communityId',
+                                                        isEqualTo:
+                                                            communityController
+                                                                .community!
+                                                                .communityId)
+                                                    .where('communityMember',
+                                                        arrayContains:
+                                                            userController
+                                                                .user.username)
+                                                    .get();
 
-                                  await communityDoc.docs.first.reference
-                                      .update({
-                                    'communityMember': FieldValue.arrayRemove(
-                                        [userController.user.username]),
-                                  });
+                                            await communityDoc
+                                                .docs.first.reference
+                                                .update({
+                                              'communityMember':
+                                                  FieldValue.arrayRemove([
+                                                userController.user.username
+                                              ]),
+                                            });
+                                          }
+                                          if (communityController
+                                                  .community!.communityAdmin ==
+                                              userController.user.username) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text('Error'),
+                                                  content: Text(
+                                                      'You are the admin, you cannot leave the group.'),
+                                                  actions: [
+                                                    TextButton(
+                                                      child: Text('OK'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }
                                         },
                                       ),
                                     ],
@@ -389,7 +425,6 @@ class _PostTabState extends State<PostTab> {
                                                                 postController
                                                                     .users[i]
                                                                     .email,
-                                                              
                                                                 style:
                                                                     TextStyle(
                                                                   color: Colors
