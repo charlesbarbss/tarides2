@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:tarides/Auth/logInPage.dart';
 
 import 'firebase_options.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
+    name: 'ta-rides2',
     options: DefaultFirebaseOptions.currentPlatform,
   );
 

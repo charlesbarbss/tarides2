@@ -21,14 +21,14 @@ class _CreateCommunityState extends State<CreateCommunity> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Error'),
-            content: Text('Please fill in the form'),
+            title: const Text('Error'),
+            content: const Text('Please fill in the form'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Ok'),
+                child: const Text('Ok'),
               ),
             ],
           );
@@ -42,7 +42,7 @@ class _CreateCommunityState extends State<CreateCommunity> {
             email: widget.email,
             communityName: communityNameController.text,
             isPrivate: _isPrivate,
-           communityDescription: communityDescriptionController.text,
+            communityDescription: communityDescriptionController.text,
           ),
         ),
       );
@@ -55,7 +55,7 @@ class _CreateCommunityState extends State<CreateCommunity> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text(
+        title: const Text(
           'Create a Community',
           style: TextStyle(color: Colors.white),
         ),
@@ -68,33 +68,33 @@ class _CreateCommunityState extends State<CreateCommunity> {
               padding: const EdgeInsets.fromLTRB(20, 40, 20, 10),
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'Name of the Community',
                     style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   TextFormField(
                     controller: communityNameController,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                     ),
-                    decoration: InputDecoration(
-                      focusedBorder: const OutlineInputBorder(
+                    decoration: const InputDecoration(
+                      focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
+                          color: Color(0x3ffffffff0),
                         ),
                         borderRadius: BorderRadius.all(
                           Radius.circular(15.0),
                         ),
                       ),
-                      enabledBorder: const OutlineInputBorder(
+                      enabledBorder: OutlineInputBorder(
                         borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
+                          color: Color(0x3ffffffff0),
                         ),
                         borderRadius: BorderRadius.all(
                           Radius.circular(15.0),
@@ -106,12 +106,12 @@ class _CreateCommunityState extends State<CreateCommunity> {
                       labelText: 'Community Name',
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10,
                   ),
                   Container(
                     height: 200,
-                    padding: EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8.0),
                     decoration: BoxDecoration(
                       color: Colors.black,
                       border: Border.all(color: Colors.white),
@@ -121,8 +121,8 @@ class _CreateCommunityState extends State<CreateCommunity> {
                       controller: communityDescriptionController,
                       minLines: 1,
                       maxLines: 10,
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: InputDecoration(
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Type here...',
                         hintStyle: TextStyle(
@@ -131,11 +131,11 @@ class _CreateCommunityState extends State<CreateCommunity> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10,
                   ),
                   SwitchListTile(
-                    title: Text(
+                    title: const Text(
                       'Private',
                       style: TextStyle(color: Colors.white),
                     ),
@@ -148,21 +148,21 @@ class _CreateCommunityState extends State<CreateCommunity> {
                     secondary: const Icon(Icons.lock, color: Colors.white),
                     activeColor: Colors.white,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                      textStyle: TextStyle(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 10),
+                      textStyle: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     onPressed: _submit,
-                    child: Text(
+                    child: const Text(
                       'Next',
                       style: TextStyle(color: Colors.white),
                     ),

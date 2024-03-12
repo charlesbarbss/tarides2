@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tarides/BottomNav/Goal30Screen.dart';
 import 'package:tarides/BottomNav/pedalScreen.dart';
+import 'package:tarides/BottomNav/preridesScreen.dart';
 import 'package:tarides/BottomNav/profileScreen.dart';
 import 'package:tarides/Controller/userController.dart';
 
@@ -46,15 +47,15 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (_selectedPageIndex == 1) {
-      activePage = RidesScreen();
+      activePage = const PreRidesScreen();
     }
 
     if (_selectedPageIndex == 2) {
-      activePage = PedalScreeen();
+      activePage = const PedalScreeen();
     }
 
     if (_selectedPageIndex == 3) {
-      activePage = Goal30Screen();
+      activePage = const Goal30Screen();
     }
     if (_selectedPageIndex == 4) {
       activePage = ProfileScreen(
