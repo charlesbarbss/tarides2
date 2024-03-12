@@ -163,38 +163,38 @@ class _CreateAccountState extends State<CreateAccount> {
                 height: 10,
               ),
               TextFormField(
-                    controller: usernameController,
-                    style: TextStyle(
-                      color: Colors.white,
+                controller: usernameController,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+                decoration: InputDecoration(
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3fffFFFFF0),
                     ),
-                    decoration: InputDecoration(
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      labelText: 'Username',
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3fffFFFFF0),
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    ),
+                  ),
+                  labelStyle: TextStyle(
+                    color: Colors.white,
+                  ),
+                  labelText: 'Username',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
-                  
-                 
                   Expanded(
                     child: TextFormField(
                       controller: lastNameController,
@@ -418,7 +418,6 @@ class _CreateAccountState extends State<CreateAccount> {
                 height: 10,
               ),
               TextFormField(
-             
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -520,7 +519,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                   ),
                   labelStyle: TextStyle(
-                    color:  Colors.white,
+                    color: Colors.white,
                   ),
                   prefixIcon: const Icon(
                     Icons.lock,
@@ -536,7 +535,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     child: Icon(
                         _obscureText ? Icons.visibility : Icons.visibility_off),
                   ),
-                  suffixIconColor:  Colors.white,
+                  suffixIconColor: Colors.white,
                   labelText: 'Password',
                 ),
               ),
