@@ -1,9 +1,20 @@
 import 'dart:async';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:google_api_headers/google_api_headers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tarides/services/add_favs.dart';
+import 'package:tarides/services/add_pedal.dart';
+import 'package:tarides/utils/distance_calculations.dart';
+import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
+import 'package:google_maps_webservice/places.dart' as location;
+
+import '../utils/keys.dart';
 
 class PedalScreeen extends StatefulWidget {
   const PedalScreeen({super.key});
@@ -13,6 +24,35 @@ class PedalScreeen extends StatefulWidget {
 }
 
 class _PedalScreeenState extends State<PedalScreeen> {
+  late Polyline _poly = const Polyline(polylineId: PolylineId('new'));
+
+  Set<Marker> markers = {};
+
+  List<LatLng> polylineCoordinates = [];
+  PolylinePoints polylinePoints = PolylinePoints();
+
+  late LatLng pickUp;
+  GoogleMapController? mapController;
+  late LatLng dropOff;
+
+  addMyMarker1(lat1, long1) async {
+    markers.add(Marker(
+        icon: BitmapDescriptor.defaultMarker,
+        markerId: const MarkerId("pickup"),
+        position: LatLng(lat1, long1),
+        infoWindow: const InfoWindow(title: 'Pick-up Location')));
+  }
+
+  addMyMarker12(lat1, long1) async {
+    markers.add(Marker(
+        icon: BitmapDescriptor.defaultMarker,
+        markerId: const MarkerId("dropOff"),
+        position: LatLng(lat1, long1),
+        infoWindow: const InfoWindow(title: 'Drop-off Location')));
+  }
+
+  late String pickup = '';
+  late String drop = '';
   bool isclicked = false;
   @override
   Widget build(BuildContext context) {
@@ -41,11 +81,14 @@ class _PedalScreeenState extends State<PedalScreeen> {
                 child: Stack(
                   children: [
                     GoogleMap(
+                      polylines: {_poly},
+                      markers: markers,
                       zoomControlsEnabled: true,
                       myLocationButtonEnabled: true,
                       mapType: MapType.normal,
                       initialCameraPosition: _kGooglePlex,
                       onMapCreated: (GoogleMapController controller) {
+                        mapController = controller;
                         _controller.complete(controller);
                       },
                     ),
@@ -101,7 +144,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: '0:00:00',
+                                                      text:
+                                                          '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -118,7 +162,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: '0.0',
+                                                      text:
+                                                          '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -190,7 +235,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 left: 10, right: 10),
                                             child: TextButton(
                                                 onPressed: () {
-                                                  Navigator.pop(context);
+                                                  setState(() {
+                                                    isclicked = false;
+                                                  });
                                                 },
                                                 child: Container(
                                                   decoration: BoxDecoration(
@@ -218,7 +265,20 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                             color: Colors.red,
                                             radius: 15,
                                             label: 'FINISH',
-                                            onPressed: () {},
+                                            onPressed: () {
+                                              addPedal(
+                                                  pickUp.latitude,
+                                                  pickUp.longitude,
+                                                  pickup,
+                                                  dropOff.latitude,
+                                                  dropOff.latitude,
+                                                  drop,
+                                                  '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
+                                                  '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs');
+                                              setState(() {
+                                                isclicked = false;
+                                              });
+                                            },
                                           ),
                                         ],
                                       ),
@@ -284,14 +344,20 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                     fontFamily: 'Bold',
                                                   ),
                                                   ButtonWidget(
-                                                    color: Colors.red,
+                                                    color: pickup == '' &&
+                                                            drop == ''
+                                                        ? Colors.grey
+                                                        : Colors.red,
                                                     fontSize: 12,
                                                     width: 50,
                                                     radius: 100,
                                                     height: 35,
                                                     label: 'Save route',
                                                     onPressed: () {
-                                                      showsaverouteDialog();
+                                                      if (pickup != '' &&
+                                                          drop != '') {
+                                                        showsaverouteDialog();
+                                                      }
                                                     },
                                                   ),
                                                 ],
@@ -300,7 +366,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 height: 10,
                                               ),
                                               GestureDetector(
-                                                onTap: () async {},
+                                                onTap: () {
+                                                  searchPickup();
+                                                },
                                                 child: Container(
                                                   height: 35,
                                                   width: 300,
@@ -353,7 +421,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                                 .circular(10),
                                                       ),
                                                       label: TextWidget(
-                                                        text: 'Start point',
+                                                        text:
+                                                            'Start point: $pickup',
                                                         fontSize: 12,
                                                         color: Colors.grey,
                                                       ),
@@ -366,7 +435,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 height: 10,
                                               ),
                                               GestureDetector(
-                                                onTap: () async {},
+                                                onTap: () {
+                                                  searchDropoff();
+                                                },
                                                 child: Container(
                                                   height: 35,
                                                   width: 300,
@@ -419,7 +490,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                                 .circular(10),
                                                       ),
                                                       label: TextWidget(
-                                                        text: 'End point',
+                                                        text:
+                                                            'End point: $drop',
                                                         fontSize: 12,
                                                         color: Colors.grey,
                                                       ),
@@ -439,103 +511,185 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 height: 50,
                                                 label: 'Start',
                                                 onPressed: () {
-                                                  setState(() {
-                                                    isclicked = true;
-                                                  });
+                                                  if (pickup != '' &&
+                                                      drop != '') {
+                                                    setState(() {
+                                                      isclicked = true;
+                                                    });
+                                                  }
                                                 },
                                               ),
                                             ],
                                           ),
                                           // Saved routes tab
-                                          SizedBox(
-                                            height: 220,
-                                            width: double.infinity,
-                                            child: ListView.builder(
-                                              itemBuilder: (context, index) {
-                                                return Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Row(
+                                          StreamBuilder<QuerySnapshot>(
+                                              stream: FirebaseFirestore.instance
+                                                  .collection('Favs')
+                                                  .where('userId',
+                                                      isEqualTo: FirebaseAuth
+                                                          .instance
+                                                          .currentUser!
+                                                          .uid)
+                                                  .where('type',
+                                                      isEqualTo: 'pedal')
+                                                  .snapshots(),
+                                              builder: (BuildContext context,
+                                                  AsyncSnapshot<QuerySnapshot>
+                                                      snapshot) {
+                                                if (snapshot.hasError) {
+                                                  print('error');
+                                                  return const Center(
+                                                      child: Text('Error'));
+                                                }
+                                                if (snapshot.connectionState ==
+                                                    ConnectionState.waiting) {
+                                                  return const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        top: 50),
+                                                    child: Center(
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                      color: Colors.black,
+                                                    )),
+                                                  );
+                                                }
+
+                                                final data =
+                                                    snapshot.requireData;
+                                                return SizedBox(
+                                                  height: 220,
+                                                  width: double.infinity,
+                                                  child: ListView.builder(
+                                                    itemCount: data.docs.length,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      return GestureDetector(
+                                                        onTap: () {
+                                                          setState(() {
+                                                            drop =
+                                                                data.docs[index]
+                                                                    ['end'];
+                                                            pickup =
+                                                                data.docs[index]
+                                                                    ['start'];
+
+                                                            dropOff = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong']);
+
+                                                            pickUp = LatLng(
+                                                                data.docs[index]
+                                                                    [
+                                                                    'startLat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'startLong']);
+                                                          });
+                                                        },
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
                                                           mainAxisAlignment:
                                                               MainAxisAlignment
-                                                                  .start,
+                                                                  .spaceBetween,
                                                           children: [
-                                                            const Icon(
-                                                              Icons
-                                                                  .location_on_rounded,
-                                                              color: Colors.red,
-                                                            ),
-                                                            const SizedBox(
-                                                              width: 20,
+                                                            Column(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              mainAxisAlignment:
+                                                                  MainAxisAlignment
+                                                                      .center,
+                                                              children: [
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    const Icon(
+                                                                      Icons
+                                                                          .location_on_rounded,
+                                                                      color: Colors
+                                                                          .red,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 20,
+                                                                    ),
+                                                                    TextWidget(
+                                                                      text: data
+                                                                              .docs[index]
+                                                                          [
+                                                                          'start'],
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontFamily:
+                                                                          'Bold',
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                Padding(
+                                                                  padding: const EdgeInsets
+                                                                          .only(
+                                                                      left: 5),
+                                                                  child:
+                                                                      TextWidget(
+                                                                    text: 'to',
+                                                                    fontSize:
+                                                                        12,
+                                                                    fontFamily:
+                                                                        'Bold',
+                                                                    color: Colors
+                                                                        .grey,
+                                                                  ),
+                                                                ),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    const Icon(
+                                                                      Icons
+                                                                          .location_on_rounded,
+                                                                      color: Colors
+                                                                          .red,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 20,
+                                                                    ),
+                                                                    TextWidget(
+                                                                      text: data
+                                                                              .docs[index]
+                                                                          [
+                                                                          'end'],
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontFamily:
+                                                                          'Bold',
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ],
                                                             ),
                                                             TextWidget(
                                                               text:
-                                                                  'Basak Pardo, Cebu City',
-                                                              fontSize: 14,
+                                                                  '${calculateDistance(data.docs[index]['startLat'], data.docs[index]['startLong'], data.docs[index]['endLat'], data.docs[index]['endLong']).toStringAsFixed(2)}KM',
+                                                              fontSize: 18,
                                                               fontFamily:
                                                                   'Bold',
+                                                              color:
+                                                                  Colors.grey,
                                                             ),
                                                           ],
                                                         ),
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                      .only(
-                                                                  left: 5),
-                                                          child: TextWidget(
-                                                            text: 'to',
-                                                            fontSize: 12,
-                                                            fontFamily: 'Bold',
-                                                            color: Colors.grey,
-                                                          ),
-                                                        ),
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .start,
-                                                          children: [
-                                                            const Icon(
-                                                              Icons
-                                                                  .location_on_rounded,
-                                                              color: Colors.red,
-                                                            ),
-                                                            const SizedBox(
-                                                              width: 20,
-                                                            ),
-                                                            TextWidget(
-                                                              text:
-                                                                  'Metro Colon, Cebu City',
-                                                              fontSize: 14,
-                                                              fontFamily:
-                                                                  'Bold',
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    TextWidget(
-                                                      text: '80KM',
-                                                      fontSize: 18,
-                                                      fontFamily: 'Bold',
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ],
+                                                      );
+                                                    },
+                                                  ),
                                                 );
-                                              },
-                                            ),
-                                          ),
+                                              }),
                                         ]),
                                       ),
                                     ),
@@ -596,6 +750,8 @@ class _PedalScreeenState extends State<PedalScreeen> {
             ),
             TextButton(
                 onPressed: () {
+                  addFav(pickUp.latitude, pickUp.longitude, pickup,
+                      dropOff.latitude, dropOff.latitude, drop, 'pedal');
                   Navigator.pop(context);
                 },
                 child: Container(
@@ -625,4 +781,134 @@ class _PedalScreeenState extends State<PedalScreeen> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+
+  searchPickup() async {
+    location.Prediction? p = await PlacesAutocomplete.show(
+        mode: Mode.overlay,
+        context: context,
+        apiKey: kGoogleApiKey,
+        language: 'en',
+        strictbounds: false,
+        types: [""],
+        decoration: InputDecoration(
+            hintText: 'Search Pick-up Location',
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(color: Colors.white))),
+        components: [location.Component(location.Component.country, "ph")]);
+
+    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
+        apiKey: kGoogleApiKey,
+        apiHeaders: await const GoogleApiHeaders().getHeaders());
+
+    location.PlacesDetailsResponse detail =
+        await places.getDetailsByPlaceId(p!.placeId!);
+
+    addMyMarker1(detail.result.geometry!.location.lat,
+        detail.result.geometry!.location.lng);
+
+    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+        LatLng(detail.result.geometry!.location.lat,
+            detail.result.geometry!.location.lng),
+        18.0));
+
+    setState(() {
+      pickup = detail.result.name;
+      pickUp = LatLng(detail.result.geometry!.location.lat,
+          detail.result.geometry!.location.lng);
+    });
+  }
+
+  searchDropoff() async {
+    location.Prediction? p = await PlacesAutocomplete.show(
+        mode: Mode.overlay,
+        context: context,
+        apiKey: kGoogleApiKey,
+        language: 'en',
+        strictbounds: false,
+        types: [""],
+        decoration: InputDecoration(
+            hintText: 'Search Drop-off Location',
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: const BorderSide(color: Colors.white))),
+        components: [location.Component(location.Component.country, "ph")]);
+
+    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
+        apiKey: kGoogleApiKey,
+        apiHeaders: await const GoogleApiHeaders().getHeaders());
+
+    location.PlacesDetailsResponse detail =
+        await places.getDetailsByPlaceId(p!.placeId!);
+
+    addMyMarker12(detail.result.geometry!.location.lat,
+        detail.result.geometry!.location.lng);
+
+    setState(() {
+      drop = detail.result.name;
+
+      dropOff = LatLng(detail.result.geometry!.location.lat,
+          detail.result.geometry!.location.lng);
+    });
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+        kGoogleApiKey,
+        PointLatLng(pickUp.latitude, pickUp.longitude),
+        PointLatLng(detail.result.geometry!.location.lat,
+            detail.result.geometry!.location.lng));
+    if (result.points.isNotEmpty) {
+      polylineCoordinates = result.points
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+    }
+    setState(() {
+      _poly = Polyline(
+          color: Colors.red,
+          polylineId: const PolylineId('route'),
+          points: polylineCoordinates,
+          width: 4);
+    });
+
+    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
+        LatLng(detail.result.geometry!.location.lat,
+            detail.result.geometry!.location.lng),
+        18.0));
+
+    double miny = (pickUp.latitude <= dropOff.latitude)
+        ? pickUp.latitude
+        : dropOff.latitude;
+    double minx = (pickUp.longitude <= dropOff.longitude)
+        ? pickUp.longitude
+        : dropOff.longitude;
+    double maxy = (pickUp.latitude <= dropOff.latitude)
+        ? dropOff.latitude
+        : pickUp.latitude;
+    double maxx = (pickUp.longitude <= dropOff.longitude)
+        ? dropOff.longitude
+        : pickUp.longitude;
+
+    double southWestLatitude = miny;
+    double southWestLongitude = minx;
+
+    double northEastLatitude = maxy;
+    double northEastLongitude = maxx;
+
+    // Accommodate the two locations within the
+    // camera view of the map
+    mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          northeast: LatLng(
+            northEastLatitude,
+            northEastLongitude,
+          ),
+          southwest: LatLng(
+            southWestLatitude,
+            southWestLongitude,
+          ),
+        ),
+        100.0,
+      ),
+    );
+  }
 }

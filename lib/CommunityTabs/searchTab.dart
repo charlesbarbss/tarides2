@@ -14,6 +14,7 @@ class SearchTab extends StatefulWidget {
 class _SearchTabState extends State<SearchTab> {
   UserController userController = UserController();
 
+  @override
   void initState() {
     userController.getUser(widget.email);
     super.initState();
@@ -25,20 +26,20 @@ class _SearchTabState extends State<SearchTab> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Error'),
-            content: Text('You already have a community'),
+            title: const Text('Error'),
+            content: const Text('You already have a community'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Ok'),
+                child: const Text('Ok'),
               ),
             ],
           );
         },
       );
-    } else
+    } else {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -47,6 +48,7 @@ class _SearchTabState extends State<SearchTab> {
           ),
         ),
       );
+    }
   }
 
   void _joinCommunity() {
@@ -73,7 +75,7 @@ class _SearchTabState extends State<SearchTab> {
             return Center(
               child: Column(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 60,
                   ),
                   Row(
@@ -82,9 +84,9 @@ class _SearchTabState extends State<SearchTab> {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 50, vertical: 10),
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -94,38 +96,38 @@ class _SearchTabState extends State<SearchTab> {
                           userController.user.isCommunity == true
                               ? 'Search community'
                               : 'Join Community',
-                          style: TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                      textStyle: TextStyle(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 10),
+                      textStyle: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     onPressed: _createCommunity,
-                    child: Text(
+                    child: const Text(
                       'Create a Community',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 60,
                   ),
                   Text(
                     userController.user.isCommunity == true
                         ? 'You have a community'
                         : 'NOTE: You don\'t have a community yet',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold),
