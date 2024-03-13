@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:tarides/services/add_ride.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 
@@ -13,6 +15,10 @@ class MapPage extends StatefulWidget {
   final LatLng loc2;
   final LatLng loc3;
   final LatLng loc4;
+  final String location1;
+  final String location2;
+  final String location3;
+  final String location4;
   final Polyline poly;
   String distance;
   String time;
@@ -20,6 +26,10 @@ class MapPage extends StatefulWidget {
   MapPage(
       {super.key,
       required this.loc1,
+      required this.location1,
+      required this.location2,
+      required this.location3,
+      required this.location4,
       required this.distance,
       required this.time,
       required this.loc2,
@@ -83,6 +93,16 @@ class _MapPageState extends State<MapPage> {
       markerId: const MarkerId("dropOff2"),
       position: LatLng(widget.loc4.latitude, widget.loc4.longitude),
     ));
+  }
+
+  double speed = 0;
+
+  getSpeed() {
+    Geolocator.getPositionStream().listen((position) {
+      setState(() {
+        speed = position.speed;
+      });
+    });
   }
 
   @override
@@ -179,7 +199,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '0:45:23',
+                                                  text: widget.time,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -196,7 +216,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '5.0',
+                                                  text: widget.distance,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -227,7 +247,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '2.0',
+                                                  text: '$speed',
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -336,7 +356,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '0.0',
+                                                  text: '$speed',
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -375,6 +395,24 @@ class _MapPageState extends State<MapPage> {
                               label: isfinish ? 'Finish' : 'Start',
                               onPressed: () {
                                 if (!isfinish) {
+                                  getSpeed();
+                                  addRide(
+                                      widget.loc1.latitude,
+                                      widget.loc1.longitude,
+                                      widget.location1,
+                                      widget.loc2.latitude,
+                                      widget.loc2.longitude,
+                                      widget.location2,
+                                      widget.loc3.latitude,
+                                      widget.loc3.longitude,
+                                      widget.location3,
+                                      widget.loc4.latitude,
+                                      widget.loc4.longitude,
+                                      widget.location4,
+                                      widget.distance,
+                                      widget.time,
+                                      'Team 1',
+                                      'Team 2');
                                   setState(() {
                                     isfinish = true;
                                   });

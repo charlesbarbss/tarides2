@@ -729,6 +729,14 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                 builder:
                                                                     (context) =>
                                                                         MapPage(
+                                                                          location1:
+                                                                              pickup,
+                                                                          location2:
+                                                                              drop1,
+                                                                          location3:
+                                                                              drop2,
+                                                                          location4:
+                                                                              drop3,
                                                                           distance:
                                                                               '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
                                                                           time:
