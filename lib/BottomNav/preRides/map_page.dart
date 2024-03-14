@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:tarides/services/add_ride.dart';
+import 'package:tarides/utils/distance_calculations.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
+import 'package:tarides/widgets/toast_widget.dart';
 
 import '../../widgets/dialog_widget.dart';
 import '../rides_pages/race_logs_page.dart';
@@ -52,6 +54,7 @@ class _MapPageState extends State<MapPage> {
     addMyMarker123();
     addMyMarker124();
 
+    determinePosition();
     setState(() {
       hasloaded = true;
     });
@@ -101,6 +104,21 @@ class _MapPageState extends State<MapPage> {
     Geolocator.getPositionStream().listen((position) {
       setState(() {
         speed = position.speed;
+      });
+    });
+  }
+
+  double lat = 0;
+  double long = 0;
+  getLocation() {
+    Timer.periodic(const Duration(seconds: 10), (timer) {
+      Geolocator.getCurrentPosition().then((position) {
+        setState(() {
+          lat = position.latitude;
+          long = position.longitude;
+        });
+      }).catchError((error) {
+        print('Error getting location: $error');
       });
     });
   }
@@ -395,6 +413,7 @@ class _MapPageState extends State<MapPage> {
                               label: isfinish ? 'Finish' : 'Start',
                               onPressed: () {
                                 if (!isfinish) {
+                                  getLocation();
                                   getSpeed();
                                   addRide(
                                       widget.loc1.latitude,
@@ -417,25 +436,38 @@ class _MapPageState extends State<MapPage> {
                                     isfinish = true;
                                   });
                                 } else {
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (context) {
-                                      return DialogWidget(
-                                        image: 'assets/images/star 1.png',
-                                        title: 'WINNER!',
-                                        caption: 'CONGRATUALATIONS!',
-                                        onpressed: () {
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const RaceLogsPage()),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  );
+                                  if (calculateDistance(
+                                          lat,
+                                          long,
+                                          widget.loc4.latitude,
+                                          widget.loc4.longitude) <
+                                      0.1) {
+                                    // If the winner == '', update winner, show winner dialog
+                                    // If the winner != '', show defeat dialog
+
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (context) {
+                                        return DialogWidget(
+                                          image: 'assets/images/star 1.png',
+                                          title: 'WINNER!',
+                                          caption: 'CONGRATUALATIONS!',
+                                          onpressed: () {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const RaceLogsPage()),
+                                            );
+                                          },
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    showToast(
+                                        'You are not in the finish line yet!');
+                                  }
                                 }
                               },
                             ),
@@ -496,5 +528,42 @@ class _MapPageState extends State<MapPage> {
         );
       },
     );
+  }
+
+  Future<Position> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled don't continue
+      // accessing the position and request users of the
+      // App to enable the location services.
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try
+        // requesting permissions again (this is also where
+        // Android's shouldShowRequestPermissionRationale
+        // returned true. According to Android guidelines
+        // your App should show an explanatory UI now.
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    return await Geolocator.getCurrentPosition();
   }
 }
