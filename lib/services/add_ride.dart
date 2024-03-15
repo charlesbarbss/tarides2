@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-Future addRide(
+Future<String> addRide(
   double startLat,
   double startLong,
   String start,
@@ -46,4 +46,6 @@ Future addRide(
   };
 
   await docUser.set(json);
+
+  return docUser.id;
 }

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -122,6 +124,8 @@ class _MapPageState extends State<MapPage> {
       });
     });
   }
+
+  String id = '';
 
   @override
   Widget build(BuildContext context) {
@@ -406,71 +410,130 @@ class _MapPageState extends State<MapPage> {
                             const SizedBox(
                               height: 25,
                             ),
-                            ButtonWidget(
-                              width: 350,
-                              color: Colors.red,
-                              radius: 15,
-                              label: isfinish ? 'Finish' : 'Start',
-                              onPressed: () {
-                                if (!isfinish) {
-                                  getLocation();
-                                  getSpeed();
-                                  addRide(
-                                      widget.loc1.latitude,
-                                      widget.loc1.longitude,
-                                      widget.location1,
-                                      widget.loc2.latitude,
-                                      widget.loc2.longitude,
-                                      widget.location2,
-                                      widget.loc3.latitude,
-                                      widget.loc3.longitude,
-                                      widget.location3,
-                                      widget.loc4.latitude,
-                                      widget.loc4.longitude,
-                                      widget.location4,
-                                      widget.distance,
-                                      widget.time,
-                                      'Team 1',
-                                      'Team 2');
-                                  setState(() {
-                                    isfinish = true;
-                                  });
-                                } else {
-                                  if (calculateDistance(
-                                          lat,
-                                          long,
+                            id == ''
+                                ? ButtonWidget(
+                                    width: 350,
+                                    color: Colors.red,
+                                    radius: 15,
+                                    label: 'Start',
+                                    onPressed: () async {
+                                      getLocation();
+                                      getSpeed();
+                                      final docId = await addRide(
+                                          widget.loc1.latitude,
+                                          widget.loc1.longitude,
+                                          widget.location1,
+                                          widget.loc2.latitude,
+                                          widget.loc2.longitude,
+                                          widget.location2,
+                                          widget.loc3.latitude,
+                                          widget.loc3.longitude,
+                                          widget.location3,
                                           widget.loc4.latitude,
-                                          widget.loc4.longitude) <
-                                      0.1) {
-                                    // If the winner == '', update winner, show winner dialog
-                                    // If the winner != '', show defeat dialog
+                                          widget.loc4.longitude,
+                                          widget.location4,
+                                          widget.distance,
+                                          widget.time,
+                                          'Team 1',
+                                          'Team 2');
+                                      setState(() {
+                                        isfinish = true;
 
-                                    showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (context) {
-                                        return DialogWidget(
-                                          image: 'assets/images/star 1.png',
-                                          title: 'WINNER!',
-                                          caption: 'CONGRATUALATIONS!',
-                                          onpressed: () {
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const RaceLogsPage()),
-                                            );
-                                          },
-                                        );
-                                      },
-                                    );
-                                  } else {
-                                    showToast(
-                                        'You are not in the finish line yet!');
-                                  }
-                                }
-                              },
-                            ),
+                                        id = docId;
+                                      });
+                                    },
+                                  )
+                                : StreamBuilder<DocumentSnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('Rides')
+                                        .doc(id)
+                                        .snapshots(),
+                                    builder: (context,
+                                        AsyncSnapshot<DocumentSnapshot>
+                                            snapshot) {
+                                      if (!snapshot.hasData) {
+                                        return const SizedBox();
+                                      } else if (snapshot.hasError) {
+                                        return const Center(
+                                            child:
+                                                Text('Something went wrong'));
+                                      } else if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const SizedBox();
+                                      }
+                                      dynamic data = snapshot.data;
+                                      return ButtonWidget(
+                                        width: 350,
+                                        color: Colors.red,
+                                        radius: 15,
+                                        label: 'Finish',
+                                        onPressed: () async {
+                                          if (calculateDistance(
+                                                  lat,
+                                                  long,
+                                                  widget.loc4.latitude,
+                                                  widget.loc4.longitude) <
+                                              0.1) {
+                                            if (data['winner'] == '') {
+                                              await FirebaseFirestore.instance
+                                                  .collection('Rides')
+                                                  .doc(id)
+                                                  .update({
+                                                'winner': FirebaseAuth
+                                                    .instance.currentUser!.uid,
+                                                'status': 'Finished',
+                                                'endDateTime': DateTime.now(),
+                                              });
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (context) {
+                                                  return DialogWidget(
+                                                    image:
+                                                        'assets/images/star 1.png',
+                                                    title: 'WINNER!',
+                                                    caption: 'CONGRATULATIONS!',
+                                                    onpressed: () {
+                                                      Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const RaceLogsPage()),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            } else {
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder: (context) {
+                                                  return DialogWidget(
+                                                    image:
+                                                        'assets/images/urtle_svgrepo.com.png.png',
+                                                    title: 'DEFEAT!',
+                                                    caption:
+                                                        'Better luck next time!',
+                                                    onpressed: () {
+                                                      Navigator.pushReplacement(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                const RaceLogsPage()),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            }
+                                          } else {
+                                            showToast(
+                                                'You are not in the finish line yet!');
+                                          }
+                                        },
+                                      );
+                                    })
                           ],
                         ),
                       ),
