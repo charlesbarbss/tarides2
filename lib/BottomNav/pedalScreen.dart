@@ -37,18 +37,32 @@ class _PedalScreeenState extends State<PedalScreeen> {
 
   addMyMarker1(lat1, long1) async {
     markers.add(Marker(
+        draggable: true,
+        onDragEnd: (value) {
+          setState(() {
+            pickUp = value;
+          });
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("pickup"),
         position: LatLng(lat1, long1),
-        infoWindow: const InfoWindow(title: 'Pick-up Location')));
+        infoWindow: const InfoWindow(
+            title: 'Starting Point', snippet: 'Starting Point')));
   }
 
   addMyMarker12(lat1, long1) async {
     markers.add(Marker(
+        draggable: true,
+        onDragEnd: (value) {
+          setState(() {
+            dropOff = value;
+          });
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("dropOff"),
         position: LatLng(lat1, long1),
-        infoWindow: const InfoWindow(title: 'Drop-off Location')));
+        infoWindow:
+            const InfoWindow(title: 'Ending Point', snippet: 'Ending Point')));
   }
 
   late String pickup = '';
