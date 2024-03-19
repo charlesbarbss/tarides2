@@ -19,7 +19,17 @@ import 'package:google_maps_webservice/places.dart' as location;
 import '../../utils/keys.dart';
 
 class PickRouteScreeen extends StatefulWidget {
-  const PickRouteScreeen({super.key});
+  String team1;
+  String team2;
+  String team1name;
+  String team2name;
+
+  PickRouteScreeen(
+      {super.key,
+      required this.team1,
+      required this.team2,
+      required this.team1name,
+      required this.team2name});
 
   @override
   State<PickRouteScreeen> createState() => _PickRouteScreeenState();
@@ -747,8 +757,8 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                               drop3,
                                                               '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
                                                               '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude), 0.30).toStringAsFixed(2)}hrs',
-                                                              'Team 1',
-                                                              'Team 2');
+                                                              widget.team1,
+                                                              widget.team2);
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -996,7 +1006,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                       height: 5,
                                     ),
                                     TextWidget(
-                                      text: 'OCTO CIRCUIT CLUB',
+                                      text: widget.team1name,
                                       fontSize: 14,
                                       color: Colors.white,
                                       fontFamily: 'Bold',
@@ -1022,7 +1032,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                       height: 5,
                                     ),
                                     TextWidget(
-                                      text: 'DEW LITTLE CLUB',
+                                      text: widget.team2name,
                                       fontSize: 14,
                                       color: Colors.white,
                                       fontFamily: 'Bold',

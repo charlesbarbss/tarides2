@@ -37,7 +37,7 @@ class _CreateAccountState extends State<CreateAccount> {
   IconData? femaleIcon = Icons.female;
 
   String capitalize(String s) {
-    if (s == null || s.isEmpty) {
+    if (s.isEmpty) {
       return s;
     }
     return s[0].toUpperCase() + s.substring(1);
@@ -55,10 +55,10 @@ class _CreateAccountState extends State<CreateAccount> {
         return Theme(
           data: ThemeData(
             colorScheme: const ColorScheme.light(
-              primary: Color(0x3ffFF0000),
+              primary: Color(0x3ffff0000),
               onPrimary: Colors.white,
             ),
-            textTheme: TextTheme(),
+            textTheme: const TextTheme(),
           ),
           child: child!,
         );
@@ -119,7 +119,11 @@ class _CreateAccountState extends State<CreateAccount> {
 
         // Get the download URL of the uploaded image
         final imageUrl = await storageRef.getDownloadURL();
-        await FirebaseFirestore.instance.collection('user').add({
+        final docUser = FirebaseFirestore.instance
+            .collection('user')
+            .doc(userCredential.user!.uid);
+
+        await docUser.set({
           'username': usernameController.text.trim(), // Add this line
           'lastName': lastNameController.text,
           'firstName': firstNameController.text,
@@ -133,15 +137,16 @@ class _CreateAccountState extends State<CreateAccount> {
           'isCommunity': false,
           'isAchievement': false,
           'communityId': '',
-        }).then((value) => Navigator.pop(context));
+        });
         // print('Account Created Successfully');
+        Navigator.pop(context);
       }
     }
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Create Account',
           style: TextStyle(color: Colors.white),
         ),
@@ -149,7 +154,7 @@ class _CreateAccountState extends State<CreateAccount> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           child: Column(
             children: [
               Center(
@@ -159,60 +164,60 @@ class _CreateAccountState extends State<CreateAccount> {
                   });
                 }),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
-                    controller: usernameController,
-                    style: TextStyle(
-                      color: Colors.white,
+                controller: usernameController,
+                style: const TextStyle(
+                  color: Colors.white,
+                ),
+                decoration: const InputDecoration(
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3ffffffff0),
                     ),
-                    decoration: InputDecoration(
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      labelText: 'Username',
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3ffffffff0),
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    ),
+                  ),
+                  labelStyle: TextStyle(
+                    color: Colors.white,
+                  ),
+                  labelText: 'Username',
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
-                  
-                 
                   Expanded(
                     child: TextFormField(
                       controller: lastNameController,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                       ),
-                      decoration: InputDecoration(
-                        focusedBorder: const OutlineInputBorder(
+                      decoration: const InputDecoration(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
                           ),
                         ),
-                        enabledBorder: const OutlineInputBorder(
+                        enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
@@ -225,27 +230,27 @@ class _CreateAccountState extends State<CreateAccount> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                   ),
                   Expanded(
                     child: TextFormField(
                       controller: firstNameController,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                       ),
-                      decoration: InputDecoration(
-                        focusedBorder: const OutlineInputBorder(
+                      decoration: const InputDecoration(
+                        focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
                           ),
                         ),
-                        enabledBorder: const OutlineInputBorder(
+                        enabledBorder: OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
@@ -260,26 +265,26 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
                 controller: emailController,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
-                decoration: InputDecoration(
-                  focusedBorder: const OutlineInputBorder(
+                decoration: const InputDecoration(
+                  focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
                     ),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -291,7 +296,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   labelText: 'Email',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Row(
@@ -302,11 +307,11 @@ class _CreateAccountState extends State<CreateAccount> {
                       onTap: () {
                         _selectDate(context);
                       },
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
                         focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
@@ -314,13 +319,13 @@ class _CreateAccountState extends State<CreateAccount> {
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
                           ),
                         ),
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           color: Colors.white,
                         ),
                         prefixIcon: const Icon(
@@ -331,14 +336,14 @@ class _CreateAccountState extends State<CreateAccount> {
                         suffixIcon: dateController.text.isEmpty
                             ? Container(width: 0)
                             : IconButton(
-                                icon: Icon(Icons.close),
+                                icon: const Icon(Icons.close),
                                 onPressed: () => dateController.clear(),
                               ),
                         labelText: 'Birthday',
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 10,
                   ),
                   Expanded(
@@ -378,7 +383,7 @@ class _CreateAccountState extends State<CreateAccount> {
                       decoration: InputDecoration(
                         focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
@@ -386,13 +391,13 @@ class _CreateAccountState extends State<CreateAccount> {
                         ),
                         enabledBorder: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
+                            color: Color(0x3ffffffff0),
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(15.0),
                           ),
                         ),
-                        labelStyle: TextStyle(
+                        labelStyle: const TextStyle(
                           fontSize: 15,
                           color: Colors.white,
                         ),
@@ -414,12 +419,11 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
-             
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
                 controller: phoneNumberController,
@@ -431,7 +435,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   counterText: "",
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -439,7 +443,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                   enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -450,38 +454,38 @@ class _CreateAccountState extends State<CreateAccount> {
                     color: Colors.white,
                   ),
                   prefixIconColor: Colors.white,
-                  labelStyle: TextStyle(
+                  labelStyle: const TextStyle(
                     color: Colors.white,
                   ),
                   suffixIcon: phoneNumberController.text.isEmpty
                       ? Container(width: 0)
                       : IconButton(
-                          icon: Icon(Icons.close),
+                          icon: const Icon(Icons.close),
                           onPressed: () => phoneNumberController.clear(),
                         ),
                   labelText: 'Phone Number',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
                 controller: locationController,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
-                decoration: InputDecoration(
-                  focusedBorder: const OutlineInputBorder(
+                decoration: const InputDecoration(
+                  focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
                     ),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color(0x3ffffffff0),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -493,13 +497,13 @@ class _CreateAccountState extends State<CreateAccount> {
                   labelText: 'Location',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
                 controller: passwordController,
                 obscureText: _obscureText,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
                 decoration: InputDecoration(
@@ -519,8 +523,8 @@ class _CreateAccountState extends State<CreateAccount> {
                       Radius.circular(15.0),
                     ),
                   ),
-                  labelStyle: TextStyle(
-                    color:  Colors.white,
+                  labelStyle: const TextStyle(
+                    color: Colors.white,
                   ),
                   prefixIcon: const Icon(
                     Icons.lock,
@@ -536,18 +540,19 @@ class _CreateAccountState extends State<CreateAccount> {
                     child: Icon(
                         _obscureText ? Icons.visibility : Icons.visibility_off),
                   ),
-                  suffixIconColor:  Colors.white,
+                  suffixIconColor: Colors.white,
                   labelText: 'Password',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                  textStyle: TextStyle(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                  textStyle: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -555,7 +560,7 @@ class _CreateAccountState extends State<CreateAccount> {
                 onPressed: () {
                   _createAccount();
                 },
-                child: Text(
+                child: const Text(
                   'Submit',
                   style: TextStyle(color: Colors.white),
                 ),
