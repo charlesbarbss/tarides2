@@ -23,23 +23,28 @@ class MapPage extends StatefulWidget {
   final String location2;
   final String location3;
   final String location4;
-  final Polyline poly;
+  final Polyline poly1;
+  final Polyline poly2;
+  final Polyline poly3;
   String distance;
   String time;
 
-  MapPage(
-      {super.key,
-      required this.loc1,
-      required this.location1,
-      required this.location2,
-      required this.location3,
-      required this.location4,
-      required this.distance,
-      required this.time,
-      required this.loc2,
-      required this.loc3,
-      required this.loc4,
-      required this.poly});
+  MapPage({
+    super.key,
+    required this.loc1,
+    required this.location1,
+    required this.location2,
+    required this.location3,
+    required this.location4,
+    required this.distance,
+    required this.time,
+    required this.loc2,
+    required this.loc3,
+    required this.loc4,
+    required this.poly1,
+    required this.poly2,
+    required this.poly3,
+  });
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -165,7 +170,11 @@ class _MapPageState extends State<MapPage> {
                   ),
                   Expanded(
                     child: GoogleMap(
-                      polylines: {widget.poly},
+                      polylines: {
+                        widget.poly1,
+                        widget.poly2,
+                        widget.poly3,
+                      },
                       markers: markers,
                       zoomControlsEnabled: true,
                       myLocationButtonEnabled: true,
