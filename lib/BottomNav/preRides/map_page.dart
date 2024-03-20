@@ -170,6 +170,7 @@ class _MapPageState extends State<MapPage> {
                   ),
                   Expanded(
                     child: GoogleMap(
+                      myLocationEnabled: true,
                       polylines: {
                         widget.poly1,
                         widget.poly2,
@@ -278,7 +279,8 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '$speed',
+                                                  text:
+                                                      speed.toStringAsFixed(2),
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
