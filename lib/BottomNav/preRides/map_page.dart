@@ -295,7 +295,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '3.0',
+                                                  text: '0.0',
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
