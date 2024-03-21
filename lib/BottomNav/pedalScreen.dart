@@ -340,7 +340,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                           child: Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                        .fromLTRB(
+                                                                    .fromLTRB(
                                                                     45,
                                                                     11,
                                                                     45,
@@ -765,8 +765,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                                           ],
                                                                         ),
                                                                         Padding(
-                                                                          padding:
-                                                                              const EdgeInsets.only(left: 5),
+                                                                          padding: const EdgeInsets
+                                                                              .only(
+                                                                              left: 5),
                                                                           child:
                                                                               TextWidget(
                                                                             text:
@@ -878,8 +879,21 @@ class _PedalScreeenState extends State<PedalScreeen> {
             ),
             TextButton(
                 onPressed: () {
-                  addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff.latitude, dropOff.latitude, drop, 'pedal');
+                  addFav(
+                    pickUp.latitude,
+                    pickUp.longitude,
+                    pickup,
+                    dropOff.latitude,
+                    dropOff.latitude,
+                    drop,
+                    'pedal',
+                    0,
+                    0,
+                    '',
+                    0,
+                    0,
+                    '',
+                  );
                   Navigator.pop(context);
                 },
                 child: Container(

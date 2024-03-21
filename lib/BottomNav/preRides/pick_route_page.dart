@@ -15,6 +15,7 @@ import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 import 'package:google_maps_webservice/places.dart' as location;
+import 'package:tarides/widgets/toast_widget.dart';
 
 import '../../utils/keys.dart';
 
@@ -154,6 +155,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                     GoogleMap(
                       polylines: {_poly1, _poly2, _poly3},
                       markers: markers,
+                      myLocationEnabled: true,
                       zoomControlsEnabled: true,
                       myLocationButtonEnabled: true,
                       mapType: MapType.normal,
@@ -328,7 +330,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                     ),
                                                     child: Padding(
                                                       padding: const EdgeInsets
-                                                              .fromLTRB(
+                                                          .fromLTRB(
                                                           45, 11, 45, 11),
                                                       child: TextWidget(
                                                         text: 'STOP',
@@ -372,7 +374,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                             ),
                           )
                         : Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                            padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
                             child: Align(
                               alignment: Alignment.topCenter,
                               child: Container(
@@ -856,6 +858,18 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                 data.docs[index]
                                                                     [
                                                                     'endLong']);
+                                                            dropOff2 = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat1'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong1']);
+                                                            dropOff3 = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat2'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong2']);
 
                                                             pickUp = LatLng(
                                                                 data.docs[index]
@@ -909,9 +923,11 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                   ],
                                                                 ),
                                                                 Padding(
-                                                                  padding: const EdgeInsets
+                                                                  padding:
+                                                                      const EdgeInsets
                                                                           .only(
-                                                                      left: 5),
+                                                                          left:
+                                                                              5),
                                                                   child:
                                                                       TextWidget(
                                                                     text: 'to',
@@ -1097,9 +1113,23 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
             ),
             TextButton(
                 onPressed: () {
-                  addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff3.latitude, dropOff3.latitude, drop3, 'rides');
+                  addFav(
+                    pickUp.latitude,
+                    pickUp.longitude,
+                    pickup,
+                    dropOff1.latitude,
+                    dropOff1.latitude,
+                    drop1,
+                    'rides',
+                    dropOff2.latitude,
+                    dropOff2.latitude,
+                    drop2,
+                    dropOff3.latitude,
+                    dropOff3.latitude,
+                    drop3,
+                  );
                   Navigator.pop(context);
+                  showToast('Routes saved!');
                 },
                 child: Container(
                   decoration: BoxDecoration(
