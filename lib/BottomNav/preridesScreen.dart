@@ -143,9 +143,9 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                             ? searchScreen()
                             : StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
-                                    .collection('community')
-                                    // .where('status', isEqualTo: 'Completed')
-                                    .where('communityId',
+                                    .collection('Rides')
+                                    .where('status', isEqualTo: 'Started')
+                                    .where('team2',
                                         isEqualTo: data['communityId'])
                                     .snapshots(),
                                 builder: (BuildContext context,
@@ -165,262 +165,720 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                     );
                                   }
 
-                                  final comData = snapshot.requireData;
-                                  return SizedBox(
-                                    height: 400,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        TextWidget(
-                                          text: 'Your Team',
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Container(
-                                          width: double.infinity,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                            color: Colors.brown[100]!
-                                                .withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              TextWidget(
-                                                text: comData.docs
-                                                    .first['communityName'],
-                                                fontSize: 20,
-                                                color: Colors.white,
-                                                fontFamily: 'Bold',
-                                              ),
-                                              const SizedBox(
-                                                height: 10,
-                                              ),
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    left: 20, right: 20),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  children: [
-                                                    CircleAvatar(
-                                                      minRadius: 50,
-                                                      maxRadius: 50,
-                                                      backgroundImage:
-                                                          NetworkImage(
-                                                              data['imageUrl']),
-                                                    ),
-                                                    const SizedBox(
-                                                      width: 20,
-                                                    ),
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        TextWidget(
-                                                          text: comData
-                                                                  .docs.first[
-                                                              'communityDescription'],
-                                                          fontSize: 20,
-                                                          color: Colors.white,
-                                                          fontFamily: 'Bold',
-                                                        ),
-                                                        TextWidget(
-                                                          text:
-                                                              '@${comData.docs.first['communityAdmin']}',
-                                                          fontSize: 12,
-                                                          color: Colors.grey,
-                                                          fontFamily: 'Regular',
-                                                        ),
-                                                      ],
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 10,
-                                        ),
-                                        TextWidget(
-                                          text: 'Enemy Team',
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        const SizedBox(
-                                          height: 5,
-                                        ),
-                                        Container(
-                                          width: double.infinity,
-                                          height: 150,
-                                          decoration: BoxDecoration(
-                                            color: Colors.brown[100]!
-                                                .withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: selected
-                                              ? Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    TextWidget(
-                                                      text: name,
-                                                      fontSize: 20,
-                                                      color: Colors.white,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              left: 20,
-                                                              right: 20),
-                                                      child: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Image.asset(
-                                                            'assets/images/Ellipse 1849 (1).png',
-                                                            height: 75,
+                                  final newData = snapshot.requireData;
+
+                                  return newData.docs.isNotEmpty
+                                      ? StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('community')
+                                              // .where('status', isEqualTo: 'Completed')
+                                              .where('communityId',
+                                                  isEqualTo: newData
+                                                      .docs.first['team1'])
+                                              .snapshots(),
+                                          builder: (BuildContext context,
+                                              AsyncSnapshot<QuerySnapshot>
+                                                  snapshot) {
+                                            if (snapshot.hasError) {
+                                              print(snapshot.error);
+                                              return const Center(
+                                                  child: Text('Error'));
+                                            }
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const Padding(
+                                                padding:
+                                                    EdgeInsets.only(top: 50),
+                                                child: Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                  color: Colors.black,
+                                                )),
+                                              );
+                                            }
+
+                                            final comData =
+                                                snapshot.requireData;
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback(
+                                                    (timeStamp) {
+                                              if (!selected) {
+                                                setState(() {
+                                                  selected = true;
+                                                });
+                                              }
+                                            });
+                                            return SizedBox(
+                                              height: 400,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  TextWidget(
+                                                    text: 'Your Team',
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  StreamBuilder<QuerySnapshot>(
+                                                      stream: FirebaseFirestore
+                                                          .instance
+                                                          .collection(
+                                                              'community')
+                                                          // .where('status', isEqualTo: 'Completed')
+                                                          .where('communityId',
+                                                              isEqualTo: data[
+                                                                  'communityId'])
+                                                          .snapshots(),
+                                                      builder: (BuildContext
+                                                              context,
+                                                          AsyncSnapshot<
+                                                                  QuerySnapshot>
+                                                              snapshot) {
+                                                        if (snapshot.hasError) {
+                                                          print(snapshot.error);
+                                                          return const Center(
+                                                              child: Text(
+                                                                  'Error'));
+                                                        }
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const Padding(
+                                                            padding:
+                                                                EdgeInsets.only(
+                                                                    top: 50),
+                                                            child: Center(
+                                                                child:
+                                                                    CircularProgressIndicator(
+                                                              color:
+                                                                  Colors.black,
+                                                            )),
+                                                          );
+                                                        }
+
+                                                        final myData = snapshot
+                                                            .requireData;
+                                                        return Container(
+                                                          width:
+                                                              double.infinity,
+                                                          height: 150,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors
+                                                                .brown[100]!
+                                                                .withOpacity(
+                                                                    0.2),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
                                                           ),
-                                                          const SizedBox(
-                                                            width: 20,
-                                                          ),
-                                                          Column(
+                                                          child: Column(
                                                             crossAxisAlignment:
                                                                 CrossAxisAlignment
-                                                                    .start,
+                                                                    .center,
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
-                                                                    .start,
+                                                                    .center,
                                                             children: [
                                                               TextWidget(
-                                                                text: desc,
+                                                                text: myData
+                                                                        .docs
+                                                                        .first[
+                                                                    'communityName'],
                                                                 fontSize: 20,
                                                                 color: Colors
                                                                     .white,
                                                                 fontFamily:
                                                                     'Bold',
                                                               ),
-                                                              TextWidget(
-                                                                text: '@$admin',
-                                                                fontSize: 12,
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontFamily:
-                                                                    'Regular',
+                                                              const SizedBox(
+                                                                height: 10,
+                                                              ),
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        left:
+                                                                            20,
+                                                                        right:
+                                                                            20),
+                                                                child: Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    CircleAvatar(
+                                                                      minRadius:
+                                                                          50,
+                                                                      maxRadius:
+                                                                          50,
+                                                                      backgroundImage:
+                                                                          NetworkImage(
+                                                                              data['imageUrl']),
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 20,
+                                                                    ),
+                                                                    Column(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .start,
+                                                                      children: [
+                                                                        Row(
+                                                                          mainAxisAlignment:
+                                                                              MainAxisAlignment.start,
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            TextWidget(
+                                                                              text: myData.docs.first['communityDescription'],
+                                                                              fontSize: 20,
+                                                                              color: Colors.white,
+                                                                              fontFamily: 'Bold',
+                                                                            ),
+                                                                            const SizedBox(
+                                                                              width: 10,
+                                                                            ),
+                                                                            Container(
+                                                                              decoration: BoxDecoration(color: Colors.grey.withOpacity(0.5), borderRadius: BorderRadius.circular(100)),
+                                                                              child: Padding(
+                                                                                padding: const EdgeInsets.only(left: 10, right: 10),
+                                                                                child: TextWidget(
+                                                                                  text: 'Host',
+                                                                                  fontSize: 12,
+                                                                                  color: Colors.white,
+                                                                                  fontFamily: 'Bold',
+                                                                                ),
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                        TextWidget(
+                                                                          text:
+                                                                              '@${myData.docs.first['communityAdmin']}',
+                                                                          fontSize:
+                                                                              12,
+                                                                          color:
+                                                                              Colors.grey,
+                                                                          fontFamily:
+                                                                              'Regular',
+                                                                        ),
+                                                                      ],
+                                                                    )
+                                                                  ],
+                                                                ),
                                                               ),
                                                             ],
-                                                          )
-                                                        ],
-                                                      ),
+                                                          ),
+                                                        );
+                                                      }),
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  TextWidget(
+                                                    text: 'Enemy Team',
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  Container(
+                                                    width: double.infinity,
+                                                    height: 150,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.brown[100]!
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
                                                     ),
-                                                  ],
-                                                )
-                                              : GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      selectedteams = true;
-                                                    });
-                                                  },
-                                                  child: Center(
                                                     child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment
                                                               .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
                                                       children: [
                                                         TextWidget(
-                                                          text: 'No Team',
-                                                          fontSize: 18,
-                                                          color: Colors.grey,
+                                                          text: comData
+                                                                  .docs.first[
+                                                              'communityName'],
+                                                          fontSize: 20,
+                                                          color: Colors.white,
                                                           fontFamily: 'Bold',
                                                         ),
                                                         const SizedBox(
                                                           height: 10,
                                                         ),
-                                                        Container(
-                                                          width: 300,
-                                                          height: 100,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            border: Border.all(
-                                                              color:
-                                                                  Colors.grey,
-                                                            ),
-                                                          ),
-                                                          child: const Center(
-                                                            child: Icon(
-                                                              Icons
-                                                                  .question_mark,
-                                                              color:
-                                                                  Colors.grey,
-                                                            ),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  left: 20,
+                                                                  right: 20),
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              CircleAvatar(
+                                                                minRadius: 50,
+                                                                maxRadius: 50,
+                                                                backgroundImage:
+                                                                    NetworkImage(
+                                                                        data[
+                                                                            'imageUrl']),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 20,
+                                                              ),
+                                                              Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  TextWidget(
+                                                                    text: comData
+                                                                            .docs
+                                                                            .first[
+                                                                        'communityDescription'],
+                                                                    fontSize:
+                                                                        20,
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontFamily:
+                                                                        'Bold',
+                                                                  ),
+                                                                  TextWidget(
+                                                                    text:
+                                                                        '@${comData.docs.first['communityAdmin']}',
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .grey,
+                                                                    fontFamily:
+                                                                        'Regular',
+                                                                  ),
+                                                                ],
+                                                              )
+                                                            ],
                                                           ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                ),
-                                        ),
-                                        const SizedBox(
-                                          height: 10,
-                                        ),
-                                        selected
-                                            ? Align(
-                                                alignment:
-                                                    Alignment.bottomCenter,
-                                                child: ButtonWidget(
-                                                  radius: 15,
-                                                  width: double.infinity,
-                                                  color: Colors.amber,
-                                                  label: 'Pick a Route',
-                                                  textColor: Colors.black,
-                                                  onPressed: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              PickRouteScreeen(
-                                                                team1: data[
-                                                                    'communityId'],
-                                                                team2: id,
-                                                                team1name: comData
-                                                                        .docs
-                                                                        .first[
-                                                                    'communityName'],
-                                                                team2name: name,
-                                                              )),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            : const SizedBox(),
-                                      ],
-                                    ),
-                                  );
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  selected
+                                                      ? Align(
+                                                          alignment: Alignment
+                                                              .bottomCenter,
+                                                          child: ButtonWidget(
+                                                            radius: 15,
+                                                            width:
+                                                                double.infinity,
+                                                            color: Colors.amber,
+                                                            label:
+                                                                'Pick a Route',
+                                                            textColor:
+                                                                Colors.black,
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder:
+                                                                        (context) =>
+                                                                            PickRouteScreeen(
+                                                                              team1: data['communityId'],
+                                                                              team2: id,
+                                                                              team1name: comData.docs.first['communityName'],
+                                                                              team2name: name,
+                                                                            )),
+                                                              );
+                                                            },
+                                                          ),
+                                                        )
+                                                      : const SizedBox(),
+                                                ],
+                                              ),
+                                            );
+                                          })
+                                      : StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('community')
+                                              // .where('status', isEqualTo: 'Completed')
+                                              .where('communityId',
+                                                  isEqualTo:
+                                                      data['communityId'])
+                                              .snapshots(),
+                                          builder: (BuildContext context,
+                                              AsyncSnapshot<QuerySnapshot>
+                                                  snapshot) {
+                                            if (snapshot.hasError) {
+                                              print(snapshot.error);
+                                              return const Center(
+                                                  child: Text('Error'));
+                                            }
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return const Padding(
+                                                padding:
+                                                    EdgeInsets.only(top: 50),
+                                                child: Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                  color: Colors.black,
+                                                )),
+                                              );
+                                            }
+
+                                            final comData =
+                                                snapshot.requireData;
+                                            return SizedBox(
+                                              height: 400,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  TextWidget(
+                                                    text: 'Your Team',
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  Container(
+                                                    width: double.infinity,
+                                                    height: 150,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.brown[100]!
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        TextWidget(
+                                                          text: comData
+                                                                  .docs.first[
+                                                              'communityName'],
+                                                          fontSize: 20,
+                                                          color: Colors.white,
+                                                          fontFamily: 'Bold',
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 10,
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  left: 20,
+                                                                  right: 20),
+                                                          child: Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              CircleAvatar(
+                                                                minRadius: 50,
+                                                                maxRadius: 50,
+                                                                backgroundImage:
+                                                                    NetworkImage(
+                                                                        data[
+                                                                            'imageUrl']),
+                                                              ),
+                                                              const SizedBox(
+                                                                width: 20,
+                                                              ),
+                                                              Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .start,
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      TextWidget(
+                                                                        text: comData
+                                                                            .docs
+                                                                            .first['communityDescription'],
+                                                                        fontSize:
+                                                                            20,
+                                                                        color: Colors
+                                                                            .white,
+                                                                        fontFamily:
+                                                                            'Bold',
+                                                                      ),
+                                                                      const SizedBox(
+                                                                        width:
+                                                                            10,
+                                                                      ),
+                                                                      Container(
+                                                                        decoration: BoxDecoration(
+                                                                            color:
+                                                                                Colors.grey.withOpacity(0.5),
+                                                                            borderRadius: BorderRadius.circular(100)),
+                                                                        child:
+                                                                            Padding(
+                                                                          padding: const EdgeInsets
+                                                                              .only(
+                                                                              left: 10,
+                                                                              right: 10),
+                                                                          child:
+                                                                              TextWidget(
+                                                                            text:
+                                                                                'Host',
+                                                                            fontSize:
+                                                                                12,
+                                                                            color:
+                                                                                Colors.white,
+                                                                            fontFamily:
+                                                                                'Bold',
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  TextWidget(
+                                                                    text:
+                                                                        '@${comData.docs.first['communityAdmin']}',
+                                                                    fontSize:
+                                                                        12,
+                                                                    color: Colors
+                                                                        .grey,
+                                                                    fontFamily:
+                                                                        'Regular',
+                                                                  ),
+                                                                ],
+                                                              )
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  TextWidget(
+                                                    text: 'Enemy Team',
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 5,
+                                                  ),
+                                                  Container(
+                                                    width: double.infinity,
+                                                    height: 150,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.brown[100]!
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                    ),
+                                                    child: selected
+                                                        ? Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .center,
+                                                            children: [
+                                                              TextWidget(
+                                                                text: name,
+                                                                fontSize: 20,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontFamily:
+                                                                    'Bold',
+                                                              ),
+                                                              const SizedBox(
+                                                                height: 10,
+                                                              ),
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        left:
+                                                                            20,
+                                                                        right:
+                                                                            20),
+                                                                child: Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    Image.asset(
+                                                                      'assets/images/Ellipse 1849 (1).png',
+                                                                      height:
+                                                                          75,
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 20,
+                                                                    ),
+                                                                    Column(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .start,
+                                                                      children: [
+                                                                        TextWidget(
+                                                                          text:
+                                                                              desc,
+                                                                          fontSize:
+                                                                              20,
+                                                                          color:
+                                                                              Colors.white,
+                                                                          fontFamily:
+                                                                              'Bold',
+                                                                        ),
+                                                                        TextWidget(
+                                                                          text:
+                                                                              '@$admin',
+                                                                          fontSize:
+                                                                              12,
+                                                                          color:
+                                                                              Colors.grey,
+                                                                          fontFamily:
+                                                                              'Regular',
+                                                                        ),
+                                                                      ],
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          )
+                                                        : GestureDetector(
+                                                            onTap: () {
+                                                              setState(() {
+                                                                selectedteams =
+                                                                    true;
+                                                              });
+                                                            },
+                                                            child: Center(
+                                                              child: Column(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  TextWidget(
+                                                                    text:
+                                                                        'No Team',
+                                                                    fontSize:
+                                                                        18,
+                                                                    color: Colors
+                                                                        .grey,
+                                                                    fontFamily:
+                                                                        'Bold',
+                                                                  ),
+                                                                  const SizedBox(
+                                                                    height: 10,
+                                                                  ),
+                                                                  Container(
+                                                                    width: 300,
+                                                                    height: 100,
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      border:
+                                                                          Border
+                                                                              .all(
+                                                                        color: Colors
+                                                                            .grey,
+                                                                      ),
+                                                                    ),
+                                                                    child:
+                                                                        const Center(
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .question_mark,
+                                                                        color: Colors
+                                                                            .grey,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: 10,
+                                                  ),
+                                                  selected
+                                                      ? Align(
+                                                          alignment: Alignment
+                                                              .bottomCenter,
+                                                          child: ButtonWidget(
+                                                            radius: 15,
+                                                            width:
+                                                                double.infinity,
+                                                            color: Colors.amber,
+                                                            label:
+                                                                'Pick a Route',
+                                                            textColor:
+                                                                Colors.black,
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder:
+                                                                        (context) =>
+                                                                            PickRouteScreeen(
+                                                                              team1: data['communityId'],
+                                                                              team2: id,
+                                                                              team1name: comData.docs.first['communityName'],
+                                                                              team2name: name,
+                                                                            )),
+                                                              );
+                                                            },
+                                                          ),
+                                                        )
+                                                      : const SizedBox(),
+                                                ],
+                                              ),
+                                            );
+                                          });
                                 }),
                     const SizedBox(
                       height: 10,
