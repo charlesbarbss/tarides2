@@ -7,8 +7,9 @@ import 'package:tarides/ProfileTabs/profileTab.dart';
 import 'package:tarides/ProfileTabs/progressTab.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required this.email});
+  const ProfileScreen({super.key, required this.email, this.index = 0});
   final String email;
+  final int? index;
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -17,6 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
+      initialIndex: widget.index!,
       length: 3,
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -24,7 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
-                icon: Icon(Icons.logout),
+                icon: const Icon(Icons.logout),
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut().then(
                         (value) => Navigator.pushReplacement(
@@ -37,14 +39,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }),
           ],
           backgroundColor: Colors.black,
-          title: Text(
+          title: const Text(
             'Profile',
             style: TextStyle(color: Colors.white),
           ),
         ),
         body: Column(
           children: [
-            TabBar(
+            const TabBar(
               dividerColor: Colors.white,
               indicatorColor: Colors.red,
               tabs: [
@@ -63,8 +65,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: TabBarView(
                 children: [
                   ProfileTab(email: widget.email),
-                  AchievmentsTab(),
-                  ProgressTab(),
+                  const AchievmentsTab(),
+                  const ProgressTab(),
                 ],
               ),
             ),

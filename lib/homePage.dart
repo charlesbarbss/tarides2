@@ -9,12 +9,12 @@ import 'package:tarides/Controller/userController.dart';
 import 'BottomNav/ridesScreen.dart';
 import 'BottomNav/communityScreeen.dart';
 
+int selectedPageIndex = 0;
+
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.email,
-  });
+  const HomePage({super.key, required this.email, this.index = 0});
   final String email;
+  final int? index;
 
   @override
   State<HomePage> createState() {
@@ -23,8 +23,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedPageIndex = 2;
-
   UserController userController = UserController();
 
   @override
@@ -37,9 +35,9 @@ class _HomePageState extends State<HomePage> {
 
   void selectedPage(int index) {
     setState(() {
-      _selectedPageIndex = index;
+      selectedPageIndex = index;
     });
-    print(_selectedPageIndex);
+    print(selectedPageIndex);
   }
 
   @override
@@ -48,19 +46,22 @@ class _HomePageState extends State<HomePage> {
       email: widget.email,
     );
 
-    if (_selectedPageIndex == 1) {
+    if (selectedPageIndex == 1) {
       activePage = const PreRidesScreen();
     }
 
-    if (_selectedPageIndex == 2) {
-      activePage = const PedalScreeen();
+    if (selectedPageIndex == 2) {
+      activePage = PedalScreeen(
+        email: widget.email,
+      );
     }
 
-    if (_selectedPageIndex == 3) {
+    if (selectedPageIndex == 3) {
       activePage = const Goal30Screen();
     }
-    if (_selectedPageIndex == 4) {
+    if (selectedPageIndex == 4) {
       activePage = ProfileScreen(
+        index: widget.index,
         email: widget.email,
       );
     }
@@ -70,10 +71,10 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
         onTap: selectedPage,
-        currentIndex: _selectedPageIndex,
+        currentIndex: selectedPageIndex,
         fixedColor: const Color(0x3ffff0000),
         items: [
-          if (_selectedPageIndex == 0)
+          if (selectedPageIndex == 0)
             BottomNavigationBarItem(
               icon: Image.asset(
                 'assets/images/Community.png',
@@ -94,7 +95,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Community',
               backgroundColor: Colors.black,
             ),
-          if (_selectedPageIndex == 1)
+          if (selectedPageIndex == 1)
             BottomNavigationBarItem(
               icon: Image.asset(
                 'assets/images/Rides.png',
@@ -112,7 +113,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Rides',
               backgroundColor: Colors.black,
             ),
-          if (_selectedPageIndex == 2)
+          if (selectedPageIndex == 2)
             BottomNavigationBarItem(
               icon: Image.asset(
                 'assets/images/Pedal.png',
@@ -130,7 +131,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Pedal',
               backgroundColor: Colors.black,
             ),
-          if (_selectedPageIndex == 3)
+          if (selectedPageIndex == 3)
             BottomNavigationBarItem(
               icon: Image.asset(
                 'assets/images/Goal30.png',
@@ -148,7 +149,7 @@ class _HomePageState extends State<HomePage> {
               label: 'Goal 30',
               backgroundColor: Colors.black,
             ),
-          if (_selectedPageIndex == 4)
+          if (selectedPageIndex == 4)
             BottomNavigationBarItem(
               icon: Image.asset(
                 'assets/images/Profile.png',
