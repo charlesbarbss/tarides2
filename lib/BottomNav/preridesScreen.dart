@@ -89,41 +89,45 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                     const SizedBox(
                       height: 20,
                     ),
-                    Container(
-                      height: 45,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.white,
-                          ),
-                          borderRadius: BorderRadius.circular(100)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10, right: 10),
-                        child: TextFormField(
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'Regular',
-                              fontSize: 14),
-                          onChanged: (value) {
-                            setState(() {
-                              nameSearched = value;
-                            });
-                          },
-                          decoration: const InputDecoration(
-                              labelStyle: TextStyle(
-                                color: Colors.white,
+                    selectedteams
+                        ? Container(
+                            height: 45,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white,
+                                ),
+                                borderRadius: BorderRadius.circular(100)),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 10, right: 10),
+                              child: TextFormField(
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Regular',
+                                    fontSize: 14),
+                                onChanged: (value) {
+                                  setState(() {
+                                    nameSearched = value;
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                    labelStyle: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                    hintText: 'Search',
+                                    hintStyle: TextStyle(
+                                        fontFamily: 'QRegular',
+                                        color: Colors.white),
+                                    suffixIcon: Icon(
+                                      Icons.search,
+                                      color: Colors.grey,
+                                    )),
+                                controller: searchController,
                               ),
-                              hintText: 'Search',
-                              hintStyle: TextStyle(
-                                  fontFamily: 'QRegular', color: Colors.white),
-                              suffixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey,
-                              )),
-                          controller: searchController,
-                        ),
-                      ),
-                    ),
+                            ),
+                          )
+                        : const SizedBox(),
                     const SizedBox(
                       height: 10,
                     ),
@@ -339,7 +343,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                                               CrossAxisAlignment.start,
                                                                           children: [
                                                                             TextWidget(
-                                                                              text: myData.docs.first['communityDescription'],
+                                                                              text: data['firstName'],
                                                                               fontSize: 20,
                                                                               color: Colors.white,
                                                                               fontFamily: 'Bold',
@@ -363,7 +367,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                                         ),
                                                                         TextWidget(
                                                                           text:
-                                                                              '@${myData.docs.first['communityAdmin']}',
+                                                                              '@${data['username']}',
                                                                           fontSize:
                                                                               12,
                                                                           color:
@@ -391,95 +395,129 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                   const SizedBox(
                                                     height: 5,
                                                   ),
-                                                  Container(
-                                                    width: double.infinity,
-                                                    height: 150,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.brown[100]!
-                                                          .withOpacity(0.2),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
-                                                    ),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        TextWidget(
-                                                          text: comData
-                                                                  .docs.first[
-                                                              'communityName'],
-                                                          fontSize: 20,
-                                                          color: Colors.white,
-                                                          fontFamily: 'Bold',
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 10,
-                                                        ),
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 20,
-                                                                  right: 20),
-                                                          child: Row(
+                                                  StreamBuilder<
+                                                          DocumentSnapshot>(
+                                                      stream: FirebaseFirestore
+                                                          .instance
+                                                          .collection('user')
+                                                          .doc(userId)
+                                                          .snapshots(),
+                                                      builder: (context,
+                                                          AsyncSnapshot<
+                                                                  DocumentSnapshot>
+                                                              snapshot) {
+                                                        if (!snapshot.hasData) {
+                                                          return const SizedBox();
+                                                        } else if (snapshot
+                                                            .hasError) {
+                                                          return const Center(
+                                                              child: Text(
+                                                                  'Something went wrong'));
+                                                        } else if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox();
+                                                        }
+                                                        dynamic enemyData =
+                                                            snapshot.data;
+
+                                                        return Container(
+                                                          width:
+                                                              double.infinity,
+                                                          height: 150,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors
+                                                                .brown[100]!
+                                                                .withOpacity(
+                                                                    0.2),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                          ),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .center,
                                                             mainAxisAlignment:
                                                                 MainAxisAlignment
-                                                                    .start,
+                                                                    .center,
                                                             children: [
-                                                              CircleAvatar(
-                                                                minRadius: 50,
-                                                                maxRadius: 50,
-                                                                backgroundImage:
-                                                                    NetworkImage(
-                                                                        data[
-                                                                            'imageUrl']),
+                                                              TextWidget(
+                                                                text: name,
+                                                                fontSize: 20,
+                                                                color: Colors
+                                                                    .white,
+                                                                fontFamily:
+                                                                    'Bold',
                                                               ),
                                                               const SizedBox(
-                                                                width: 20,
+                                                                height: 10,
                                                               ),
-                                                              Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  TextWidget(
-                                                                    text: comData
-                                                                            .docs
-                                                                            .first[
-                                                                        'communityDescription'],
-                                                                    fontSize:
-                                                                        20,
-                                                                    color: Colors
-                                                                        .white,
-                                                                    fontFamily:
-                                                                        'Bold',
-                                                                  ),
-                                                                  TextWidget(
-                                                                    text:
-                                                                        '@${comData.docs.first['communityAdmin']}',
-                                                                    fontSize:
-                                                                        12,
-                                                                    color: Colors
-                                                                        .grey,
-                                                                    fontFamily:
-                                                                        'Regular',
-                                                                  ),
-                                                                ],
-                                                              )
+                                                              Padding(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .only(
+                                                                        left:
+                                                                            20,
+                                                                        right:
+                                                                            20),
+                                                                child: Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .start,
+                                                                  children: [
+                                                                    CircleAvatar(
+                                                                      minRadius:
+                                                                          50,
+                                                                      maxRadius:
+                                                                          50,
+                                                                      backgroundImage:
+                                                                          NetworkImage(
+                                                                              enemyData['imageUrl']),
+                                                                    ),
+                                                                    const SizedBox(
+                                                                      width: 20,
+                                                                    ),
+                                                                    Column(
+                                                                      crossAxisAlignment:
+                                                                          CrossAxisAlignment
+                                                                              .start,
+                                                                      mainAxisAlignment:
+                                                                          MainAxisAlignment
+                                                                              .start,
+                                                                      children: [
+                                                                        TextWidget(
+                                                                          text:
+                                                                              enemyData['firstName'],
+                                                                          fontSize:
+                                                                              20,
+                                                                          color:
+                                                                              Colors.white,
+                                                                          fontFamily:
+                                                                              'Bold',
+                                                                        ),
+                                                                        TextWidget(
+                                                                          text:
+                                                                              '@${enemyData['username']}',
+                                                                          fontSize:
+                                                                              12,
+                                                                          color:
+                                                                              Colors.grey,
+                                                                          fontFamily:
+                                                                              'Regular',
+                                                                        ),
+                                                                      ],
+                                                                    )
+                                                                  ],
+                                                                ),
+                                                              ),
                                                             ],
                                                           ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
+                                                        );
+                                                      }),
                                                   const SizedBox(
                                                     height: 10,
                                                   ),
@@ -630,9 +668,8 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                                             .start,
                                                                     children: [
                                                                       TextWidget(
-                                                                        text: comData
-                                                                            .docs
-                                                                            .first['communityDescription'],
+                                                                        text: data[
+                                                                            'firstName'],
                                                                         fontSize:
                                                                             20,
                                                                         color: Colors
@@ -672,7 +709,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                                   ),
                                                                   TextWidget(
                                                                     text:
-                                                                        '@${comData.docs.first['communityAdmin']}',
+                                                                        '@${data['username']}',
                                                                     fontSize:
                                                                         12,
                                                                     color: Colors
@@ -932,14 +969,15 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
   String desc = '';
   String admin = '';
   String id = '';
+  String userId = '';
 
   Widget searchScreen() {
     return StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('community')
-            .where('communityName',
+            .collection('user')
+            .where('firstName',
                 isGreaterThanOrEqualTo: toBeginningOfSentenceCase(nameSearched))
-            .where('communityName',
+            .where('firstName',
                 isLessThan: '${toBeginningOfSentenceCase(nameSearched)}z')
             .snapshots(),
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -963,79 +1001,108 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
             child: ListView.builder(
               itemCount: data.docs.length,
               itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 5, bottom: 5),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedteams = false;
-                        selected = true;
-                        name = data.docs[index]['communityName'];
-                        desc = data.docs[index]['communityDescription'];
-                        admin = data.docs[index]['communityAdmin'];
-                        id = data.docs[index]['communityId'];
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.brown[100]!.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextWidget(
-                            text: data.docs[index]['communityName'],
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontFamily: 'Bold',
-                          ),
-                          const SizedBox(
-                            height: 10,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 20, right: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
+                return StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('community')
+                        .where('communityId',
+                            isEqualTo: data.docs[index]['communityId'])
+                        .snapshots(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<QuerySnapshot> snapshot) {
+                      if (snapshot.hasError) {
+                        print(snapshot.error);
+                        return const Center(child: Text('Error'));
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.only(top: 50),
+                          child: Center(
+                              child: CircularProgressIndicator(
+                            color: Colors.black,
+                          )),
+                        );
+                      }
+
+                      final comData = snapshot.requireData;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 5, bottom: 5),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedteams = false;
+                              selected = true;
+                              name = comData.docs.first['communityName'];
+                              desc = data.docs[index]['firstName'];
+                              admin = data.docs[index]['username'];
+                              id = data.docs[index]['communityId'];
+                              userId = data.docs[index].id;
+
+                              print(data.docs[index]['firstName']);
+                            });
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.brown[100]!.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Image.asset(
-                                  'assets/images/Ellipse 1849.png',
-                                  height: 75,
+                                TextWidget(
+                                  text: comData.docs.first['communityName'],
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontFamily: 'Bold',
                                 ),
                                 const SizedBox(
-                                  width: 20,
+                                  height: 10,
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    TextWidget(
-                                      text: data.docs[index]
-                                          ['communityDescription'],
-                                      fontSize: 20,
-                                      color: Colors.white,
-                                      fontFamily: 'Bold',
-                                    ),
-                                    TextWidget(
-                                      text:
-                                          '@${data.docs[index]['communityAdmin']}',
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                      fontFamily: 'Regular',
-                                    ),
-                                  ],
-                                )
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 20, right: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Image.asset(
+                                        'assets/images/Ellipse 1849.png',
+                                        height: 75,
+                                      ),
+                                      const SizedBox(
+                                        width: 20,
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          TextWidget(
+                                            text: data.docs[index]['firstName'],
+                                            fontSize: 20,
+                                            color: Colors.white,
+                                            fontFamily: 'Bold',
+                                          ),
+                                          TextWidget(
+                                            text:
+                                                '@${data.docs[index]['username']}',
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontFamily: 'Regular',
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
+                        ),
+                      );
+                    });
               },
             ),
           );
