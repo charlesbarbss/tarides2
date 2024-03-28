@@ -1244,7 +1244,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
     setState(() {
       _poly1 = Polyline(
           color: Colors.red,
-          polylineId: const PolylineId('route'),
+          polylineId: const PolylineId('route1'),
           points: polylineCoordinates,
           width: 4);
     });
@@ -1292,7 +1292,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
     setState(() {
       _poly2 = Polyline(
           color: Colors.red,
-          polylineId: const PolylineId('route'),
+          polylineId: const PolylineId('route2'),
           points: polylineCoordinates,
           width: 4);
     });
@@ -1348,7 +1348,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
     setState(() {
       _poly3 = Polyline(
           color: Colors.red,
-          polylineId: const PolylineId('route'),
+          polylineId: const PolylineId('route3'),
           points: polylineCoordinates,
           width: 4);
     });
