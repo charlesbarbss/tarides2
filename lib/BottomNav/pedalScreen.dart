@@ -91,8 +91,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("pickup"),
         position: LatLng(lat1, long1),
-        infoWindow: const InfoWindow(
-            title: 'Starting Point', snippet: 'Starting Point')));
+        infoWindow: InfoWindow(title: 'Starting Point', snippet: pickup)));
   }
 
   addMyMarker12(lat1, long1) async {
@@ -106,8 +105,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("dropOff"),
         position: LatLng(lat1, long1),
-        infoWindow:
-            const InfoWindow(title: 'Ending Point', snippet: 'Ending Point')));
+        infoWindow: InfoWindow(title: 'Ending Point', snippet: second)));
   }
 
   addMyMarker123(lat1, long1) async {
@@ -119,10 +117,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
           });
         },
         icon: BitmapDescriptor.defaultMarker,
-        markerId: const MarkerId("dropOff"),
+        markerId: const MarkerId("dropOff1"),
         position: LatLng(lat1, long1),
-        infoWindow:
-            const InfoWindow(title: 'Ending Point', snippet: 'Ending Point')));
+        infoWindow: InfoWindow(title: 'Ending Point', snippet: drop)));
   }
 
   late String pickup = '';
@@ -1182,7 +1179,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
     setState(() {
       _poly2 = Polyline(
           color: Colors.blue,
-          polylineId: const PolylineId('route'),
+          polylineId: const PolylineId('route1'),
           points: polylineCoordinates,
           width: 4);
     });
