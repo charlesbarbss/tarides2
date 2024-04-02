@@ -697,7 +697,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                   height: 50,
                                                   label: 'Start',
                                                   onPressed: () {
-                                                    if (pickup != '' &&
+                                                    if (second != '' &&
                                                         drop != '') {
                                                       setState(() {
                                                         isclicked = true;

@@ -15,10 +15,10 @@ import '../../widgets/dialog_widget.dart';
 import '../rides_pages/race_logs_page.dart';
 
 class MapPage extends StatefulWidget {
-  final LatLng loc1;
-  final LatLng loc2;
-  final LatLng loc3;
-  final LatLng loc4;
+  LatLng loc1;
+  LatLng loc2;
+  LatLng loc3;
+  LatLng loc4;
   final String location1;
   final String location2;
   final String location3;
@@ -75,6 +75,11 @@ class _MapPageState extends State<MapPage> {
 
   addMyMarker1() async {
     markers.add(Marker(
+        onDragEnd: (value) {
+          setState(() {
+            widget.loc1 = value;
+          });
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("pickup"),
         position: LatLng(widget.loc1.latitude, widget.loc1.longitude),
@@ -83,6 +88,11 @@ class _MapPageState extends State<MapPage> {
 
   addMyMarker12() async {
     markers.add(Marker(
+        onDragEnd: (value) {
+          setState(() {
+            widget.loc2 = value;
+          });
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("dropOff"),
         position: LatLng(widget.loc2.latitude, widget.loc2.longitude),
@@ -91,6 +101,11 @@ class _MapPageState extends State<MapPage> {
 
   addMyMarker123() async {
     markers.add(Marker(
+      onDragEnd: (value) {
+        setState(() {
+          widget.loc3 = value;
+        });
+      },
       icon: BitmapDescriptor.defaultMarker,
       markerId: const MarkerId("dropOff1"),
       position: LatLng(widget.loc3.latitude, widget.loc3.longitude),
@@ -99,6 +114,11 @@ class _MapPageState extends State<MapPage> {
 
   addMyMarker124() async {
     markers.add(Marker(
+      onDragEnd: (value) {
+        setState(() {
+          widget.loc4 = value;
+        });
+      },
       icon: BitmapDescriptor.defaultMarker,
       markerId: const MarkerId("dropOff2"),
       position: LatLng(widget.loc4.latitude, widget.loc4.longitude),
