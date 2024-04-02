@@ -465,7 +465,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       height: 35,
                                                       label: 'Save route',
                                                       onPressed: () {
-                                                        if (pickup != '' &&
+                                                        if (second != '' &&
                                                             drop != '') {
                                                           showsaverouteDialog();
                                                         }
@@ -752,40 +752,35 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                         (context, index) {
                                                       return GestureDetector(
                                                         onTap: () {
-                                                          setState(() {
-                                                            drop =
-                                                                data.docs[index]
-                                                                    ['end1'];
-                                                            pickup =
-                                                                data.docs[index]
-                                                                    ['start'];
+                                                          drop =
+                                                              data.docs[index]
+                                                                  ['end1'];
+                                                          pickup =
+                                                              data.docs[index]
+                                                                  ['start'];
 
-                                                            second =
-                                                                data.docs[index]
-                                                                    ['end'];
+                                                          second =
+                                                              data.docs[index]
+                                                                  ['end'];
 
-                                                            dropOff = LatLng(
-                                                                data.docs[index]
-                                                                    ['endLat1'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'endLong1']);
+                                                          dropOff = LatLng(
+                                                              data.docs[index]
+                                                                  ['endLat1'],
+                                                              data.docs[index]
+                                                                  ['endLong1']);
 
-                                                            secondLoc = LatLng(
-                                                                data.docs[index]
-                                                                    ['endLat'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'endLong']);
+                                                          secondLoc = LatLng(
+                                                              data.docs[index]
+                                                                  ['endLat'],
+                                                              data.docs[index]
+                                                                  ['endLong']);
 
-                                                            pickUp = LatLng(
-                                                                data.docs[index]
-                                                                    [
-                                                                    'startLat'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'startLong']);
-                                                          });
+                                                          pickUp = LatLng(
+                                                              data.docs[index]
+                                                                  ['startLat'],
+                                                              data.docs[index][
+                                                                  'startLong']);
+                                                          setState(() {});
                                                         },
                                                         child: Row(
                                                           crossAxisAlignment:
