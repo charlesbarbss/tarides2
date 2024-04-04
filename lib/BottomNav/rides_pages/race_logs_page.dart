@@ -61,6 +61,8 @@ class _RaceLogsPageState extends State<RaceLogsPage> {
               StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection('Rides')
+                      .where('userId',
+                          isEqualTo: FirebaseAuth.instance.currentUser!.uid)
                       .where('status', isEqualTo: 'Finished')
                       .snapshots(),
                   builder: (BuildContext context,

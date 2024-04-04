@@ -154,6 +154,10 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
+    CameraPosition kGooglePlex = CameraPosition(
+      target: LatLng(widget.loc1.latitude, widget.loc1.longitude),
+      zoom: 14.4746,
+    );
     return Scaffold(
       backgroundColor: Colors.black,
       body: hasloaded
@@ -200,7 +204,7 @@ class _MapPageState extends State<MapPage> {
                       zoomControlsEnabled: true,
                       myLocationButtonEnabled: true,
                       mapType: MapType.normal,
-                      initialCameraPosition: _kGooglePlex,
+                      initialCameraPosition: kGooglePlex,
                       onMapCreated: (GoogleMapController controller) {
                         _controller.complete(controller);
                       },
@@ -251,7 +255,9 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: widget.time,
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : widget.time,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -268,7 +274,9 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: widget.distance,
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : widget.distance,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -299,8 +307,10 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text:
-                                                      speed.toStringAsFixed(2),
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : speed
+                                                          .toStringAsFixed(2),
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -361,7 +371,9 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: widget.time,
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : widget.time,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -378,7 +390,9 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: widget.distance,
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : widget.distance,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -409,7 +423,9 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: '$speed',
+                                                  text: speed == 0
+                                                      ? '0.0'
+                                                      : '$speed',
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -581,11 +597,6 @@ class _MapPageState extends State<MapPage> {
 
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(10.3157, 123.8854),
-    zoom: 14.4746,
-  );
 
   showhangtightDialog() {
     showDialog(

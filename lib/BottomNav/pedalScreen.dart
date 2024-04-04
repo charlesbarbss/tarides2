@@ -12,6 +12,7 @@ import 'package:tarides/homePage.dart';
 import 'package:tarides/services/add_favs.dart';
 import 'package:tarides/services/add_pedal.dart';
 import 'package:tarides/utils/distance_calculations.dart';
+import 'package:tarides/utils/get_location.dart';
 import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
@@ -45,6 +46,12 @@ class _PedalScreeenState extends State<PedalScreeen> {
         });
 
         addMyMarker1(position.latitude, position.longitude);
+        getAddressFromLatLng(position.latitude, position.longitude)
+            .then((value) {
+          setState(() {
+            pickup = value;
+          });
+        });
         mapController!.animateCamera(CameraUpdate.newCameraPosition(
             CameraPosition(
                 zoom: 14.4746,
@@ -73,6 +80,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
   Set<Marker> markers = {};
 
   List<LatLng> polylineCoordinates = [];
+  List<LatLng> polylineCoordinates1 = [];
   PolylinePoints polylinePoints = PolylinePoints();
 
   late LatLng pickUp;
@@ -83,8 +91,45 @@ class _PedalScreeenState extends State<PedalScreeen> {
   addMyMarker1(lat1, long1) async {
     markers.add(Marker(
         draggable: true,
-        onDragEnd: (value) {
+        onDragEnd: (value) async {
+          pickup = await getAddressFromLatLng(value.latitude, value.longitude);
+
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(value.latitude, value.longitude),
+                    PointLatLng(secondLoc.latitude, secondLoc.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+              kGoogleApiKey,
+              PointLatLng(secondLoc.latitude, secondLoc.longitude),
+              PointLatLng(dropOff.latitude, dropOff.longitude),
+            );
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+          }
           setState(() {
+            _poly = Polyline(
+                color: Colors.red,
+                polylineId: const PolylineId('route'),
+                points: polylineCoordinates,
+                width: 4);
+
+            _poly2 = Polyline(
+                color: Colors.blue,
+                polylineId: const PolylineId('route1'),
+                points: polylineCoordinates1,
+                width: 4);
             pickUp = value;
           });
         },
@@ -97,22 +142,94 @@ class _PedalScreeenState extends State<PedalScreeen> {
   addMyMarker12(lat1, long1) async {
     markers.add(Marker(
         draggable: true,
-        onDragEnd: (value) {
+        onDragEnd: (value) async {
+          second = await getAddressFromLatLng(value.latitude, value.longitude);
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(pickUp.latitude, pickUp.longitude),
+                    PointLatLng(value.latitude, value.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+              kGoogleApiKey,
+              PointLatLng(value.latitude, value.longitude),
+              PointLatLng(dropOff.latitude, dropOff.longitude),
+            );
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+          }
           setState(() {
-            dropOff = value;
+            _poly = Polyline(
+                color: Colors.red,
+                polylineId: const PolylineId('route'),
+                points: polylineCoordinates,
+                width: 4);
+
+            _poly2 = Polyline(
+                color: Colors.blue,
+                polylineId: const PolylineId('route1'),
+                points: polylineCoordinates1,
+                width: 4);
+            secondLoc = value;
           });
         },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("dropOff"),
         position: LatLng(lat1, long1),
-        infoWindow: InfoWindow(title: 'Ending Point', snippet: second)));
+        infoWindow: InfoWindow(title: 'Second Point', snippet: second)));
   }
 
   addMyMarker123(lat1, long1) async {
     markers.add(Marker(
         draggable: true,
-        onDragEnd: (value) {
+        onDragEnd: (value) async {
+          drop = await getAddressFromLatLng(value.latitude, value.longitude);
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(pickUp.latitude, pickUp.longitude),
+                    PointLatLng(secondLoc.latitude, secondLoc.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+              kGoogleApiKey,
+              PointLatLng(secondLoc.latitude, secondLoc.longitude),
+              PointLatLng(value.latitude, value.longitude),
+            );
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+          }
           setState(() {
+            _poly = Polyline(
+                color: Colors.red,
+                polylineId: const PolylineId('route'),
+                points: polylineCoordinates,
+                width: 4);
+
+            _poly2 = Polyline(
+                color: Colors.blue,
+                polylineId: const PolylineId('route1'),
+                points: polylineCoordinates1,
+                width: 4);
             dropOff = value;
           });
         },
@@ -179,6 +296,65 @@ class _PedalScreeenState extends State<PedalScreeen> {
                 child: Stack(
                   children: [
                     GoogleMap(
+                      onTap: (argument) async {
+                        if (second == '') {
+                          secondLoc = argument;
+                          second = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker12(argument.latitude, argument.longitude);
+
+                          setState(() {});
+                        } else if (drop == '') {
+                          dropOff = argument;
+                          drop = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker123(argument.latitude, argument.longitude);
+
+                          PolylineResult result =
+                              await polylinePoints.getRouteBetweenCoordinates(
+                                  kGoogleApiKey,
+                                  PointLatLng(
+                                      pickUp.latitude, pickUp.longitude),
+                                  PointLatLng(
+                                      secondLoc.latitude, secondLoc.longitude));
+                          if (result.points.isNotEmpty) {
+                            polylineCoordinates = result.points
+                                .map((point) =>
+                                    LatLng(point.latitude, point.longitude))
+                                .toList();
+                          }
+
+                          PolylineResult result1 =
+                              await polylinePoints.getRouteBetweenCoordinates(
+                            kGoogleApiKey,
+                            PointLatLng(
+                                secondLoc.latitude, secondLoc.longitude),
+                            PointLatLng(argument.latitude, argument.longitude),
+                          );
+                          if (result.points.isNotEmpty) {
+                            polylineCoordinates1 = result1.points
+                                .map((point) =>
+                                    LatLng(point.latitude, point.longitude))
+                                .toList();
+                          }
+
+                          setState(() {
+                            _poly = Polyline(
+                                color: Colors.red,
+                                polylineId: const PolylineId('route'),
+                                points: polylineCoordinates,
+                                width: 4);
+
+                            _poly2 = Polyline(
+                                color: Colors.blue,
+                                polylineId: const PolylineId('route1'),
+                                points: polylineCoordinates1,
+                                width: 4);
+                          });
+                        }
+                      },
                       polylines: {_poly, _poly2},
                       markers: markers,
                       zoomControlsEnabled: true,
@@ -242,8 +418,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text:
-                                                          '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
+                                                      text: speed == 0
+                                                          ? '0.0'
+                                                          : '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -260,8 +437,9 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text:
-                                                          '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
+                                                      text: speed == 0
+                                                          ? '0.0'
+                                                          : '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -292,8 +470,11 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: speed
-                                                          .toStringAsFixed(2),
+                                                      text: speed == 0
+                                                          ? '0.0'
+                                                          : speed
+                                                              .toStringAsFixed(
+                                                                  2),
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -455,7 +636,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       fontFamily: 'Bold',
                                                     ),
                                                     ButtonWidget(
-                                                      color: pickup == '' &&
+                                                      color: second == '' ||
                                                               drop == ''
                                                           ? Colors.grey
                                                           : Colors.red,
@@ -465,7 +646,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       height: 35,
                                                       label: 'Save route',
                                                       onPressed: () {
-                                                        if (second != '' &&
+                                                        if (second != '' ||
                                                             drop != '') {
                                                           showsaverouteDialog();
                                                         }
@@ -534,7 +715,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                         ),
                                                         label: TextWidget(
                                                           text:
-                                                              'Start point: Your Location',
+                                                              'Start point: $pickup',
                                                           fontSize: 12,
                                                           color: Colors.grey,
                                                         ),
@@ -548,9 +729,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchSecond();
-                                                  },
+                                                  onTap: () {},
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -619,9 +798,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchDropoff();
-                                                  },
+                                                  onTap: () {},
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -689,22 +866,24 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                 const SizedBox(
                                                   height: 30,
                                                 ),
-                                                ButtonWidget(
-                                                  color: Colors.red,
-                                                  fontSize: 18,
-                                                  width: 300,
-                                                  radius: 15,
-                                                  height: 50,
-                                                  label: 'Start',
-                                                  onPressed: () {
-                                                    if (second != '' &&
-                                                        drop != '') {
-                                                      setState(() {
-                                                        isclicked = true;
-                                                      });
-                                                    }
-                                                  },
-                                                ),
+                                                second == '' || drop == ''
+                                                    ? const SizedBox()
+                                                    : ButtonWidget(
+                                                        color: Colors.red,
+                                                        fontSize: 18,
+                                                        width: 300,
+                                                        radius: 15,
+                                                        height: 50,
+                                                        label: 'Start',
+                                                        onPressed: () {
+                                                          if (second != '' &&
+                                                              drop != '') {
+                                                            setState(() {
+                                                              isclicked = true;
+                                                            });
+                                                          }
+                                                        },
+                                                      ),
                                               ],
                                             ),
                                           ),
@@ -752,35 +931,38 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                         (context, index) {
                                                       return GestureDetector(
                                                         onTap: () {
-                                                          drop =
-                                                              data.docs[index]
-                                                                  ['end1'];
-                                                          pickup =
-                                                              data.docs[index]
-                                                                  ['start'];
+                                                          setState(() {
+                                                            pickup =
+                                                                data.docs[index]
+                                                                    ['start'];
+                                                            second =
+                                                                data.docs[index]
+                                                                    ['end'];
+                                                            drop =
+                                                                data.docs[index]
+                                                                    ['end1'];
 
-                                                          second =
-                                                              data.docs[index]
-                                                                  ['end'];
+                                                            pickUp = LatLng(
+                                                                data.docs[index]
+                                                                    [
+                                                                    'startLat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'startLong']);
 
-                                                          dropOff = LatLng(
-                                                              data.docs[index]
-                                                                  ['endLat1'],
-                                                              data.docs[index]
-                                                                  ['endLong1']);
-
-                                                          secondLoc = LatLng(
-                                                              data.docs[index]
-                                                                  ['endLat'],
-                                                              data.docs[index]
-                                                                  ['endLong']);
-
-                                                          pickUp = LatLng(
-                                                              data.docs[index]
-                                                                  ['startLat'],
-                                                              data.docs[index][
-                                                                  'startLong']);
-                                                          setState(() {});
+                                                            secondLoc = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong']);
+                                                            dropOff = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat1'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong1']);
+                                                          });
                                                         },
                                                         child: Row(
                                                           crossAxisAlignment:
