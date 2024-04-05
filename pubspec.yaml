@@ -46,6 +46,7 @@ dependencies:
   flutter_google_places:
   intl:
   image_picker:
+  syncfusion_flutter_charts:
 
 
 

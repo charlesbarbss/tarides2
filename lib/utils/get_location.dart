@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'package:geocode/geocode.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:tarides/utils/keys.dart';
-import 'package:http/http.dart' as http;
+import 'package:geocoding/geocoding.dart';
 
 Future<String> getAddressFromLatLng(double lat, double lng) async {
-  final currentAddress =
-      await GeoCode().reverseGeocoding(latitude: lat, longitude: lng);
-  return currentAddress.city!;
+  final currentAddress = await placemarkFromCoordinates(lat, lng);
+
+  Placemark place = currentAddress[0];
+  return place.name!;
 }

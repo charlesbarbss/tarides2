@@ -587,7 +587,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                             final comData =
                                                 snapshot.requireData;
                                             return SizedBox(
-                                              height: 400,
+                                              height: 500,
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -880,7 +880,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                           ),
                                                   ),
                                                   const SizedBox(
-                                                    height: 10,
+                                                    height: 20,
                                                   ),
                                                   selected
                                                       ? Align(
@@ -894,7 +894,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                             label:
                                                                 'Pick a Route',
                                                             textColor:
-                                                                Colors.black,
+                                                                Colors.white,
                                                             onPressed: () {
                                                               Navigator.push(
                                                                 context,

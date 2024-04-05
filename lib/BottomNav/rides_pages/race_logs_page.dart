@@ -128,8 +128,67 @@ class _RaceLogsPageState extends State<RaceLogsPage> {
                                               const SizedBox(
                                                 height: 5,
                                               ),
-                                              Image.asset(
-                                                'assets/images/Rectangle 2764.png',
+                                              Container(
+                                                height: 225,
+                                                width: 150,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                child: GoogleMap(
+                                                    zoomControlsEnabled: false,
+                                                    markers: {
+                                                      Marker(
+                                                          position: LatLng(
+                                                              data.docs[index]
+                                                                  ['loc1lat'],
+                                                              data.docs[index]
+                                                                  ['loc1long']),
+                                                          markerId:
+                                                              const MarkerId(
+                                                                  '1')),
+                                                      Marker(
+                                                          position: LatLng(
+                                                              data.docs[index]
+                                                                  ['loc4lat'],
+                                                              data.docs[index]
+                                                                  ['loc4long']),
+                                                          markerId:
+                                                              const MarkerId(
+                                                                  '2')),
+                                                    },
+                                                    polylines: {
+                                                      Polyline(
+                                                          color: Colors.red,
+                                                          width: 1,
+                                                          points: [
+                                                            LatLng(
+                                                                data.docs[index]
+                                                                    ['loc1lat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'loc1long']),
+                                                            LatLng(
+                                                                data.docs[index]
+                                                                    ['loc4lat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'loc4long']),
+                                                          ],
+                                                          polylineId:
+                                                              const PolylineId(
+                                                                  '1')),
+                                                    },
+                                                    initialCameraPosition:
+                                                        CameraPosition(
+                                                            zoom: 14,
+                                                            target: LatLng(
+                                                                data.docs[index]
+                                                                    ['loc1lat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'loc1long']))),
                                               ),
                                             ],
                                           ),
@@ -186,20 +245,6 @@ class _RaceLogsPageState extends State<RaceLogsPage> {
                                                         height: 5,
                                                       ),
                                                       TextWidget(
-                                                        text: 'AVG SPEED',
-                                                        fontSize: 10,
-                                                        color: Colors.amber,
-                                                      ),
-                                                      TextWidget(
-                                                        text: '00.00km',
-                                                        fontSize: 18,
-                                                        color: Colors.white,
-                                                        fontFamily: 'Bold',
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 5,
-                                                      ),
-                                                      TextWidget(
                                                         text: 'START TIME',
                                                         fontSize: 10,
                                                         color: Colors.amber,
@@ -246,29 +291,14 @@ class _RaceLogsPageState extends State<RaceLogsPage> {
                                                         color: Colors.amber,
                                                       ),
                                                       TextWidget(
-                                                        text: '0.0km',
+                                                        text: data.docs[index]
+                                                            ['distance'],
                                                         fontSize: 18,
                                                         color: Colors.white,
                                                         fontFamily: 'Bold',
                                                       ),
                                                       const SizedBox(
                                                         height: 5,
-                                                      ),
-                                                      TextWidget(
-                                                        text: 'END TIME',
-                                                        fontSize: 10,
-                                                        color: Colors.amber,
-                                                      ),
-                                                      TextWidget(
-                                                        text: DateFormat()
-                                                            .add_jm()
-                                                            .format(data
-                                                                .docs[index][
-                                                                    'endDateTime']
-                                                                .toDate()),
-                                                        fontSize: 18,
-                                                        color: Colors.white,
-                                                        fontFamily: 'Bold',
                                                       ),
                                                       const SizedBox(
                                                         height: 100,
