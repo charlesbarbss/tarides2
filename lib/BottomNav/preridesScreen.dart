@@ -213,7 +213,7 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                               }
                                             });
                                             return SizedBox(
-                                              height: 400,
+                                              height: 450,
                                               child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -400,7 +400,8 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                       stream: FirebaseFirestore
                                                           .instance
                                                           .collection('user')
-                                                          .doc(userId)
+                                                          .doc(newData.docs
+                                                              .first['userId'])
                                                           .snapshots(),
                                                       builder: (context,
                                                           AsyncSnapshot<
