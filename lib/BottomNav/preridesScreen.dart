@@ -21,6 +21,8 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
 
   bool selected = false;
 
+  String selectedImage = '';
+
   bool selectedteams = false;
   final Stream<DocumentSnapshot> userData = FirebaseFirestore.instance
       .collection('user')
@@ -780,10 +782,14 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                                                       MainAxisAlignment
                                                                           .start,
                                                                   children: [
-                                                                    Image.asset(
-                                                                      'assets/images/Ellipse 1849 (1).png',
-                                                                      height:
-                                                                          75,
+                                                                    CircleAvatar(
+                                                                      minRadius:
+                                                                          50,
+                                                                      maxRadius:
+                                                                          50,
+                                                                      backgroundImage:
+                                                                          NetworkImage(
+                                                                              selectedImage),
                                                                     ),
                                                                     const SizedBox(
                                                                       width: 20,
@@ -1034,11 +1040,10 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                               selected = true;
                               name = comData.docs.first['communityName'];
                               desc = data.docs[index]['firstName'];
+                              selectedImage = data.docs[index]['imageUrl'];
                               admin = data.docs[index]['username'];
                               id = data.docs[index]['communityId'];
                               userId = data.docs[index].id;
-
-                              print(data.docs[index]['firstName']);
                             });
                           },
                           child: Container(
@@ -1067,9 +1072,11 @@ class _PreRidesScreenState extends State<PreRidesScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      Image.asset(
-                                        'assets/images/Ellipse 1849.png',
-                                        height: 75,
+                                      CircleAvatar(
+                                        minRadius: 50,
+                                        maxRadius: 50,
+                                        backgroundImage: NetworkImage(
+                                            data.docs[index]['imageUrl']),
                                       ),
                                       const SizedBox(
                                         width: 20,

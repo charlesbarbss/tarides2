@@ -62,6 +62,16 @@ class _MapPageState extends State<MapPage> {
     addMyMarker124();
 
     determinePosition();
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_start == 0) {
+        _timer.cancel();
+      } else {
+        setState(() {
+          _start++;
+        });
+      }
+    });
     setState(() {
       hasloaded = true;
     });
@@ -151,6 +161,22 @@ class _MapPageState extends State<MapPage> {
   }
 
   String id = '';
+
+  late Timer _timer;
+  int _start = 1;
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String get timerString {
+    Duration duration = Duration(seconds: _start);
+    int minutes = duration.inMinutes;
+    int seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,9 +281,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: speed == 0
-                                                      ? '0.0'
-                                                      : widget.time,
+                                                  text: timerString,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -307,7 +331,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: speed == 0
+                                                  text: speed < 1
                                                       ? '0.0'
                                                       : speed
                                                           .toStringAsFixed(2),
@@ -371,9 +395,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: speed == 0
-                                                      ? '0.0'
-                                                      : widget.time,
+                                                  text: timerString,
                                                   fontSize: 28,
                                                   color: Colors.white,
                                                   fontFamily: 'Bold',
@@ -423,7 +445,7 @@ class _MapPageState extends State<MapPage> {
                                                   color: Colors.amber,
                                                 ),
                                                 TextWidget(
-                                                  text: speed == 0
+                                                  text: speed < 1
                                                       ? '0.0'
                                                       : '$speed',
                                                   fontSize: 28,

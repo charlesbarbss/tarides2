@@ -65,6 +65,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
   @override
   void dispose() {
     // TODO: implement dispose
+    _timer.cancel();
     super.dispose();
     mapController!.dispose();
   }
@@ -247,6 +248,16 @@ class _PedalScreeenState extends State<PedalScreeen> {
   double speed = 0;
   bool isPause = false;
 
+  late Timer _timer;
+  int _start = 1;
+
+  String get timerString {
+    Duration duration = Duration(seconds: _start);
+    int minutes = duration.inMinutes;
+    int seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     CameraPosition kGooglePlex = CameraPosition(
@@ -418,9 +429,7 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                       color: Colors.amber,
                                                     ),
                                                     TextWidget(
-                                                      text: speed == 0
-                                                          ? '0.0'
-                                                          : '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs',
+                                                      text: timerString,
                                                       fontSize: 28,
                                                       color: Colors.white,
                                                       fontFamily: 'Bold',
@@ -878,6 +887,20 @@ class _PedalScreeenState extends State<PedalScreeen> {
                                                         onPressed: () {
                                                           if (second != '' &&
                                                               drop != '') {
+                                                            _timer =
+                                                                Timer.periodic(
+                                                                    const Duration(
+                                                                        seconds:
+                                                                            1),
+                                                                    (timer) {
+                                                              if (_start == 0) {
+                                                                _timer.cancel();
+                                                              } else {
+                                                                setState(() {
+                                                                  _start++;
+                                                                });
+                                                              }
+                                                            });
                                                             setState(() {
                                                               isclicked = true;
                                                             });
