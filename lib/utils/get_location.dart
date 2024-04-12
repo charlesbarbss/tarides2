@@ -1,8 +1,29 @@
 import 'package:geocoding/geocoding.dart';
 
 Future<String> getAddressFromLatLng(double lat, double lng) async {
-  final currentAddress = await placemarkFromCoordinates(lat, lng);
+  final List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
 
-  Placemark place = currentAddress[0];
-  return place.name!;
+  if (placemarks.isNotEmpty) {
+    final Placemark place = placemarks[0];
+
+    // Construct a readable address
+    String address = '';
+    if (place.name != null) {
+      address += '${place.name}, ';
+    }
+    if (place.street != null) {
+      address += '${place.street}, ';
+    }
+    if (place.locality != null) {
+      address += '${place.locality}, ';
+    }
+
+    // Remove trailing comma and space
+    address =
+        address.isNotEmpty ? address.substring(0, address.length - 2) : '';
+
+    return address;
+  } else {
+    return 'No address found';
+  }
 }

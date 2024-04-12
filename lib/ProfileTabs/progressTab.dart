@@ -33,13 +33,13 @@ class _ProgressTabState extends State<ProgressTab> {
             ),
             Container(
               width: double.infinity,
-              height: 300,
+              height: 305,
               decoration: BoxDecoration(
                 color: Colors.white24,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -96,11 +96,11 @@ class _ProgressTabState extends State<ProgressTab> {
                           }
 
                           return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   TextWidget(
                                     text: 'Distance',
@@ -119,45 +119,29 @@ class _ProgressTabState extends State<ProgressTab> {
                                   ),
                                 ],
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextWidget(
-                                    text: 'Time',
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  TextWidget(
-                                    text: '${totalTime.toStringAsFixed(2)} h',
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontFamily: 'Bold',
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  TextWidget(
-                                    text: 'Elevation Gain',
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(
-                                    height: 5,
-                                  ),
-                                  TextWidget(
-                                    text: '0 m',
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontFamily: 'Bold',
-                                  ),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 20.0), // Adjust the value as needed
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    TextWidget(
+                                      text: 'Time',
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(
+                                      height: 5,
+                                    ),
+                                    TextWidget(
+                                      text: '${totalTime.toStringAsFixed(2)} h',
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontFamily: 'Bold',
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           );

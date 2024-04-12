@@ -6,7 +6,6 @@ import 'package:tarides/BottomNav/preridesScreen.dart';
 import 'package:tarides/BottomNav/profileScreen.dart';
 import 'package:tarides/Controller/userController.dart';
 
-import 'BottomNav/ridesScreen.dart';
 import 'BottomNav/communityScreeen.dart';
 
 int selectedPageIndex = 0;
