@@ -113,7 +113,7 @@ class _ProgressTabState extends State<ProgressTab> {
                                   TextWidget(
                                     text:
                                         '${totalDistance.toStringAsFixed(2)} km',
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     color: Colors.white,
                                     fontFamily: 'Bold',
                                   ),
@@ -136,7 +136,7 @@ class _ProgressTabState extends State<ProgressTab> {
                                     ),
                                     TextWidget(
                                       text: '${totalTime.toStringAsFixed(2)} h',
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       color: Colors.white,
                                       fontFamily: 'Bold',
                                     ),
@@ -147,7 +147,7 @@ class _ProgressTabState extends State<ProgressTab> {
                           );
                         }),
                     const SizedBox(
-                      height: 20,
+                      height: 10,
                     ),
                     StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance

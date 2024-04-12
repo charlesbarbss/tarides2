@@ -9,10 +9,10 @@ Future<String> getAddressFromLatLng(double lat, double lng) async {
     // Construct a readable address
     String address = '';
     if (place.name != null) {
-      address += '${place.name}, ';
+      address += '${place.street}, ';
     }
     if (place.street != null) {
-      address += '${place.street}, ';
+      address += '${place.name}, ';
     }
     if (place.locality != null) {
       address += '${place.locality}, ';
