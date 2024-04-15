@@ -26,7 +26,10 @@ class _LogInPageState extends State<LogInPage> {
         .then((value) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) =>  HomePage(email: emailController.text,)),
+        MaterialPageRoute(
+            builder: (context) => HomePage(
+                  email: emailController.text,
+                )),
       );
     }).onError((error, stackTrace) {
       ScaffoldMessenger.of(context).clearSnackBars();
@@ -46,41 +49,43 @@ class _LogInPageState extends State<LogInPage> {
       backgroundColor: Colors.black,
       body: SingleChildScrollView(
         child: Container(
-          margin: EdgeInsets.fromLTRB(10, 150, 10, 10),
+          margin: const EdgeInsets.fromLTRB(10, 150, 10, 10),
           child: Column(
             children: [
               RichText(
-                text: TextSpan(
+                text: const TextSpan(
                   children: [
                     TextSpan(
                       text: 'Ta',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 70,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: "DM Sans",
                       ),
                     ),
                     TextSpan(
-                      text: 'Rides',
+                      text: 'RIDES',
                       style: TextStyle(
                         color: Colors.red,
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 70,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: "DM Sans",
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(
-                height: 50,
+              const SizedBox(
+                height: 20,
               ),
               TextFormField(
                 controller: emailController,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
-                decoration: InputDecoration(
-                  focusedBorder: const OutlineInputBorder(
+                decoration: const InputDecoration(
+                  focusedBorder: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Color(0x3fffFFFFF0),
                     ),
@@ -88,9 +93,9 @@ class _LogInPageState extends State<LogInPage> {
                       Radius.circular(15.0),
                     ),
                   ),
-                  enabledBorder: const OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color.fromARGB(255, 255, 255, 240),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -99,26 +104,26 @@ class _LogInPageState extends State<LogInPage> {
                   labelStyle: TextStyle(
                     color: Colors.white,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.person,
                     color: Colors.white,
                   ),
-                  labelText: 'Email',
+                  labelText: 'email',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               TextFormField(
                 obscureText: _obscureText,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                 ),
                 controller: passController,
                 decoration: InputDecoration(
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color.fromARGB(255, 255, 255, 240),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
@@ -126,14 +131,14 @@ class _LogInPageState extends State<LogInPage> {
                   ),
                   enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0x3fffFFFFF0),
+                      color: Color.fromARGB(255, 255, 255, 240),
                     ),
                     borderRadius: BorderRadius.all(
                       Radius.circular(15.0),
                     ),
                   ),
-                  labelStyle: TextStyle(
-                    color: Colors.white,
+                  labelStyle: const TextStyle(
+                    color: Color.fromARGB(255, 255, 255, 240),
                   ),
                   prefixIcon: const Icon(Icons.lock, color: Colors.white),
                   suffixIcon: GestureDetector(
@@ -144,34 +149,34 @@ class _LogInPageState extends State<LogInPage> {
                     },
                     child: Icon(
                       _obscureText ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.white,
+                      color: const Color.fromARGB(255, 255, 255, 240),
                     ),
                   ),
-                  suffixIconColor: Colors.white,
-                  labelText: 'Password',
+                  suffixIconColor: const Color.fromARGB(255, 255, 255, 240),
+                  labelText: 'password',
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => CreateAccount(),
+                          builder: (context) => const CreateAccount(),
                         ),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       'Create Account',
                       style: TextStyle(color: Colors.blue),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 20,
                   ),
                   TextButton(
@@ -179,33 +184,36 @@ class _LogInPageState extends State<LogInPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ForgotPassword(),
+                          builder: (context) => const ForgotPassword(),
                         ),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       'Forgot Password',
                       style: TextStyle(color: Colors.blue),
                     ),
                   ),
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                  textStyle: TextStyle(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 160, vertical: 18),
+                  textStyle: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 onPressed: _logIn,
-                child: Text(
-                  'LogIn',
-                  style: TextStyle(color: Colors.white),
+                child: const Text(
+                  'Login',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 255, 255, 240),
+                  ),
                 ),
               ),
             ],
