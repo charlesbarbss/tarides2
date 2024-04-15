@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-Future addRide(
+Future<String> addRide(
   double startLat,
   double startLong,
   String start,
@@ -35,14 +35,17 @@ Future addRide(
     'loc4long': endLong3,
     'loc4': end3,
     'dateTime': DateTime.now(),
+    'endDateTime': '',
     'userId': FirebaseAuth.instance.currentUser!.uid,
     'distance': distance,
     'time': time,
-    'status': 'Not Started',
+    'status': 'Started',
     'winner': '',
     'team1': team1,
     'team2': team2,
   };
 
   await docUser.set(json);
+
+  return docUser.id;
 }

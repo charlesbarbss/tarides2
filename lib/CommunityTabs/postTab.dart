@@ -1,6 +1,9 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/BottomNav/communityScreeen.dart';
+import 'package:tarides/CommunityTabs/viewMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
@@ -128,7 +131,7 @@ class _PostTabState extends State<PostTab> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[900],
         child: const Icon(Icons.add),
       ),
       backgroundColor: Colors.black,
@@ -204,7 +207,9 @@ class _PostTabState extends State<PostTab> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) => HomePage(
-                                                    email: widget.email),
+                                                  email: widget.email,
+                                                  homePageIndex: 0,
+                                                ),
                                               ),
                                             );
                                             final userDoc =
@@ -247,9 +252,13 @@ class _PostTabState extends State<PostTab> {
                                               ]),
                                             });
                                           }
-                                          if (communityController
-                                                  .community!.communityAdmin ==
-                                              userController.user.username) {
+                                          if (communityController.community!
+                                                      .communityAdmin ==
+                                                  userController
+                                                      .user.username &&
+                                              communityController.community!
+                                                      .communityMember.length !=
+                                                  1) {
                                             showDialog(
                                               context: context,
                                               builder: (BuildContext context) {
@@ -260,6 +269,95 @@ class _PostTabState extends State<PostTab> {
                                                   actions: [
                                                     TextButton(
                                                       child: Text('OK'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }
+                                          if (communityController.community!
+                                                      .communityAdmin ==
+                                                  userController
+                                                      .user.username &&
+                                              communityController.community!
+                                                      .communityMember.length ==
+                                                  1) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text(
+                                                      'You are the admin'), // Replace with your title
+                                                  content:
+                                                      SingleChildScrollView(
+                                                    child: ListBody(
+                                                      children: <Widget>[
+                                                        Text(
+                                                            'Do you wish to delete this community?'), // Replace with your body text
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      child: Text(
+                                                          'Yes'), // Replace with your button text
+                                                      onPressed: () async {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    HomePage(
+                                                              email:
+                                                                  widget.email,
+                                                              homePageIndex: 0,
+                                                            ),
+                                                          ),
+                                                        );
+                                                        final userDoc =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'user')
+                                                                .where(
+                                                                    'username',
+                                                                    isEqualTo:
+                                                                        userController
+                                                                            .user
+                                                                            .username)
+                                                                .get();
+
+                                                        await userDoc.docs.first
+                                                            .reference
+                                                            .update({
+                                                          'communityId': '',
+                                                          'isCommunity': false,
+                                                        });
+
+                                                        final communityDoc =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'community')
+                                                                .where(
+                                                                    'communityId',
+                                                                    isEqualTo: communityController
+                                                                        .community!
+                                                                        .communityId)
+                                                                .get();
+
+                                                        await communityDoc.docs
+                                                            .first.reference
+                                                            .delete();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: Text(
+                                                          'No'), // Replace with your button text
                                                       onPressed: () {
                                                         Navigator.of(context)
                                                             .pop();
@@ -313,6 +411,51 @@ class _PostTabState extends State<PostTab> {
                             ),
                             Column(
                               children: [
+                                if (communityController
+                                        .community!.communityAdmin ==
+                                    userController.user.username)
+                                  ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.black),
+                                        shape: MaterialStateProperty.all<
+                                                RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                                side: BorderSide(
+                                                    color: Colors.grey)))),
+                                    onPressed: () {
+                                      for (int x = 0;
+                                          x <
+                                              communityController.community!
+                                                  .communityMember.length;
+                                          x++) {
+                                        if (communityController.community!
+                                                .communityMember[x] ==
+                                            userController.user.username) {
+                                          String nonAdminMembers =
+                                              communityController.community!
+                                                  .communityMember[x];
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewMembers(
+                                                      email: widget.email,
+                                                      communityId:
+                                                          widget.communityId,
+                                                      admin: nonAdminMembers,
+                                                    )),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: Text('View Members',
+                                        style: TextStyle(color: Colors.white)),
+                                  ),
                                 const Text(
                                   'Group Post',
                                   style: TextStyle(
@@ -339,7 +482,7 @@ class _PostTabState extends State<PostTab> {
                                             Column(
                                               children: [
                                                 Container(
-                                                  height: 200,
+                                                  height: 210,
                                                   width: 400,
                                                   color: const Color.fromARGB(
                                                       31, 153, 150, 150),
@@ -432,6 +575,10 @@ class _PostTabState extends State<PostTab> {
                                                             ],
                                                           ),
                                                           const SizedBox(
+                                                            width: 92,
+                                                          ),
+                                                          
+                                                          const SizedBox(
                                                             width: 10,
                                                           ),
                                                         ],
@@ -442,7 +589,7 @@ class _PostTabState extends State<PostTab> {
                                                       Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                    .fromLTRB(
+                                                                .fromLTRB(
                                                                 10, 0, 10, 10),
                                                         child: Text(
                                                           postController
@@ -600,6 +747,79 @@ class _PostTabState extends State<PostTab> {
                                                           ),
                                                         ],
                                                       ),
+                                                      Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .end,
+                                                            children: [
+                                                              if (postController
+                                                                      .posts[i]
+                                                                      .usersName ==
+                                                                  userController
+                                                                      .user
+                                                                      .username)
+                                                                IconButton(
+                                                                  icon: Icon(Icons
+                                                                      .delete), // Change this to your desired icon
+                                                                  color: Colors
+                                                                      .white,
+                                                                  onPressed:
+                                                                      () {
+                                                                    showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (BuildContext
+                                                                              context) {
+                                                                        return AlertDialog(
+                                                                          title:
+                                                                              Text('Delete Post'), // Replace with your title
+                                                                          content:
+                                                                              SingleChildScrollView(
+                                                                            child:
+                                                                                ListBody(
+                                                                              children: [
+                                                                                Text('Do you wish to delete this post?'), // Replace with your body text
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              child: Text('Yes'), // Replace with your button text
+                                                                              // onPressed:(){
+                                                                              //   print('Y E S clicked');
+                                                                              // },
+                                                                              onPressed: () async {
+                                                                                // Replace 'postId' with the actual document ID of the post
+                                                                                final postDoc = await FirebaseFirestore.instance.collection('post').where('postId', isEqualTo: postController.posts[i].postId).get();
+
+                                                                                await postDoc.docs.first.reference.delete();
+
+                                                                                Navigator.push(
+                                                                                  context,
+                                                                                  MaterialPageRoute(
+                                                                                    builder: (context) => HomePage(
+                                                                                      email: widget.email,
+                                                                                      homePageIndex: 0,
+                                                                                    ),
+                                                                                  ),
+                                                                                );
+                                                                              },
+                                                                            ),
+                                                                            TextButton(
+                                                                              child: Text('No'), // Replace with your button text
+                                                                              onPressed: () {
+                                                                                Navigator.of(context).pop();
+                                                                              },
+                                                                            ),
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  },
+                                                                ),
+                                                            ],
+                                                          ),
                                                     ],
                                                   ),
                                                 ),

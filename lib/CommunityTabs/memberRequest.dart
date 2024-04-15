@@ -5,6 +5,7 @@ import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/requestController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/Model/createCommunityModel.dart';
+import 'package:tarides/homePage.dart';
 
 class MemberRequest extends StatefulWidget {
   const MemberRequest(
@@ -191,6 +192,16 @@ class _MemberRequestState extends State<MemberRequest> {
                                               requestContoller.request
                                                   .removeAt(i);
                                             });
+                                          }).then((value) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      HomePage(
+                                                        email: widget.email,
+                                                        homePageIndex: 0,
+                                                      )),
+                                            );
                                           });
                                         },
                                       ),
@@ -227,6 +238,16 @@ class _MemberRequestState extends State<MemberRequest> {
                                           setState(() {
                                             requestContoller.request
                                                 .removeAt(i);
+
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      HomePage(
+                                                        email: widget.email,
+                                                        homePageIndex: 0,
+                                                      )),
+                                            );
                                           });
                                         },
                                       ),

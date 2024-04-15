@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -11,26 +12,85 @@ import 'package:tarides/services/add_favs.dart';
 import 'package:tarides/services/add_pedal.dart';
 import 'package:tarides/services/add_ride.dart';
 import 'package:tarides/utils/distance_calculations.dart';
+import 'package:tarides/utils/get_location.dart';
 import 'package:tarides/utils/time_calculation.dart';
 import 'package:tarides/widgets/button_widget.dart';
 import 'package:tarides/widgets/text_widget.dart';
 import 'package:google_maps_webservice/places.dart' as location;
+import 'package:tarides/widgets/toast_widget.dart';
 
 import '../../utils/keys.dart';
 
 class PickRouteScreeen extends StatefulWidget {
-  const PickRouteScreeen({super.key});
+  String team1;
+  String team2;
+  String team1name;
+  String team2name;
+
+  PickRouteScreeen(
+      {super.key,
+      required this.team1,
+      required this.team2,
+      required this.team1name,
+      required this.team2name});
 
   @override
   State<PickRouteScreeen> createState() => _PickRouteScreeenState();
 }
 
 class _PickRouteScreeenState extends State<PickRouteScreeen> {
-  late Polyline _poly = const Polyline(polylineId: PolylineId('new'));
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      Geolocator.getCurrentPosition().then((position) {
+        setState(() {
+          lat = position.latitude;
+          long = position.longitude;
+          hasLoaded = true;
+
+          pickUp = LatLng(position.latitude, position.longitude);
+        });
+
+        addMyMarker1(position.latitude, position.longitude);
+        getAddressFromLatLng(position.latitude, position.longitude)
+            .then((value) {
+          setState(() {
+            pickup = value;
+          });
+        });
+        mapController!.animateCamera(CameraUpdate.newCameraPosition(
+            CameraPosition(
+                zoom: 14.4746,
+                target: LatLng(position.latitude, position.longitude))));
+      }).catchError((error) {
+        print('Error getting location: $error');
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    mapController!.dispose();
+  }
+
+  bool hasLoaded = false;
+
+  double lat = 0;
+  double long = 0;
+  late Polyline _poly1 = const Polyline(polylineId: PolylineId('1'));
+  late Polyline _poly2 = const Polyline(polylineId: PolylineId('2'));
+  late Polyline _poly3 = const Polyline(polylineId: PolylineId('3'));
 
   Set<Marker> markers = {};
 
-  List<LatLng> polylineCoordinates = [];
+  List<LatLng> polylineCoordinates1 = [];
+  List<LatLng> polylineCoordinates2 = [];
+  List<LatLng> polylineCoordinates3 = [];
   PolylinePoints polylinePoints = PolylinePoints();
 
   late LatLng pickUp;
@@ -41,34 +101,262 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
 
   addMyMarker1(lat1, long1) async {
     markers.add(Marker(
+        draggable: true,
+        onDragEnd: (value) async {
+          pickup = await getAddressFromLatLng(value.latitude, value.longitude);
+
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(value.latitude, value.longitude),
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude),
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude));
+            if (result1.points.isNotEmpty) {
+              polylineCoordinates2 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            PolylineResult result2 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude),
+                    PointLatLng(dropOff3.latitude, dropOff3.longitude));
+            if (result2.points.isNotEmpty) {
+              polylineCoordinates3 = result2.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            setState(() {
+              _poly1 = Polyline(
+                  color: Colors.blue,
+                  polylineId: const PolylineId('route1'),
+                  points: polylineCoordinates1,
+                  width: 4);
+              _poly2 = Polyline(
+                  color: Colors.red,
+                  polylineId: const PolylineId('route2'),
+                  points: polylineCoordinates2,
+                  width: 4);
+              _poly3 = Polyline(
+                  color: Colors.black,
+                  polylineId: const PolylineId('route3'),
+                  points: polylineCoordinates3,
+                  width: 4);
+
+              pickUp = value;
+            });
+          }
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("pickup"),
         position: LatLng(lat1, long1),
-        infoWindow: const InfoWindow(title: 'Pick-up Location')));
+        infoWindow: InfoWindow(title: 'Starting point', snippet: pickup)));
   }
 
   addMyMarker12(lat1, long1) async {
     markers.add(Marker(
+        draggable: true,
+        onDragEnd: (value) async {
+          drop1 = await getAddressFromLatLng(value.latitude, value.longitude);
+
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(pickUp.latitude, pickUp.longitude),
+                    PointLatLng(value.latitude, value.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(value.latitude, value.longitude),
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude));
+            if (result1.points.isNotEmpty) {
+              polylineCoordinates2 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            PolylineResult result2 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude),
+                    PointLatLng(dropOff3.latitude, dropOff3.longitude));
+            if (result2.points.isNotEmpty) {
+              polylineCoordinates3 = result2.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            setState(() {
+              _poly1 = Polyline(
+                  color: Colors.blue,
+                  polylineId: const PolylineId('route1'),
+                  points: polylineCoordinates1,
+                  width: 4);
+              _poly2 = Polyline(
+                  color: Colors.red,
+                  polylineId: const PolylineId('route2'),
+                  points: polylineCoordinates2,
+                  width: 4);
+              _poly3 = Polyline(
+                  color: Colors.black,
+                  polylineId: const PolylineId('route3'),
+                  points: polylineCoordinates3,
+                  width: 4);
+
+              dropOff1 = value;
+            });
+          }
+        },
         icon: BitmapDescriptor.defaultMarker,
         markerId: const MarkerId("dropOff"),
         position: LatLng(lat1, long1),
-        infoWindow: const InfoWindow(title: 'Drop-off Location')));
+        infoWindow: InfoWindow(title: 'First Point', snippet: drop1)));
   }
 
   addMyMarker123(lat1, long1) async {
     markers.add(Marker(
-      icon: BitmapDescriptor.defaultMarker,
-      markerId: const MarkerId("dropOff1"),
-      position: LatLng(lat1, long1),
-    ));
+        draggable: true,
+        onDragEnd: (value) async {
+          drop2 = await getAddressFromLatLng(value.latitude, value.longitude);
+
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(pickUp.latitude, pickUp.longitude),
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude),
+                    PointLatLng(value.latitude, value.longitude));
+            if (result1.points.isNotEmpty) {
+              polylineCoordinates2 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            PolylineResult result2 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(value.latitude, value.longitude),
+                    PointLatLng(dropOff3.latitude, dropOff3.longitude));
+            if (result2.points.isNotEmpty) {
+              polylineCoordinates3 = result2.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            setState(() {
+              _poly1 = Polyline(
+                  color: Colors.blue,
+                  polylineId: const PolylineId('route1'),
+                  points: polylineCoordinates1,
+                  width: 4);
+              _poly2 = Polyline(
+                  color: Colors.red,
+                  polylineId: const PolylineId('route2'),
+                  points: polylineCoordinates2,
+                  width: 4);
+              _poly3 = Polyline(
+                  color: Colors.black,
+                  polylineId: const PolylineId('route3'),
+                  points: polylineCoordinates3,
+                  width: 4);
+
+              dropOff2 = value;
+            });
+          }
+        },
+        icon: BitmapDescriptor.defaultMarker,
+        markerId: const MarkerId("dropOff1"),
+        position: LatLng(lat1, long1),
+        infoWindow: InfoWindow(title: 'Second Point', snippet: drop2)));
   }
 
   addMyMarker124(lat1, long1) async {
     markers.add(Marker(
-      icon: BitmapDescriptor.defaultMarker,
-      markerId: const MarkerId("dropOff2"),
-      position: LatLng(lat1, long1),
-    ));
+        draggable: true,
+        onDragEnd: (value) async {
+          drop3 = await getAddressFromLatLng(value.latitude, value.longitude);
+
+          if (polylineCoordinates1 != []) {
+            PolylineResult result =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(pickUp.latitude, pickUp.longitude),
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude));
+            if (result.points.isNotEmpty) {
+              polylineCoordinates1 = result.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+
+            PolylineResult result1 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff1.latitude, dropOff1.longitude),
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude));
+            if (result1.points.isNotEmpty) {
+              polylineCoordinates2 = result1.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            PolylineResult result2 =
+                await polylinePoints.getRouteBetweenCoordinates(
+                    kGoogleApiKey,
+                    PointLatLng(dropOff2.latitude, dropOff2.longitude),
+                    PointLatLng(value.latitude, value.longitude));
+            if (result2.points.isNotEmpty) {
+              polylineCoordinates3 = result2.points
+                  .map((point) => LatLng(point.latitude, point.longitude))
+                  .toList();
+            }
+            setState(() {
+              _poly1 = Polyline(
+                  color: Colors.blue,
+                  polylineId: const PolylineId('route1'),
+                  points: polylineCoordinates1,
+                  width: 4);
+              _poly2 = Polyline(
+                  color: Colors.red,
+                  polylineId: const PolylineId('route2'),
+                  points: polylineCoordinates2,
+                  width: 4);
+              _poly3 = Polyline(
+                  color: Colors.black,
+                  polylineId: const PolylineId('route3'),
+                  points: polylineCoordinates3,
+                  width: 4);
+
+              dropOff3 = value;
+            });
+          }
+        },
+        icon: BitmapDescriptor.defaultMarker,
+        markerId: const MarkerId("dropOff2"),
+        position: LatLng(lat1, long1),
+        infoWindow: InfoWindow(title: 'Third Point', snippet: drop3)));
   }
 
   late String pickup = '';
@@ -78,6 +366,10 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
   bool isclicked = false;
   @override
   Widget build(BuildContext context) {
+    CameraPosition kGooglePlex = CameraPosition(
+      target: LatLng(lat, long),
+      zoom: 14.4746,
+    );
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -116,12 +408,103 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                 child: Stack(
                   children: [
                     GoogleMap(
-                      polylines: {_poly},
+                      onTap: (argument) async {
+                        if (pickup == '') {
+                          pickUp = argument;
+                          pickup = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker1(argument.latitude, argument.longitude);
+
+                          setState(() {});
+                        } else if (drop1 == '') {
+                          dropOff1 = argument;
+                          drop1 = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker12(argument.latitude, argument.longitude);
+
+                          setState(() {});
+                        } else if (drop2 == '') {
+                          dropOff2 = argument;
+                          drop2 = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker123(argument.latitude, argument.longitude);
+
+                          setState(() {});
+                        } else if (drop3 == '') {
+                          dropOff3 = argument;
+                          drop3 = await getAddressFromLatLng(
+                              argument.latitude, argument.longitude);
+
+                          addMyMarker124(argument.latitude, argument.longitude);
+
+                          PolylineResult result =
+                              await polylinePoints.getRouteBetweenCoordinates(
+                                  kGoogleApiKey,
+                                  PointLatLng(
+                                      pickUp.latitude, pickUp.longitude),
+                                  PointLatLng(
+                                      dropOff1.latitude, dropOff1.longitude));
+                          if (result.points.isNotEmpty) {
+                            polylineCoordinates1 = result.points
+                                .map((point) =>
+                                    LatLng(point.latitude, point.longitude))
+                                .toList();
+                          }
+
+                          PolylineResult result1 =
+                              await polylinePoints.getRouteBetweenCoordinates(
+                                  kGoogleApiKey,
+                                  PointLatLng(
+                                      dropOff1.latitude, dropOff1.longitude),
+                                  PointLatLng(
+                                      dropOff2.latitude, dropOff2.longitude));
+                          if (result1.points.isNotEmpty) {
+                            polylineCoordinates2 = result1.points
+                                .map((point) =>
+                                    LatLng(point.latitude, point.longitude))
+                                .toList();
+                          }
+                          PolylineResult result2 =
+                              await polylinePoints.getRouteBetweenCoordinates(
+                                  kGoogleApiKey,
+                                  PointLatLng(
+                                      dropOff2.latitude, dropOff2.longitude),
+                                  PointLatLng(
+                                      dropOff3.latitude, dropOff3.longitude));
+                          if (result2.points.isNotEmpty) {
+                            polylineCoordinates3 = result2.points
+                                .map((point) =>
+                                    LatLng(point.latitude, point.longitude))
+                                .toList();
+                          }
+                          setState(() {
+                            _poly1 = Polyline(
+                                color: Colors.blue,
+                                polylineId: const PolylineId('route1'),
+                                points: polylineCoordinates1,
+                                width: 4);
+                            _poly2 = Polyline(
+                                color: Colors.red,
+                                polylineId: const PolylineId('route2'),
+                                points: polylineCoordinates2,
+                                width: 4);
+                            _poly3 = Polyline(
+                                color: Colors.black,
+                                polylineId: const PolylineId('route3'),
+                                points: polylineCoordinates3,
+                                width: 4);
+                          });
+                        }
+                      },
+                      polylines: {_poly1, _poly2, _poly3},
                       markers: markers,
                       zoomControlsEnabled: true,
                       myLocationButtonEnabled: true,
                       mapType: MapType.normal,
-                      initialCameraPosition: _kGooglePlex,
+                      initialCameraPosition: kGooglePlex,
                       onMapCreated: (GoogleMapController controller) {
                         mapController = controller;
                         _controller.complete(controller);
@@ -292,7 +675,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                     ),
                                                     child: Padding(
                                                       padding: const EdgeInsets
-                                                              .fromLTRB(
+                                                          .fromLTRB(
                                                           45, 11, 45, 11),
                                                       child: TextWidget(
                                                         text: 'STOP',
@@ -384,9 +767,9 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   children: [
                                                     const SizedBox(),
                                                     ButtonWidget(
-                                                      color: pickup == '' &&
-                                                              drop1 == '' &&
-                                                              drop2 == '' &&
+                                                      color: pickup == '' ||
+                                                              drop1 == '' ||
+                                                              drop2 == '' ||
                                                               drop3 == ''
                                                           ? Colors.grey
                                                           : Colors.red,
@@ -396,8 +779,10 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       height: 35,
                                                       label: 'Save route',
                                                       onPressed: () {
-                                                        if (pickup != '' &&
-                                                            drop1 != '') {
+                                                        if (pickup != '' ||
+                                                            drop1 != '' ||
+                                                            drop2 != '' ||
+                                                            drop3 != '') {
                                                           showsaverouteDialog();
                                                         }
                                                       },
@@ -408,9 +793,6 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchPickup();
-                                                  },
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -479,9 +861,6 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchDroppoff1();
-                                                  },
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -550,9 +929,6 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchDroppoff2();
-                                                  },
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -621,9 +997,6 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                   height: 10,
                                                 ),
                                                 GestureDetector(
-                                                  onTap: () {
-                                                    searchDropoff3();
-                                                  },
                                                   child: Container(
                                                     height: 35,
                                                     width: 300,
@@ -691,9 +1064,9 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                 const SizedBox(
                                                   height: 30,
                                                 ),
-                                                pickup != '' &&
-                                                        drop1 != '' &&
-                                                        drop2 != '' &&
+                                                pickup != '' ||
+                                                        drop1 != '' ||
+                                                        drop2 != '' ||
                                                         drop3 != ''
                                                     ? ButtonWidget(
                                                         color: Colors.amber,
@@ -721,20 +1094,32 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                               drop3,
                                                               '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
                                                               '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude), 0.30).toStringAsFixed(2)}hrs',
-                                                              'Team 1',
-                                                              'Team 2');
+                                                              widget.team1,
+                                                              widget.team2);
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
                                                                 builder:
                                                                     (context) =>
                                                                         MapPage(
+                                                                          location1:
+                                                                              pickup,
+                                                                          location2:
+                                                                              drop1,
+                                                                          location3:
+                                                                              drop2,
+                                                                          location4:
+                                                                              drop3,
                                                                           distance:
                                                                               '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude).toStringAsFixed(2)}KM',
                                                                           time:
                                                                               '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff3.latitude, dropOff3.longitude), 0.30).toStringAsFixed(2)}hrs',
-                                                                          poly:
-                                                                              _poly,
+                                                                          poly1:
+                                                                              _poly1,
+                                                                          poly2:
+                                                                              _poly2,
+                                                                          poly3:
+                                                                              _poly3,
                                                                           loc1:
                                                                               pickUp,
                                                                           loc2:
@@ -760,7 +1145,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                           .currentUser!
                                                           .uid)
                                                   .where('type',
-                                                      isNotEqualTo: 'rides')
+                                                      isEqualTo: 'rides')
                                                   .snapshots(),
                                               builder: (BuildContext context,
                                                   AsyncSnapshot<QuerySnapshot>
@@ -795,19 +1180,18 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                       return GestureDetector(
                                                         onTap: () {
                                                           setState(() {
-                                                            drop1 =
-                                                                data.docs[index]
-                                                                    ['end'];
                                                             pickup =
                                                                 data.docs[index]
                                                                     ['start'];
-
-                                                            dropOff1 = LatLng(
+                                                            drop1 =
                                                                 data.docs[index]
-                                                                    ['endLat'],
+                                                                    ['end'];
+                                                            drop2 =
                                                                 data.docs[index]
-                                                                    [
-                                                                    'endLong']);
+                                                                    ['end1'];
+                                                            drop3 =
+                                                                data.docs[index]
+                                                                    ['end2'];
 
                                                             pickUp = LatLng(
                                                                 data.docs[index]
@@ -816,6 +1200,25 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                 data.docs[index]
                                                                     [
                                                                     'startLong']);
+
+                                                            dropOff1 = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong']);
+                                                            dropOff2 = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat1'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong1']);
+                                                            dropOff3 = LatLng(
+                                                                data.docs[index]
+                                                                    ['endLat2'],
+                                                                data.docs[index]
+                                                                    [
+                                                                    'endLong2']);
                                                           });
                                                         },
                                                         child: Row(
@@ -861,9 +1264,11 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                   ],
                                                                 ),
                                                                 Padding(
-                                                                  padding: const EdgeInsets
+                                                                  padding:
+                                                                      const EdgeInsets
                                                                           .only(
-                                                                      left: 5),
+                                                                          left:
+                                                                              5),
                                                                   child:
                                                                       TextWidget(
                                                                     text: 'to',
@@ -893,7 +1298,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                                                       text: data
                                                                               .docs[index]
                                                                           [
-                                                                          'end'],
+                                                                          'end2'],
                                                                       fontSize:
                                                                           14,
                                                                       fontFamily:
@@ -958,7 +1363,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                       height: 5,
                                     ),
                                     TextWidget(
-                                      text: 'OCTO CIRCUIT CLUB',
+                                      text: widget.team1name,
                                       fontSize: 14,
                                       color: Colors.white,
                                       fontFamily: 'Bold',
@@ -984,7 +1389,7 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
                                       height: 5,
                                     ),
                                     TextWidget(
-                                      text: 'DEW LITTLE CLUB',
+                                      text: widget.team2name,
                                       fontSize: 14,
                                       color: Colors.white,
                                       fontFamily: 'Bold',
@@ -1049,9 +1454,23 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
             ),
             TextButton(
                 onPressed: () {
-                  addFav(pickUp.latitude, pickUp.longitude, pickup,
-                      dropOff3.latitude, dropOff3.latitude, drop3, 'rides');
+                  addFav(
+                    pickUp.latitude,
+                    pickUp.longitude,
+                    pickup,
+                    dropOff1.latitude,
+                    dropOff1.latitude,
+                    drop1,
+                    'rides',
+                    dropOff2.latitude,
+                    dropOff2.latitude,
+                    drop2,
+                    dropOff3.latitude,
+                    dropOff3.latitude,
+                    drop3,
+                  );
                   Navigator.pop(context);
+                  showToast('Routes saved!');
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -1075,213 +1494,4 @@ class _PickRouteScreeenState extends State<PickRouteScreeen> {
 
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
-
-  searchPickup() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Pick-up Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker1(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    setState(() {
-      pickup = detail.result.name;
-      pickUp = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-  }
-
-  searchDroppoff1() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Pick-up Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker12(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    setState(() {
-      drop1 = detail.result.name;
-      dropOff1 = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-  }
-
-  searchDroppoff2() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Pick-up Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker123(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    setState(() {
-      drop2 = detail.result.name;
-      dropOff2 = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-  }
-
-  searchDropoff3() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Drop-off Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker124(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    setState(() {
-      drop3 = detail.result.name;
-
-      dropOff3 = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        kGoogleApiKey,
-        PointLatLng(pickUp.latitude, pickUp.longitude),
-        PointLatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng));
-    if (result.points.isNotEmpty) {
-      polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
-    }
-    setState(() {
-      _poly = Polyline(
-          color: Colors.red,
-          polylineId: const PolylineId('route'),
-          points: polylineCoordinates,
-          width: 4);
-    });
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    double miny = (pickUp.latitude <= dropOff1.latitude)
-        ? pickUp.latitude
-        : dropOff1.latitude;
-    double minx = (pickUp.longitude <= dropOff1.longitude)
-        ? pickUp.longitude
-        : dropOff1.longitude;
-    double maxy = (pickUp.latitude <= dropOff1.latitude)
-        ? dropOff1.latitude
-        : pickUp.latitude;
-    double maxx = (pickUp.longitude <= dropOff1.longitude)
-        ? dropOff1.longitude
-        : pickUp.longitude;
-
-    double southWestLatitude = miny;
-    double southWestLongitude = minx;
-
-    double northEastLatitude = maxy;
-    double northEastLongitude = maxx;
-
-    // Accommodate the two locations within the
-    // camera view of the map
-    mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          northeast: LatLng(
-            northEastLatitude,
-            northEastLongitude,
-          ),
-          southwest: LatLng(
-            southWestLatitude,
-            southWestLongitude,
-          ),
-        ),
-        100.0,
-      ),
-    );
-  }
 }

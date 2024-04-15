@@ -4,16 +4,19 @@ import 'package:tarides/Model/userModel.dart';
 
 
 class UserController extends ChangeNotifier {
+  
   late final String email;
 
   late Users user;
   bool isLoading = false;
 
-late List<Users> users = <Users>[];
+  late List<Users> users = <Users>[];
 
-  void setEmail(String email) {
-    this.email = email;
-  }
+  late List<Users> members = <Users>[];
+
+
+
+ 
 
   void getUser(String email) async {
     isLoading = true;
@@ -36,12 +39,14 @@ late List<Users> users = <Users>[];
     notifyListeners();
   }
 
-void getAllUsers() async {
+  void getAllUsers() async {
     isLoading = true;
     notifyListeners();
 
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('user').get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('email', isNotEqualTo: 'super.admin@tarides.com')
+        .get();
 
     if (querySnapshot.docs.isEmpty) {
       isLoading = false;
@@ -56,4 +61,27 @@ void getAllUsers() async {
     isLoading = false;
     notifyListeners();
   }
+
+  void getAllMembers(String communityId, String admin) async {
+    isLoading = true;
+    notifyListeners();
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('communityId', isEqualTo: communityId)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('Members not found');
+    }
+    members = querySnapshot.docs.map((snapshot) {
+      return Users.fromDocument(snapshot);
+    }).toList();
+    isLoading = false;
+    notifyListeners();
+  }
+
+ 
 }

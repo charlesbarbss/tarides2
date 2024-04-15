@@ -33,7 +33,7 @@ dependencies:
   fluttertoast:
   google_maps_flutter:
   get_storage:
-  geocoding: ^2.1.0
+  geocoding: ^3.0.0
   geolocator: ^11.0.0
   firebase_core:
   cloud_firestore:
@@ -46,6 +46,13 @@ dependencies:
   flutter_google_places:
   intl:
   image_picker:
+  dio:
+  location:
+  flutter_svg:
+  shared_preferences: ^2.0.8
+  scrollable_positioned_list:
+  syncfusion_flutter_charts: 
+
 
 
 

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/homePage.dart';
@@ -178,6 +179,7 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                                       builder: (context) =>
                                                           HomePage(
                                                         email: widget.email,
+                                                        homePageIndex: 0,
                                                       ),
                                                     ),
                                                   );
@@ -237,6 +239,25 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                                         .communities[i]
                                                         .communityId,
                                                 'isCommunity': true,
+                                              });
+                                              final communityDoc =
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('community')
+                                                      .where('communityId',
+                                                          isEqualTo:
+                                                              communityController
+                                                                  .communities[
+                                                                      i]
+                                                                  .communityId)
+                                                      .get();
+                                              await communityDoc
+                                                  .docs.first.reference
+                                                  .update({
+                                                'communityMember':
+                                                    FieldValue.arrayUnion([
+                                                  userController.user.username
+                                                ]),
                                               }).then((value) {
                                                 showDialog(
                                                   context: context,
@@ -256,6 +277,7 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                                       builder: (context) =>
                                                           HomePage(
                                                         email: widget.email,
+                                                        homePageIndex: 0,
                                                       ),
                                                     ),
                                                   );
@@ -273,146 +295,9 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                     },
                                   );
                                 }
-                                // showDialog(
-                                //   context: context,
-                                //   builder: (BuildContext context) {
-                                //     return AlertDialog(
-                                //       title: Text(communityController
-                                //           .communities[i].communityName),
-                                //       content: Text(
-                                //           'Do you wish to join this ' +
-                                //               (communityController
-                                //                           .communities[i]
-                                //                           .isPrivate ==
-                                //                       true
-                                //                   ? 'private'
-                                //                   : 'public') +
-                                //               ' community?'),
-                                //       actions: [
-                                //         ElevatedButton(
-                                //           style: ElevatedButton.styleFrom(
-                                //             backgroundColor: Colors.red,
-                                //             padding: EdgeInsets.symmetric(
-                                //                 horizontal: 50, vertical: 10),
-                                //             textStyle: TextStyle(
-                                //               fontSize: 20,
-                                //               fontWeight: FontWeight.bold,
-                                //             ),
-                                //           ),
-                                //           onPressed: () {},
-                                //           child: Text(
-                                //             'Join',
-                                //             style:
-                                //                 TextStyle(color: Colors.white),
-                                //           ),
-                                //         ),
-                                //       ],
-                                //     );
-                                //   },
-                                // );
-                                // showDialog(
-                                //   context: context,
-                                //   builder: (BuildContext context) {
-                                //     return AlertDialog(
-                                //       title: Text(communityController
-                                //           .communities[i].communityName),
-                                //       content: Text(
-                                //           'Do you wish to join this ' +
-                                //               (communityController
-                                //                           .communities[i]
-                                //                           .isPrivate ==
-                                //                       true
-                                //                   ? 'private'
-                                //                   : 'public') +
-                                //               ' community?'),
-                                //       actions: [
-                                //         AnimatedBuilder(
-                                //             animation: userController,
-                                //             builder: (context, snapshot) {
-                                //               if (userController.isLoading) {
-                                //                 return const Center(
-                                //                   child:
-                                //                       CircularProgressIndicator(),
-                                //                 );
-                                //               }
-                                //               return ElevatedButton(
-                                //                 style: ElevatedButton.styleFrom(
-                                //                   backgroundColor: Colors.red,
-                                //                   padding: EdgeInsets.symmetric(
-                                //                       horizontal: 50,
-                                //                       vertical: 10),
-                                //                   textStyle: TextStyle(
-                                //                     fontSize: 20,
-                                //                     fontWeight: FontWeight.bold,
-                                //                   ),
-                                //                 ),
-                                //                 onPressed: () async {
-                                //                   if (userController
-                                //                           .user.isCommunity ==
-                                //                       true) {
-                                //                     showDialog(
-                                //                       context: context,
-                                //                       builder: (BuildContext
-                                //                           context) {
-                                //                         return AlertDialog(
-                                //                           title: Text(
-                                //                               'You are already a member of a community. You can only join one community at a time.'),
-                                //                         );
-                                //                       },
-                                //                     );
-                                //                   }
-                                //                   if (userController.user
-                                //                               .isCommunity ==
-                                //                           false &&
-                                //                       communityController
-                                //                               .communities[i]
-                                //                               .isPrivate ==
-                                //                           true) {
-                                //                     showDialog(
-                                //                       context: context,
-                                //                       builder: (BuildContext
-                                //                           context) {
-                                //                         return AlertDialog(
-                                //                           title: Text(
-                                //                               'You have sent a request to join the community'),
-                                //                         );
-                                //                       },
-                                //                     );
-                                //                   }
-                                //                   if (userController.user
-                                //                               .isCommunity ==
-                                //                           false &&
-                                //                       communityController
-                                //                               .communities[i]
-                                //                               .isPrivate ==
-                                //                           false) {
-                                //                     showDialog(
-                                //                       context: context,
-                                //                       builder: (BuildContext
-                                //                           context) {
-                                //                         return AlertDialog(
-                                //                           title: Text(
-                                //                               'Welcome to the community!'),
-                                //                         );
-                                //                       },
-                                //                     );
-                                //                   }
-
-                                //                 },
-                                //                 child: Text(
-                                //                   'Join',
-                                //                   style: TextStyle(
-                                //                       color: Colors.white),
-                                //                 ),
-                                //               );
-                                //             }),
-                                //       ],
-                                //     );
-                                //   },
-                                // );
                               },
                               child: Container(
-                                height: 150,
+                                height: 170,
                                 width: 400,
                                 color: Color.fromARGB(31, 153, 150, 150),
                                 child: Column(
@@ -425,19 +310,19 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                         fontSize: 18,
                                       ),
                                     ),
-                                    SizedBox(
-                                      height: 10,
-                                    ),
-                                    Text(
-                                      communityController
-                                          .communities[i].communityDescription,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 15,
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            8, 5, 8, 5),
+                                        child: Text(
+                                          communityController.communities[i]
+                                              .communityDescription,
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(
-                                      height: 50,
                                     ),
                                     Row(
                                       mainAxisAlignment:
@@ -453,9 +338,6 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                               color: Colors.white,
                                               size: 24.0,
                                             ),
-                                            SizedBox(
-                                                width:
-                                                    5), // Add some space between the icon and the text
                                             Text(
                                               communityController.communities[i]
                                                           .isPrivate ==
@@ -470,7 +352,7 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                           ],
                                         ),
                                         Text(
-                                          'Memebers' +
+                                          'Memebers: ' +
                                               communityController.communities[i]
                                                   .communityMember.length
                                                   .toString(),

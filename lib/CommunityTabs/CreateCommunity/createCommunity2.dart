@@ -89,6 +89,7 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
         MaterialPageRoute(
             builder: (ctx) => HomePage(
                   email: widget.email,
+                  homePageIndex: 0,
                 )),
       );
     }

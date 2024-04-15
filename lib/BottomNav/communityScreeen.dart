@@ -62,37 +62,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             else
                               Row(
                                 children: [
-                                  if (communityController
-                                              .community!.communityAdmin ==
-                                          userController.user.username &&
-                                      communityController
-                                              .community!.isPrivate ==
-                                          true)
-                                    ElevatedButton(
-                                      style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
-                                                  Colors.black),
-                                          shape: MaterialStateProperty.all<
-                                                  RoundedRectangleBorder>(
-                                              RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          20.0),
-                                                  side: BorderSide(
-                                                      color: Colors.grey)))),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  ViewMembers()),
-                                        );
-                                      },
-                                      child: Text('View Members',
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    ),
+                              
                                   if (communityController
                                               .community!.communityAdmin ==
                                           userController.user.username &&

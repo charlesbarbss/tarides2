@@ -83,7 +83,7 @@ class _SearchTabState extends State<SearchTab> {
                     children: [
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.red[900],
                           padding: const EdgeInsets.symmetric(
                               horizontal: 50, vertical: 10),
                           textStyle: const TextStyle(
@@ -106,7 +106,7 @@ class _SearchTabState extends State<SearchTab> {
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.red[900],
                       padding: const EdgeInsets.symmetric(
                           horizontal: 50, vertical: 10),
                       textStyle: const TextStyle(
