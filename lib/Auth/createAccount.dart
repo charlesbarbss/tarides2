@@ -86,7 +86,9 @@ class _CreateAccountState extends State<CreateAccount> {
           dateController.text.trim().isEmpty ||
           passwordController.text.trim().isEmpty ||
           selectUserImage == null ||
-          selectedGender == null) {
+          selectedGender == null ||
+          !emailController.text.contains('@') ||
+          !emailController.text.contains('.com')) {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
@@ -110,6 +112,115 @@ class _CreateAccountState extends State<CreateAccount> {
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
+        final documentReference =
+            FirebaseFirestore.instance.collection('goal30').doc();
+
+        final String goal30Id = documentReference.id;
+        await FirebaseFirestore.instance.collection('goal30').add({
+          'username': usernameController.text.trim(),
+          'category': '',
+          'timestamp': Timestamp.now(),
+          'bmiCategory': '',
+          'bmi': '',
+          'goalLength': 0,
+          'goal30Id': goal30Id,
+          'userData': false,
+          'goal30Category': false,
+          'goal60Category': false,
+          'goal90Category': false,
+          'isGoal30': false,
+          'day1': false,
+          'day2': false,
+          'day3': false,
+          'day4': false,
+          'day5': false,
+          'day6': false,
+          'day7': false,
+          'day8': false,
+          'day9': false,
+          'day10': false,
+          'day11': false,
+          'day12': false,
+          'day13': false,
+          'day14': false,
+          'day15': false,
+          'day16': false,
+          'day17': false,
+          'day18': false,
+          'day19': false,
+          'day20': false,
+          'day21': false,
+          'day22': false,
+          'day23': false,
+          'day24': false,
+          'day25': false,
+          'day26': false,
+          'day27': false,
+          'day28': false,
+          'day29': false,
+          'day30': false,
+          'day31': false,
+          'day32': false,
+          'day33': false,
+          'day34': false,
+          'day35': false,
+          'day36': false,
+          'day37': false,
+          'day38': false,
+          'day39': false,
+          'day40': false,
+          'day41': false,
+          'day42': false,
+          'day43': false,
+          'day44': false,
+          'day45': false,
+          'day46': false,
+          'day47': false,
+          'day48': false,
+          'day49': false,
+          'day50': false,
+          'day51': false,
+          'day52': false,
+          'day53': false,
+          'day54': false,
+          'day55': false,
+          'day56': false,
+          'day57': false,
+          'day58': false,
+          'day59': false,
+          'day60': false,
+          'day61': false,
+          'day62': false,
+          'day63': false,
+          'day64': false,
+          'day65': false,
+          'day66': false,
+          'day67': false,
+          'day68': false,
+          'day69': false,
+          'day70': false,
+          'day71': false,
+          'day72': false,
+          'day73': false,
+          'day74': false,
+          'day75': false,
+          'day76': false,
+          'day77': false,
+          'day78': false,
+          'day79': false,
+          'day80': false,
+          'day81': false,
+          'day82': false,
+          'day83': false,
+          'day84': false,
+          'day85': false,
+          'day86': false,
+          'day87': false,
+          'day88': false,
+          'day89': false,
+          'day90': false,
+        });
+
         final userId = userCredential.user!.uid;
         final storageRef = FirebaseStorage.instance
             .ref()
@@ -163,38 +274,38 @@ class _CreateAccountState extends State<CreateAccount> {
                 height: 10,
               ),
               TextFormField(
-                    controller: usernameController,
-                    style: TextStyle(
-                      color: Colors.white,
+                controller: usernameController,
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+                decoration: InputDecoration(
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3fffFFFFF0),
                     ),
-                    decoration: InputDecoration(
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: Color(0x3fffFFFFF0),
-                        ),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(15.0),
-                        ),
-                      ),
-                      labelStyle: TextStyle(
-                        color: Colors.white,
-                      ),
-                      labelText: 'Username',
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
                     ),
                   ),
-                  SizedBox(height: 10,),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0x3fffFFFFF0),
+                    ),
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(15.0),
+                    ),
+                  ),
+                  labelStyle: TextStyle(
+                    color: Colors.white,
+                  ),
+                  labelText: 'Username',
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
               Row(
                 children: [
-                  
-                 
                   Expanded(
                     child: TextFormField(
                       controller: lastNameController,
@@ -418,7 +529,6 @@ class _CreateAccountState extends State<CreateAccount> {
                 height: 10,
               ),
               TextFormField(
-             
                 style: TextStyle(
                   color: Colors.white,
                 ),
@@ -520,7 +630,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     ),
                   ),
                   labelStyle: TextStyle(
-                    color:  Colors.white,
+                    color: Colors.white,
                   ),
                   prefixIcon: const Icon(
                     Icons.lock,
@@ -536,7 +646,7 @@ class _CreateAccountState extends State<CreateAccount> {
                     child: Icon(
                         _obscureText ? Icons.visibility : Icons.visibility_off),
                   ),
-                  suffixIconColor:  Colors.white,
+                  suffixIconColor: Colors.white,
                   labelText: 'Password',
                 ),
               ),
@@ -545,7 +655,7 @@ class _CreateAccountState extends State<CreateAccount> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: Colors.red[900],
                   padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                   textStyle: TextStyle(
                     fontSize: 20,

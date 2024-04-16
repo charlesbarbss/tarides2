@@ -1,9 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/CommunityTabs/EventsTab.dart';
 import 'package:tarides/CommunityTabs/PostTab.dart';
 import 'package:tarides/CommunityTabs/SearchTab.dart';
 import 'package:tarides/CommunityTabs/memberRequest.dart';
+import 'package:tarides/CommunityTabs/viewMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/userController.dart';
 
@@ -42,7 +42,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               appBar: AppBar(
                 automaticallyImplyLeading: false,
                 backgroundColor: Colors.black,
-                title: Text(
+                title: const Text(
                   'Community',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -60,13 +60,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             if (communityController.community == null)
                               Container()
                             else
-                              Column(
+                              Row(
                                 children: [
+                              
                                   if (communityController
-                                          .community!.communityAdmin ==
-                                      userController.user.username)
+                                              .community!.communityAdmin ==
+                                          userController.user.username &&
+                                      communityController
+                                              .community!.isPrivate ==
+                                          true)
                                     IconButton(
-                                      icon: Icon(Icons.notifications),
+                                      icon: const Icon(Icons.notifications),
                                       onPressed: () {
                                         Navigator.push(
                                           context,
@@ -90,7 +94,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
               body: Column(
                 children: [
-                  TabBar(
+                  const TabBar(
                     dividerColor: Colors.white,
                     indicatorColor: Colors.red,
                     tabs: [
@@ -115,7 +119,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           email: widget.email,
                           communityId: userController.user.communityId,
                         ),
-                        EventsTab(),
+                        const EventsTab(),
                       ],
                     ),
                   ),

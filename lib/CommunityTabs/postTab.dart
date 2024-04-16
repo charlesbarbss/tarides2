@@ -1,23 +1,27 @@
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/BottomNav/communityScreeen.dart';
+import 'package:tarides/CommunityTabs/viewMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/Model/postModel.dart';
 import 'package:tarides/Model/userModel.dart';
+import 'package:tarides/homePage.dart';
 
 class PostTab extends StatefulWidget {
-  const PostTab({super.key, required this.email, required this.communityId});
-
   final String email;
   final String communityId;
+  const PostTab({super.key, required this.email, required this.communityId});
+
   @override
   State<PostTab> createState() => _PostTabState();
 }
 
 class _PostTabState extends State<PostTab> {
-  bool _isHeartFilled = false;
+  final bool _isHeartFilled = false;
 
   final postId = FirebaseFirestore.instance.collection('post').doc().id;
 
@@ -55,17 +59,17 @@ class _PostTabState extends State<PostTab> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Create a Post'),
+          title: const Text('Create a Post'),
           content: Form(
             child: TextFormField(
               controller: createPostController,
               minLines: 1,
               maxLines: 5,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black,
               ),
-              decoration: InputDecoration(
-                focusedBorder: const OutlineInputBorder(
+              decoration: const InputDecoration(
+                focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                     color: Colors.black,
                   ),
@@ -73,7 +77,7 @@ class _PostTabState extends State<PostTab> {
                     Radius.circular(15.0),
                   ),
                 ),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                     color: Colors.black,
                   ),
@@ -92,8 +96,9 @@ class _PostTabState extends State<PostTab> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
-                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-                textStyle: TextStyle(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+                textStyle: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -110,7 +115,7 @@ class _PostTabState extends State<PostTab> {
                   'isHeart': false,
                 }).then((value) => Navigator.pop(context));
               },
-              child: Text(
+              child: const Text(
                 'Post',
                 style: TextStyle(color: Colors.white),
               ),
@@ -126,8 +131,8 @@ class _PostTabState extends State<PostTab> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.red[900],
+        child: const Icon(Icons.add),
       ),
       backgroundColor: Colors.black,
       body: AnimatedBuilder(
@@ -142,7 +147,7 @@ class _PostTabState extends State<PostTab> {
             child: Column(
               children: [
                 if (userController.user.isCommunity == false)
-                  Center(
+                  const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -179,12 +184,12 @@ class _PostTabState extends State<PostTab> {
                               children: [
                                 Text(
                                   communityController.community!.communityName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 25,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 30,
                                 ),
                                 Expanded(
@@ -192,29 +197,177 @@ class _PostTabState extends State<PostTab> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       IconButton(
-                                        icon: Icon(Icons.exit_to_app),
+                                        icon: const Icon(Icons.exit_to_app),
                                         color: Colors.red,
                                         onPressed: () async {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    CommunityScreen(
-                                                        email: widget.email)),
-                                          );
-                                          final userDoc =
-                                              await FirebaseFirestore.instance
-                                                  .collection('user')
-                                                  .where('username',
-                                                      isEqualTo: userController
-                                                          .user.username)
-                                                  .get();
+                                          if (communityController
+                                                  .community!.communityAdmin !=
+                                              userController.user.username) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => HomePage(
+                                                  email: widget.email,
+                                                  homePageIndex: 0,
+                                                ),
+                                              ),
+                                            );
+                                            final userDoc =
+                                                await FirebaseFirestore.instance
+                                                    .collection('user')
+                                                    .where('username',
+                                                        isEqualTo:
+                                                            userController
+                                                                .user.username)
+                                                    .get();
 
-                                          await userDoc.docs.first.reference
-                                              .update({
-                                            'communityId': '',
-                                            'isCommunity': false,
-                                          });
+                                            await userDoc.docs.first.reference
+                                                .update({
+                                              'communityId': '',
+                                              'isCommunity': false,
+                                            });
+
+                                            final communityDoc =
+                                                await FirebaseFirestore
+                                                    .instance
+                                                    .collection('community')
+                                                    .where(
+                                                        'communityId',
+                                                        isEqualTo:
+                                                            communityController
+                                                                .community!
+                                                                .communityId)
+                                                    .where('communityMember',
+                                                        arrayContains:
+                                                            userController
+                                                                .user.username)
+                                                    .get();
+
+                                            await communityDoc
+                                                .docs.first.reference
+                                                .update({
+                                              'communityMember':
+                                                  FieldValue.arrayRemove([
+                                                userController.user.username
+                                              ]),
+                                            });
+                                          }
+                                          if (communityController.community!
+                                                      .communityAdmin ==
+                                                  userController
+                                                      .user.username &&
+                                              communityController.community!
+                                                      .communityMember.length !=
+                                                  1) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text('Error'),
+                                                  content: Text(
+                                                      'You are the admin, you cannot leave the group.'),
+                                                  actions: [
+                                                    TextButton(
+                                                      child: Text('OK'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }
+                                          if (communityController.community!
+                                                      .communityAdmin ==
+                                                  userController
+                                                      .user.username &&
+                                              communityController.community!
+                                                      .communityMember.length ==
+                                                  1) {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text(
+                                                      'You are the admin'), // Replace with your title
+                                                  content:
+                                                      SingleChildScrollView(
+                                                    child: ListBody(
+                                                      children: <Widget>[
+                                                        Text(
+                                                            'Do you wish to delete this community?'), // Replace with your body text
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  actions: <Widget>[
+                                                    TextButton(
+                                                      child: Text(
+                                                          'Yes'), // Replace with your button text
+                                                      onPressed: () async {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    HomePage(
+                                                              email:
+                                                                  widget.email,
+                                                              homePageIndex: 0,
+                                                            ),
+                                                          ),
+                                                        );
+                                                        final userDoc =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'user')
+                                                                .where(
+                                                                    'username',
+                                                                    isEqualTo:
+                                                                        userController
+                                                                            .user
+                                                                            .username)
+                                                                .get();
+
+                                                        await userDoc.docs.first
+                                                            .reference
+                                                            .update({
+                                                          'communityId': '',
+                                                          'isCommunity': false,
+                                                        });
+
+                                                        final communityDoc =
+                                                            await FirebaseFirestore
+                                                                .instance
+                                                                .collection(
+                                                                    'community')
+                                                                .where(
+                                                                    'communityId',
+                                                                    isEqualTo: communityController
+                                                                        .community!
+                                                                        .communityId)
+                                                                .get();
+
+                                                        await communityDoc.docs
+                                                            .first.reference
+                                                            .delete();
+                                                      },
+                                                    ),
+                                                    TextButton(
+                                                      child: Text(
+                                                          'No'), // Replace with your button text
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          }
                                         },
                                       ),
                                     ],
@@ -222,7 +375,7 @@ class _PostTabState extends State<PostTab> {
                                 ),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 5,
                             ),
                             Row(
@@ -231,44 +384,86 @@ class _PostTabState extends State<PostTab> {
                                   communityController.community!.isPrivate
                                       ? 'Private Group'
                                       : 'Public Group',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.white, fontSize: 15),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   width: 5,
                                 ),
                                 communityController.community!.isPrivate
-                                    ? Icon(Icons.lock, color: Colors.white)
-                                    : Icon(Icons.lock_open,
+                                    ? const Icon(Icons.lock,
+                                        color: Colors.white)
+                                    : const Icon(Icons.lock_open,
                                         color: Colors.white),
-                                SizedBox(width: 5),
-                                SizedBox(
+                                const SizedBox(width: 5),
+                                const SizedBox(
                                   width: 20,
                                 ),
                                 Text(
-                                  'No of Memebers: ' +
-                                      (communityController.community
-                                                  ?.communityMember.length ??
-                                              0)
-                                          .toString(),
-                                  style: TextStyle(
+                                  'No of Memebers: ${communityController.community?.communityMember.length ?? 0}',
+                                  style: const TextStyle(
                                       color: Colors.white, fontSize: 15),
                                 ),
                               ],
                             ),
-                            SizedBox(
+                            const SizedBox(
                               height: 10,
                             ),
                             Column(
                               children: [
-                                Text(
+                                if (communityController
+                                        .community!.communityAdmin ==
+                                    userController.user.username)
+                                  ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.black),
+                                        shape: MaterialStateProperty.all<
+                                                RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                                side: BorderSide(
+                                                    color: Colors.grey)))),
+                                    onPressed: () {
+                                      for (int x = 0;
+                                          x <
+                                              communityController.community!
+                                                  .communityMember.length;
+                                          x++) {
+                                        if (communityController.community!
+                                                .communityMember[x] ==
+                                            userController.user.username) {
+                                          String nonAdminMembers =
+                                              communityController.community!
+                                                  .communityMember[x];
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewMembers(
+                                                      email: widget.email,
+                                                      communityId:
+                                                          widget.communityId,
+                                                      admin: nonAdminMembers,
+                                                    )),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: Text('View Members',
+                                        style: TextStyle(color: Colors.white)),
+                                  ),
+                                const Text(
                                   'Group Post',
                                   style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
                                 AnimatedBuilder(
@@ -287,9 +482,9 @@ class _PostTabState extends State<PostTab> {
                                             Column(
                                               children: [
                                                 Container(
-                                                  height: 200,
+                                                  height: 210,
                                                   width: 400,
-                                                  color: Color.fromARGB(
+                                                  color: const Color.fromARGB(
                                                       31, 153, 150, 150),
                                                   child: Column(
                                                     crossAxisAlignment:
@@ -319,8 +514,8 @@ class _PostTabState extends State<PostTab> {
                                                               child: ClipOval(
                                                                 child: Image
                                                                     .network(
-                                                                  userController
-                                                                      .user
+                                                                  postController
+                                                                      .users[i]
                                                                       .imageUrl,
                                                                   height: 130,
                                                                   width: 130,
@@ -330,7 +525,7 @@ class _PostTabState extends State<PostTab> {
                                                               ),
                                                             ),
                                                           ),
-                                                          SizedBox(
+                                                          const SizedBox(
                                                             width: 5,
                                                           ),
                                                           Column(
@@ -341,16 +536,17 @@ class _PostTabState extends State<PostTab> {
                                                               Row(
                                                                 children: [
                                                                   Text(
-                                                                    userController
-                                                                        .user
-                                                                        .username,
+                                                                    postController
+                                                                        .posts[
+                                                                            i]
+                                                                        .usersName,
                                                                     style: TextStyle(
                                                                         color: Colors
                                                                             .white,
                                                                         fontWeight:
                                                                             FontWeight.bold),
                                                                   ),
-                                                                  SizedBox(
+                                                                  const SizedBox(
                                                                     width: 10,
                                                                   ),
                                                                   Text(
@@ -359,7 +555,7 @@ class _PostTabState extends State<PostTab> {
                                                                             i]
                                                                         .timestamp),
                                                                     style:
-                                                                        TextStyle(
+                                                                        const TextStyle(
                                                                       color: Colors
                                                                           .white,
                                                                     ),
@@ -367,33 +563,38 @@ class _PostTabState extends State<PostTab> {
                                                                 ],
                                                               ),
                                                               Text(
-                                                                userController
-                                                                    .user.email,
+                                                                postController
+                                                                    .users[i]
+                                                                    .email,
                                                                 style:
-                                                                    TextStyle(
+                                                                    const TextStyle(
                                                                   color: Colors
                                                                       .white,
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
-                                                          SizedBox(
+                                                          const SizedBox(
+                                                            width: 92,
+                                                          ),
+                                                          
+                                                          const SizedBox(
                                                             width: 10,
                                                           ),
                                                         ],
                                                       ),
-                                                      SizedBox(
+                                                      const SizedBox(
                                                         height: 10,
                                                       ),
                                                       Padding(
                                                         padding:
                                                             const EdgeInsets
-                                                                    .fromLTRB(
+                                                                .fromLTRB(
                                                                 10, 0, 10, 10),
                                                         child: Text(
                                                           postController
                                                               .posts[i].caption,
-                                                          style: TextStyle(
+                                                          style: const TextStyle(
                                                               color:
                                                                   Colors.white,
                                                               fontWeight:
@@ -406,7 +607,7 @@ class _PostTabState extends State<PostTab> {
                                                             MainAxisAlignment
                                                                 .start,
                                                         children: [
-                                                          SizedBox(
+                                                          const SizedBox(
                                                             width: 10,
                                                           ),
                                                           IconButton(
@@ -426,7 +627,7 @@ class _PostTabState extends State<PostTab> {
                                                                 () {
                                                                   if (postController
                                                                           .posts[
-                                                                              0]
+                                                                              i]
                                                                           .isHeart ==
                                                                       true) {
                                                                     postController
@@ -453,7 +654,6 @@ class _PostTabState extends State<PostTab> {
                                                                             .user
                                                                             .username);
                                                                   }
-                                                                  ;
                                                                 },
                                                               );
 
@@ -531,12 +731,99 @@ class _PostTabState extends State<PostTab> {
                                                               }
                                                             },
                                                           ),
+                                                          SizedBox(
+                                                            width: 1,
+                                                          ),
+                                                          Text(
+                                                            postController
+                                                                .posts[i]
+                                                                .heart
+                                                                .length
+                                                                .toString(),
+                                                            style: TextStyle(
+                                                                color:
+                                                                    Colors.grey,
+                                                                fontSize: 15),
+                                                          ),
                                                         ],
                                                       ),
+                                                      Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .end,
+                                                            children: [
+                                                              if (postController
+                                                                      .posts[i]
+                                                                      .usersName ==
+                                                                  userController
+                                                                      .user
+                                                                      .username)
+                                                                IconButton(
+                                                                  icon: Icon(Icons
+                                                                      .delete), // Change this to your desired icon
+                                                                  color: Colors
+                                                                      .white,
+                                                                  onPressed:
+                                                                      () {
+                                                                    showDialog(
+                                                                      context:
+                                                                          context,
+                                                                      builder:
+                                                                          (BuildContext
+                                                                              context) {
+                                                                        return AlertDialog(
+                                                                          title:
+                                                                              Text('Delete Post'), // Replace with your title
+                                                                          content:
+                                                                              SingleChildScrollView(
+                                                                            child:
+                                                                                ListBody(
+                                                                              children: [
+                                                                                Text('Do you wish to delete this post?'), // Replace with your body text
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                          actions: [
+                                                                            TextButton(
+                                                                              child: Text('Yes'), // Replace with your button text
+                                                                              // onPressed:(){
+                                                                              //   print('Y E S clicked');
+                                                                              // },
+                                                                              onPressed: () async {
+                                                                                // Replace 'postId' with the actual document ID of the post
+                                                                                final postDoc = await FirebaseFirestore.instance.collection('post').where('postId', isEqualTo: postController.posts[i].postId).get();
+
+                                                                                await postDoc.docs.first.reference.delete();
+
+                                                                                Navigator.push(
+                                                                                  context,
+                                                                                  MaterialPageRoute(
+                                                                                    builder: (context) => HomePage(
+                                                                                      email: widget.email,
+                                                                                      homePageIndex: 0,
+                                                                                    ),
+                                                                                  ),
+                                                                                );
+                                                                              },
+                                                                            ),
+                                                                            TextButton(
+                                                                              child: Text('No'), // Replace with your button text
+                                                                              onPressed: () {
+                                                                                Navigator.of(context).pop();
+                                                                              },
+                                                                            ),
+                                                                          ],
+                                                                        );
+                                                                      },
+                                                                    );
+                                                                  },
+                                                                ),
+                                                            ],
+                                                          ),
                                                     ],
                                                   ),
                                                 ),
-                                                SizedBox(
+                                                const SizedBox(
                                                   height: 10,
                                                 ),
                                               ],
@@ -544,7 +831,7 @@ class _PostTabState extends State<PostTab> {
                                         ],
                                       );
                                     }),
-                                SizedBox(
+                                const SizedBox(
                                   height: 10,
                                 ),
                               ],
@@ -553,7 +840,7 @@ class _PostTabState extends State<PostTab> {
                         ),
                       );
                     },
-                  )
+                  ),
               ],
             ),
           );

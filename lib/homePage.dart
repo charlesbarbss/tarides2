@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:tarides/BottomNav/Goal30Screen.dart';
+import 'package:tarides/BottomNav/goal30Screen.dart';
 import 'package:tarides/BottomNav/pedalScreen.dart';
+import 'package:tarides/BottomNav/preridesScreen.dart';
 import 'package:tarides/BottomNav/profileScreen.dart';
 import 'package:tarides/Controller/userController.dart';
+import 'package:location/location.dart';
 
-import 'BottomNav/ridesScreen.dart';
 import 'BottomNav/communityScreeen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({
     super.key,
     required this.email,
+    required this.homePageIndex,
   });
   final String email;
+  final int homePageIndex;
 
   @override
   State<HomePage> createState() {
@@ -21,15 +24,45 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedPageIndex = 2;
+  late int _selectedPageIndex;
+  late bool _serviceEnabled;
+  Location location = new Location();
+  late PermissionStatus _permissionGranted;
+  LocationData? _locationData;
 
   UserController userController = UserController();
 
   @override
   void initState() {
     super.initState();
-
+    _selectedPageIndex = widget.homePageIndex;
     userController.getUser(widget.email);
+
+    initializeLocation();
+  }
+
+  void initializeLocation() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+
+    setState(() {
+      _locationData = _locationData;
+    });
   }
 
   void selectedPage(int index) {
@@ -46,16 +79,41 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (_selectedPageIndex == 1) {
-      activePage = RidesScreen();
+      activePage = PreRidesScreen();
     }
 
     if (_selectedPageIndex == 2) {
-      activePage = PedalScreeen();
+      activePage = AnimatedBuilder(
+          animation: userController,
+          builder: (context, snapshot) {
+            if (userController.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return PedalScreeen(
+              email: widget.email,
+            );
+          });
     }
 
     if (_selectedPageIndex == 3) {
-      activePage = Goal30Screen();
+      activePage = AnimatedBuilder(
+          animation: userController,
+          builder: (context, snapshot) {
+            if (userController.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return Goal30Screen(
+              locationData: _locationData,
+              email: widget.email,
+              user: userController.user,
+            );
+          });
     }
+
     if (_selectedPageIndex == 4) {
       activePage = ProfileScreen(
         email: widget.email,
