@@ -221,6 +221,21 @@ class _CreateAccountState extends State<CreateAccount> {
           'day90': false,
         });
 
+        await FirebaseFirestore.instance.collection('achievements').add({
+          'username': usernameController.text.trim(),
+          'newbie': true,
+          'legendary': false,
+          'flawlessGoal30': false,
+          'consistentGoal30': false,
+          'resilientgoal30': false,
+          'flawlessGoal60': false,
+          'consistentGoal60': false,
+          'resilientgoal60': false,
+          'flawlessGoal90': false,
+          'consistentGoal90': false,
+          'resilientgoal90': false,
+        });
+
         final userId = userCredential.user!.uid;
         final storageRef = FirebaseStorage.instance
             .ref()

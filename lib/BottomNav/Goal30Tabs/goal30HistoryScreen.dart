@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tarides/Controller/goal30HistoryController.dart';
 import 'package:tarides/Model/goal30Model.dart';
+import 'package:tarides/Model/userModel.dart';
 
 class Goal30History extends StatefulWidget {
   const Goal30History({super.key, required this.email, required this.goal30});
@@ -14,9 +15,10 @@ class Goal30History extends StatefulWidget {
 
 class _Goal30HistoryState extends State<Goal30History> {
   Goal30HistoryController goal30HistoryController = Goal30HistoryController();
+  late Users user;
   @override
   void initState() {
-    goal30HistoryController.getGoal30History(widget.goal30.username);
+    goal30HistoryController.getGoal30History(user.username);
     super.initState();
   }
 

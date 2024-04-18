@@ -92,15 +92,18 @@ flutter:
     - assets/images/Pedal.png
     - assets/images/Rides.png
     - assets/images/Profile.png
-    - assets/images/achivements/consistent30.png
-    - assets/images/achivements/consistent60.png
-    - assets/images/achivements/consistent90.png
-    - assets/images/achivements/flawless30.png
-    - assets/images/achivements/flawless60.png
-    - assets/images/achivements/flawless90.png
-    - assets/images/achivements/resilient30.png
-    - assets/images/achivements/resilient60.png
-    - assets/images/achivements/resilient90.png
+    - assets/images/achievements/consistent30.png
+    - assets/images/achievements/consistent60.png
+    - assets/images/achievements/consistent90.png
+    - assets/images/achievements/flawless30.png
+    - assets/images/achievements/flawless60.png
+    - assets/images/achievements/flawless90.png
+    - assets/images/achievements/resilient30.png
+    - assets/images/achievements/resilient60.png
+    - assets/images/achievements/resilient90.png
+    - assets/images/achievements/newbie.png
+    - assets/images/achievements/legendary.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

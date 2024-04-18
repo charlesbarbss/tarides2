@@ -83,18 +83,24 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_selectedPageIndex == 2) {
-      activePage = AnimatedBuilder(
-          animation: userController,
-          builder: (context, snapshot) {
-            if (userController.isLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            return PedalScreeen(
-              email: widget.email,
-            );
-          });
+      activePage = _locationData != null
+          ? AnimatedBuilder(
+              animation: userController,
+              builder: (context, snapshot) {
+                if (userController.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                return PedalScreen(
+                  email: widget.email,
+                  location: _locationData!,
+                );
+              })
+          : const Center(
+              child:
+                  CircularProgressIndicator()); // Replace this with your placeholder widget
     }
 
     if (_selectedPageIndex == 3) {
@@ -115,9 +121,19 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_selectedPageIndex == 4) {
-      activePage = ProfileScreen(
-        email: widget.email,
-      );
+      activePage = AnimatedBuilder(
+          animation: userController,
+          builder: (context, snapshot) {
+            if (userController.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            return ProfileScreen(
+              user: userController.user,
+              email: widget.email,
+            );
+          });
     }
 
     return Scaffold(

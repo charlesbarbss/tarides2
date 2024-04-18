@@ -352,7 +352,7 @@ class _MapScreenState extends State<MapScreen> {
                 googleMapController!.animateCamera(
                   CameraUpdate.newCameraPosition(
                     CameraPosition(
-                        target: _origin!.position, zoom: 14, tilt: 50),
+                        target: _origin!.position, zoom: 20, tilt: 50),
                   ),
                 );
               },
@@ -360,7 +360,7 @@ class _MapScreenState extends State<MapScreen> {
                 alignment: Alignment.center,
                 children: <Widget>[
                   CircleAvatar(
-                    radius: _isOriginButtonTapped ? 20 : 15,
+                    radius: _isOriginButtonTapped ? 14 : 15,
                     backgroundColor: Colors.green[900],
                   ),
                   Text(
@@ -488,8 +488,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           Positioned(
-            top: 410,
-            left: 350,
+            top: 360,
+            left: 300,
             child: FloatingActionButton(
               onPressed: () {
                 googleMapController!.animateCamera(
@@ -515,8 +515,8 @@ class _MapScreenState extends State<MapScreen> {
               _finalDestination != null &&
               proceed == false)
             Positioned(
-              top: 350,
-              left: 350,
+              top: 300,
+              left: 300,
               child: FloatingActionButton(
                 onPressed: () {
                   setState(() {
@@ -539,197 +539,111 @@ class _MapScreenState extends State<MapScreen> {
             ),
           if (isStart == false)
             Positioned(
-              top: 475.0,
+              top: 420.0,
               left: 10.0,
               right: 10.0,
               child: Container(
-                height: 297,
+                height: 260,
                 padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: Colors.grey[900],
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 5,
-                    ),
-                    TextFormField(
-                      readOnly: true,
-                      controller: firstPinPoint,
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                      decoration: InputDecoration(
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        labelStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                        // labelText: '1st Pin Point',
-                        hintText: '1st Pin Point',
-                        hintStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ), // Optional: for spacing between the fields
-                    TextFormField(
-                      readOnly: true,
-                      controller: secondPinPoint,
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                      decoration: InputDecoration(
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        labelStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                        // labelText: '2nd Pin Point',
-                        hintText: '2nd Pin Point',
-                        hintStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    TextFormField(
-                      readOnly: true,
-                      controller: thirdPinPoint,
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                      decoration: InputDecoration(
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Color(0x3fffFFFFF0),
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(15.0),
-                          ),
-                        ),
-                        labelStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                        // labelText: '1st Pin Point',
-                        hintText: '3rd Pin Point',
-                        hintStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          fixedSize: const Size.fromHeight(60),
-                          maximumSize: const Size.fromWidth(350),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            side: BorderSide.none,
-                          ),
-                          backgroundColor: Colors.red[900],
-                        ),
-                        onPressed: () {
-                          if (widget.goal30.goalLength == 30 &&
-                              totalKm >= goal30[widget.day - 1].kmGoal) {
-                            setState(() {
-                              isStart = true;
-                              startTimer();
-                              proceed = true;
-                              finishedRide = true;
-                              getCurrentLocation();
-                            });
-                          } else if (widget.goal30.goalLength == 60 &&
-                              totalKm >= goal60[widget.day - 1].kmGoal) {
-                            setState(() {
-                              isStart = true;
-                              startTimer();
-                              proceed = true;
-                              finishedRide = true;
-                              getCurrentLocation();
-                            });
-                          } else if (widget.goal30.goalLength == 90 &&
-                              totalKm >= goal90[widget.day - 1].kmGoal) {
-                            setState(() {
-                              isStart = true;
-                              startTimer();
-                              proceed = true;
-                              finishedRide = true;
-                              getCurrentLocation();
-                            });
-                          } else
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'You have not reached the goal yet',
-                                ),
-                              ),
-                            );
-                        },
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'Proceed',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20.0,
+                          'FIRST PIN POINT: ${firstPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'SECOND PIN POINT:  ${secondPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'THIRD PIN POINT: ${thirdPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            fixedSize: const Size.fromHeight(60),
+                            maximumSize: const Size.fromWidth(350),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              side: BorderSide.none,
+                            ),
+                            backgroundColor: Colors.red[900],
+                          ),
+                          onPressed: () {
+                            if (widget.goal30.goalLength == 30 &&
+                                totalKm >= goal30[widget.day - 1].kmGoal) {
+                              setState(() {
+                                isStart = true;
+                                startTimer();
+                                proceed = true;
+                                finishedRide = true;
+                                getCurrentLocation();
+                              });
+                            } else if (widget.goal30.goalLength == 60 &&
+                                totalKm >= goal60[widget.day - 1].kmGoal) {
+                              setState(() {
+                                isStart = true;
+                                startTimer();
+                                proceed = true;
+                                finishedRide = true;
+                                getCurrentLocation();
+                              });
+                            } else if (widget.goal30.goalLength == 90 &&
+                                totalKm >= goal90[widget.day - 1].kmGoal) {
+                              setState(() {
+                                isStart = true;
+                                startTimer();
+                                proceed = true;
+                                finishedRide = true;
+                                getCurrentLocation();
+                              });
+                            } else
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'You have not reached the goal yet',
+                                  ),
+                                ),
+                              );
+                          },
+                          child: Text(
+                            'Proceed',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                  ],
+                      SizedBox(
+                        height: 5,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           if (isStart == true)
             Positioned(
-              top: 505.0,
+              top: 420.0,
               left: 10.0,
               right: 10.0,
               child: Container(

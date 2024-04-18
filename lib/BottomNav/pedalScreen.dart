@@ -1,1435 +1,906 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_google_places/flutter_google_places.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter/rendering.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_webservice/places.dart' as location;
+import 'package:location/location.dart';
+import 'package:location/location.dart' as cur;
+import 'package:tarides/BottomNav/Goal30Tabs/directionsRepository.dart';
+import 'package:tarides/BottomNav/Goal30Tabs/mapScreen.dart';
+import 'package:tarides/Controller/userController.dart';
+import 'package:tarides/Model/directionsModel.dart';
 import 'package:tarides/homePage.dart';
-import 'package:tarides/services/add_favs.dart';
-import 'package:tarides/services/add_pedal.dart';
-import 'package:tarides/utils/distance_calculations.dart';
-import 'package:tarides/utils/get_location.dart';
-import 'package:tarides/utils/time_calculation.dart';
-import 'package:tarides/widgets/button_widget.dart';
-import 'package:tarides/widgets/text_widget.dart';
+import 'package:path_provider/path_provider.dart';
 
-import '../utils/keys.dart';
+class PedalScreen extends StatefulWidget {
+  const PedalScreen({super.key, required this.email, this.location});
 
-class PedalScreeen extends StatefulWidget {
-  String email;
-
-  PedalScreeen({super.key, required this.email});
+  final String email;
+  final LocationData? location;
 
   @override
-  State<PedalScreeen> createState() => _PedalScreeenState();
+  State<PedalScreen> createState() => _PedalScreenState();
 }
 
-class _PedalScreeenState extends State<PedalScreeen> {
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_start == 0) {
-          _timer.cancel();
-        } else {
-          _start--;
-        }
-      });
-    });
+class _PedalScreenState extends State<PedalScreen> {
+  UserController userController = UserController();
+  final firstPinPoint = TextEditingController();
+  final secondPinPoint = TextEditingController();
+  final thirdPinPoint = TextEditingController();
 
-    Timer.periodic(const Duration(seconds: 5), (timer) {
-      Geolocator.getCurrentPosition().then((position) {
-        setState(() {
-          lat = position.latitude;
-          long = position.longitude;
-          hasLoaded = true;
-          speed = position.speed;
-          pickUp = LatLng(position.latitude, position.longitude);
-        });
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
 
-        addMyMarker1(position.latitude, position.longitude);
-        getAddressFromLatLng(position.latitude, position.longitude)
-            .then((value) {
+  GoogleMapController? googleMapController;
+
+  Marker? _origin;
+  Marker? _destination;
+  Marker? _finalDestination;
+  Directions? _info;
+  Directions? _info2;
+  Directions? _info3;
+  bool isStart = false;
+
+  bool _isOriginButtonTapped = false;
+  bool _isDestinationButtonTapped = false;
+  bool _isFinalDestinationButtonTapped = false;
+
+  LocationData? currentLocation;
+
+  bool pin1topin2 = false;
+  bool pin2topin3 = false;
+
+  bool finishedRide = false;
+
+  late Timer _timer;
+  int _start = 0;
+
+  final List<LatLng> polylinePoints = [];
+  Position? currentPosition;
+
+  final GlobalKey _globalKey = GlobalKey();
+
+  bool proceed = false;
+
+  final Set<Polyline> _polylines = Set<Polyline>();
+  List<LatLng> polylineCoordinates = [];
+
+  void getCurrentLocation() async {
+    cur.Location location = cur.Location();
+
+    GoogleMapController googleMapController = await _controller.future;
+
+    location.getLocation().then(
+      (location) {
+        currentLocation = location;
+      },
+    );
+
+    location.onLocationChanged.listen(
+      (newLoc) {
+        currentLocation = newLoc;
+        if (finishedRide == true) {
+          googleMapController.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(
+                    currentLocation!.latitude!, currentLocation!.longitude!),
+                zoom: 17.0,
+              ),
+            ),
+          );
+
+          // Add the new location to the polyline coordinates
+          polylineCoordinates.add(
+            LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
+          );
+
+          // Create a new polyline with the updated coordinates and add it to the set
+          Polyline polyline = Polyline(
+            polylineId: PolylineId('route'),
+            color: Colors.blueAccent,
+            width: 4,
+            points: polylineCoordinates,
+          );
+
           setState(() {
-            pickup = value;
+            _polylines.add(polyline);
           });
-        });
-        mapController!.animateCamera(CameraUpdate.newCameraPosition(
-            CameraPosition(
-                zoom: 14.4746,
-                target: LatLng(position.latitude, position.longitude))));
-      }).catchError((error) {
-        print('Error getting location: $error');
-      });
-    });
+        }
+      },
+    );
+  }
+
+  void startTimer() {
+    const oneSec = const Duration(seconds: 1);
+    _timer = new Timer.periodic(
+      oneSec,
+      (Timer timer) => setState(
+        () {
+          if (_start < 0) {
+            timer.cancel();
+          } else {
+            _start = _start + 1;
+          }
+        },
+      ),
+    );
+  }
+
+  String formatTimer(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final remainingSeconds = seconds % 60;
+
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
-    mapController!.dispose();
-  }
-
-  bool hasLoaded = false;
-
-  double lat = 0;
-  double long = 0;
-  late Polyline _poly = const Polyline(polylineId: PolylineId('new'));
-
-  late Polyline _poly2 = const Polyline(polylineId: PolylineId('2'));
-
-  Set<Marker> markers = {};
-
-  List<LatLng> polylineCoordinates = [];
-  List<LatLng> polylineCoordinates1 = [];
-  PolylinePoints polylinePoints = PolylinePoints();
-
-  late LatLng pickUp;
-  GoogleMapController? mapController;
-  late LatLng dropOff;
-  late LatLng secondLoc;
-
-  addMyMarker1(lat1, long1) async {
-    markers.add(Marker(
-        draggable: true,
-        onDragEnd: (value) async {
-          pickup = await getAddressFromLatLng(value.latitude, value.longitude);
-
-          if (polylineCoordinates1 != []) {
-            PolylineResult result =
-                await polylinePoints.getRouteBetweenCoordinates(
-                    kGoogleApiKey,
-                    PointLatLng(value.latitude, value.longitude),
-                    PointLatLng(secondLoc.latitude, secondLoc.longitude));
-            if (result.points.isNotEmpty) {
-              polylineCoordinates = result.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-
-            PolylineResult result1 =
-                await polylinePoints.getRouteBetweenCoordinates(
-              kGoogleApiKey,
-              PointLatLng(secondLoc.latitude, secondLoc.longitude),
-              PointLatLng(dropOff.latitude, dropOff.longitude),
-            );
-            if (result.points.isNotEmpty) {
-              polylineCoordinates1 = result1.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-          }
-          setState(() {
-            _poly = Polyline(
-                color: Colors.red,
-                polylineId: const PolylineId('route'),
-                points: polylineCoordinates,
-                width: 4);
-
-            _poly2 = Polyline(
-                color: Colors.blue,
-                polylineId: const PolylineId('route1'),
-                points: polylineCoordinates1,
-                width: 4);
-            pickUp = value;
-          });
-        },
-        icon: BitmapDescriptor.defaultMarker,
-        markerId: const MarkerId("pickup"),
-        position: LatLng(lat1, long1),
-        infoWindow: InfoWindow(title: 'Starting Point', snippet: pickup)));
-  }
-
-  addMyMarker12(lat1, long1) async {
-    markers.add(Marker(
-        draggable: true,
-        onDragEnd: (value) async {
-          second = await getAddressFromLatLng(value.latitude, value.longitude);
-          if (polylineCoordinates1 != []) {
-            PolylineResult result =
-                await polylinePoints.getRouteBetweenCoordinates(
-                    kGoogleApiKey,
-                    PointLatLng(pickUp.latitude, pickUp.longitude),
-                    PointLatLng(value.latitude, value.longitude));
-            if (result.points.isNotEmpty) {
-              polylineCoordinates = result.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-
-            PolylineResult result1 =
-                await polylinePoints.getRouteBetweenCoordinates(
-              kGoogleApiKey,
-              PointLatLng(value.latitude, value.longitude),
-              PointLatLng(dropOff.latitude, dropOff.longitude),
-            );
-            if (result.points.isNotEmpty) {
-              polylineCoordinates1 = result1.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-          }
-          setState(() {
-            _poly = Polyline(
-                color: Colors.red,
-                polylineId: const PolylineId('route'),
-                points: polylineCoordinates,
-                width: 4);
-
-            _poly2 = Polyline(
-                color: Colors.blue,
-                polylineId: const PolylineId('route1'),
-                points: polylineCoordinates1,
-                width: 4);
-            secondLoc = value;
-          });
-        },
-        icon: BitmapDescriptor.defaultMarker,
-        markerId: const MarkerId("dropOff"),
-        position: LatLng(lat1, long1),
-        infoWindow: InfoWindow(title: 'Second Point', snippet: second)));
-  }
-
-  addMyMarker123(lat1, long1) async {
-    markers.add(Marker(
-        draggable: true,
-        onDragEnd: (value) async {
-          drop = await getAddressFromLatLng(value.latitude, value.longitude);
-          if (polylineCoordinates1 != []) {
-            PolylineResult result =
-                await polylinePoints.getRouteBetweenCoordinates(
-                    kGoogleApiKey,
-                    PointLatLng(pickUp.latitude, pickUp.longitude),
-                    PointLatLng(secondLoc.latitude, secondLoc.longitude));
-            if (result.points.isNotEmpty) {
-              polylineCoordinates = result.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-
-            PolylineResult result1 =
-                await polylinePoints.getRouteBetweenCoordinates(
-              kGoogleApiKey,
-              PointLatLng(secondLoc.latitude, secondLoc.longitude),
-              PointLatLng(value.latitude, value.longitude),
-            );
-            if (result.points.isNotEmpty) {
-              polylineCoordinates1 = result1.points
-                  .map((point) => LatLng(point.latitude, point.longitude))
-                  .toList();
-            }
-          }
-          setState(() {
-            _poly = Polyline(
-                color: Colors.red,
-                polylineId: const PolylineId('route'),
-                points: polylineCoordinates,
-                width: 4);
-
-            _poly2 = Polyline(
-                color: Colors.blue,
-                polylineId: const PolylineId('route1'),
-                points: polylineCoordinates1,
-                width: 4);
-            dropOff = value;
-          });
-        },
-        icon: BitmapDescriptor.defaultMarker,
-        markerId: const MarkerId("dropOff1"),
-        position: LatLng(lat1, long1),
-        infoWindow: InfoWindow(title: 'Ending Point', snippet: drop)));
-  }
-
-  late String pickup = '';
-  late String drop = '';
-  late String second = '';
-  bool isclicked = false;
-
-  double speed = 0;
-  bool isPause = false;
-
-  late Timer _timer;
-  int _start = 1;
-
-  String get timerString {
-    Duration duration = Duration(seconds: _start);
-    int minutes = duration.inMinutes;
-    int seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
+  void initState() {
+    userController.getUser(widget.email);
+    getCurrentLocation();
+    // getCurrentLocation();
+    googleMapController?.dispose();
+
+    super.initState();
+  }
+
+  void _addMarker(LatLng pos) async {
+    final placemarks =
+        await placemarkFromCoordinates(pos.latitude, pos.longitude);
+    final place = placemarks.first;
+    final String fullAddress =
+        '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
+
+    if (_origin == null) {
+      setState(() {
+        _origin = Marker(
+          markerId: const MarkerId('origin'),
+          infoWindow: InfoWindow(title: place.name),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          position: pos,
+        );
+        firstPinPoint.text = fullAddress;
+        _destination = null;
+        _info = null;
+      });
+    } else if (_destination == null) {
+      setState(() {
+        _destination = Marker(
+          markerId: const MarkerId('destination'),
+          infoWindow: InfoWindow(title: place.name),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          position: pos,
+        );
+        secondPinPoint.text = fullAddress;
+        _finalDestination = null;
+        _info2 = null;
+      });
+      final directions = await DirectionsRepository().getDirections(
+        origin: _origin!.position,
+        destination: pos,
+      );
+      setState(() {
+        _info = directions;
+      });
+    } else if (_finalDestination == null) {
+      setState(() {
+        _finalDestination = Marker(
+          markerId: const MarkerId('finalDestination'),
+          infoWindow: InfoWindow(title: place.name),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          position: pos,
+        );
+        thirdPinPoint.text = fullAddress;
+      });
+
+      final directions2 = await DirectionsRepository().getDirections(
+        origin: _destination!.position,
+        destination: _finalDestination!.position,
+      );
+
+      setState(() {
+        _info2 = directions2;
+      });
+
+      final directions3 = await DirectionsRepository().getDirections(
+        origin: _origin!.position,
+        destination: _finalDestination!.position,
+      );
+      _info3 = directions3;
+      setState(() {
+        _info3 = directions3;
+      });
+    }
+  }
+
+  bool hasShownSnackBar = false;
+  bool reachPin2 = false;
+  void finishedPin1toPin2() {
+    double totalDistance =
+        double.parse(_info!.totalDistance.replaceFirst(' km', ''));
+
+    if (totalDistance <= locationService.totalDistanceTraveled &&
+        reachPin2 == false) {
+      setState(() {
+        pin1topin2 = true;
+
+        hasShownSnackBar = true;
+        reachPin2 = true;
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You are haflway there!'),
+          ),
+        );
+      });
+    }
+  }
+
+  bool hasShownSnackBar2 = false;
+
+  void finishedPin2toPin3() {
+    double totalDistance3 =
+        double.parse(_info!.totalDistance.replaceFirst(' km', '')) +
+            double.parse(_info2!.totalDistance.replaceFirst(' km', ''));
+
+    if (totalDistance3 <= locationService.totalDistanceTraveled &&
+        reachPin2 == true) {
+      setState(() {
+        pin2topin3 = true;
+      });
+
+      if (!hasShownSnackBar2) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Goal Completed!'),
+            ),
+          );
+        });
+        setState(() {
+          hasShownSnackBar2 = true;
+          finishedRide = false;
+        });
+      }
+    }
+  }
+
+  final LocationService locationService = LocationService();
+
+  @override
   Widget build(BuildContext context) {
-    CameraPosition kGooglePlex = CameraPosition(
-      target: LatLng(lat, long),
-      zoom: 14.4746,
-    );
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-        floatingActionButton: pickup == ''
-            ? const SizedBox()
-            : Padding(
-                padding: const EdgeInsets.only(top: 90),
-                child: FloatingActionButton.small(
-                  child: const Icon(
-                    Icons.my_location,
-                  ),
-                  onPressed: () {
-                    mapController!.animateCamera(CameraUpdate.newCameraPosition(
-                        CameraPosition(
-                            zoom: 14.4746,
-                            target:
-                                LatLng(pickUp.latitude, pickUp.longitude))));
-                  },
-                ),
-              ),
+    late double totalKm;
+    if (_info != null) {
+      double totalDistance =
+          double.parse(_info!.totalDistance.replaceAll('km', '').trim());
+      print(totalDistance);
+    }
+    if (_info2 != null) {
+      double totalDistance2 =
+          double.parse(_info2!.totalDistance.replaceAll('km', '').trim());
+      print(totalDistance2);
+    }
+    if (_info != null && _info2 != null) {
+      totalKm = double.parse(_info!.totalDistance.replaceAll('km', '').trim()) +
+          double.parse(_info2!.totalDistance.replaceAll('km', '').trim());
+      print(totalKm);
+    }
+    if (_info != null && _info2 != null) {
+      finishedPin1toPin2();
+      finishedPin2toPin3();
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.black,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 20, right: 20, top: 20, bottom: 20),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: TextWidget(
-                    text: 'Pedal',
-                    fontSize: 24,
-                    color: Colors.white,
-                    fontFamily: 'Bold',
+        title: const Text(
+          'PedalScreen',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          if (_origin != null)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isOriginButtonTapped = true;
+                  _isDestinationButtonTapped = false;
+                  _isFinalDestinationButtonTapped = false;
+                });
+                googleMapController!.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                        target: _origin!.position, zoom: 14, tilt: 50),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    GoogleMap(
-                      onTap: (argument) async {
-                        if (second == '') {
-                          secondLoc = argument;
-                          second = await getAddressFromLatLng(
-                              argument.latitude, argument.longitude);
-
-                          addMyMarker12(argument.latitude, argument.longitude);
-
-                          setState(() {});
-                        } else if (drop == '') {
-                          dropOff = argument;
-                          drop = await getAddressFromLatLng(
-                              argument.latitude, argument.longitude);
-
-                          addMyMarker123(argument.latitude, argument.longitude);
-
-                          PolylineResult result =
-                              await polylinePoints.getRouteBetweenCoordinates(
-                                  kGoogleApiKey,
-                                  PointLatLng(
-                                      pickUp.latitude, pickUp.longitude),
-                                  PointLatLng(
-                                      secondLoc.latitude, secondLoc.longitude));
-                          if (result.points.isNotEmpty) {
-                            polylineCoordinates = result.points
-                                .map((point) =>
-                                    LatLng(point.latitude, point.longitude))
-                                .toList();
-                          }
-
-                          PolylineResult result1 =
-                              await polylinePoints.getRouteBetweenCoordinates(
-                            kGoogleApiKey,
-                            PointLatLng(
-                                secondLoc.latitude, secondLoc.longitude),
-                            PointLatLng(argument.latitude, argument.longitude),
-                          );
-                          if (result.points.isNotEmpty) {
-                            polylineCoordinates1 = result1.points
-                                .map((point) =>
-                                    LatLng(point.latitude, point.longitude))
-                                .toList();
-                          }
-
-                          setState(() {
-                            _poly = Polyline(
-                                color: Colors.red,
-                                polylineId: const PolylineId('route'),
-                                points: polylineCoordinates,
-                                width: 4);
-
-                            _poly2 = Polyline(
-                                color: Colors.blue,
-                                polylineId: const PolylineId('route1'),
-                                points: polylineCoordinates1,
-                                width: 4);
-                          });
-                        }
-                      },
-                      polylines: {_poly, _poly2},
-                      markers: markers,
-                      zoomControlsEnabled: true,
-                      myLocationButtonEnabled: true,
-                      mapType: MapType.normal,
-                      initialCameraPosition: kGooglePlex,
-                      onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;
-                        _controller.complete(controller);
-                      },
+                );
+              },
+              icon: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: _isOriginButtonTapped ? 20 : 15,
+                    backgroundColor: Colors.green[900],
+                  ),
+                  Text(
+                    '1st',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
                     ),
-                    isclicked
-                        ? Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                height: 255,
-                                width: double.infinity,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 10, right: 10, top: 10),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        height: 150,
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                            color: Colors.brown[100]!
-                                                .withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    TextWidget(
-                                                      text: 'TIME',
-                                                      fontSize: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    TextWidget(
-                                                      text:
-                                                          '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, secondLoc.longitude), 0.60).toStringAsFixed(2)}hrs',
-                                                      fontSize: 28,
-                                                      color: Colors.white,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                    const SizedBox(
-                                                      width: 125,
-                                                      child: Divider(
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                    TextWidget(
-                                                      text: 'TOTAL DISTANCE',
-                                                      fontSize: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    TextWidget(
-                                                      text: speed == 0
-                                                          ? '0.0'
-                                                          : '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
-                                                      fontSize: 28,
-                                                      color: Colors.white,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(
-                                                  width: 10,
-                                                ),
-                                                const SizedBox(
-                                                  height: 125,
-                                                  child: VerticalDivider(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  width: 10,
-                                                ),
-                                                Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    TextWidget(
-                                                      text: 'AVG SPEED (km/h)',
-                                                      fontSize: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    TextWidget(
-                                                      text: speed == 0
-                                                          ? '0.0'
-                                                          : speed
-                                                              .toStringAsFixed(
-                                                                  2),
-                                                      fontSize: 28,
-                                                      color: Colors.white,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                    const SizedBox(
-                                                      width: 125,
-                                                      child: Divider(
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                    TextWidget(
-                                                      text: 'DISTANCE TRAVEL',
-                                                      fontSize: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    TextWidget(
-                                                      text: '0.0',
-                                                      fontSize: 28,
-                                                      color: Colors.white,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 15,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 10, right: 10),
-                                            child: TextButton(
-                                                onPressed: () {
-                                                  setState(() {
-                                                    isclicked = false;
-                                                  });
-                                                },
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            15),
-                                                    border: Border.all(
-                                                        color: Colors.white),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .fromLTRB(
-                                                        45, 11, 45, 11),
-                                                    child: TextWidget(
-                                                      text: 'PAUSE',
-                                                      fontSize: 18,
-                                                      fontFamily: 'Bold',
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                )),
-                                          ),
-                                          ButtonWidget(
-                                            width: 150,
-                                            color: Colors.red,
-                                            radius: 15,
-                                            label: 'FINISH',
-                                            onPressed: () {
-                                              addPedal(
-                                                  pickUp.latitude,
-                                                  pickUp.longitude,
-                                                  pickup,
-                                                  dropOff.latitude,
-                                                  dropOff.latitude,
-                                                  drop,
-                                                  '${calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude).toStringAsFixed(2)}KM',
-                                                  '${calculateTravelTimeInMinutes(calculateDistance(pickUp.latitude, pickUp.longitude, dropOff.latitude, dropOff.longitude), 0.30).toStringAsFixed(2)}hrs');
-                                              setState(() {
-                                                isclicked = false;
-                                              });
+                  ),
+                ],
+              ),
+            ),
+          if (_destination != null)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isOriginButtonTapped = false;
+                  _isDestinationButtonTapped = true;
+                  _isFinalDestinationButtonTapped = false;
+                });
+                googleMapController!.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                        target: _destination!.position, zoom: 14, tilt: 50),
+                  ),
+                );
+              },
+              icon: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: _isDestinationButtonTapped ? 20 : 15,
+                    backgroundColor: Colors.red[900],
+                  ),
+                  Text(
+                    '2nd',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          if (_finalDestination != null)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isOriginButtonTapped = false;
+                  _isDestinationButtonTapped = false;
+                  _isFinalDestinationButtonTapped = true;
+                });
+                googleMapController!.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                        target: _finalDestination!.position,
+                        zoom: 14,
+                        tilt: 50),
+                  ),
+                );
+              },
+              icon: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: _isFinalDestinationButtonTapped ? 20 : 15,
+                    backgroundColor: Colors.blue[900],
+                  ),
+                  Text(
+                    '3rd',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          RepaintBoundary(
+            key: _globalKey,
+            child: GoogleMap(
+              zoomControlsEnabled: true,
+              myLocationEnabled: true,
+              myLocationButtonEnabled: false,
+              initialCameraPosition: CameraPosition(
+                target: LatLng(
+                    widget.location!.latitude!, widget.location!.longitude!),
+                zoom: 13.5,
+              ),
+              onMapCreated: (mapController) {
+                googleMapController = mapController;
+                _controller.complete(mapController);
+              },
+              markers: {
+                if (_origin != null) _origin!,
+                if (_destination != null) _destination!,
+                if (_finalDestination != null) _finalDestination!,
+              },
+              polylines: {
+                if (_info != null)
+                  Polyline(
+                    polylineId: const PolylineId('overview_polyline'),
+                    color: Colors.red,
+                    width: 6,
+                    points: _info!.polylinePoints
+                        .map((e) => LatLng(e.latitude, e.longitude))
+                        .toList(),
+                  ),
+                if (_info2 != null)
+                  Polyline(
+                    polylineId: const PolylineId('overview_polyline_2'),
+                    color: Colors.red,
+                    width: 6,
+                    points: _info2!.polylinePoints
+                        .map((e) => LatLng(e.latitude, e.longitude))
+                        .toList(),
+                  ),
+                ..._polylines,
+              },
+              onLongPress: _addMarker,
+            ),
+          ),
+          Positioned(
+            top: 300,
+            left: 300,
+            child: FloatingActionButton(
+              onPressed: () {
+                googleMapController!.animateCamera(
+                  _info3 != null
+                      ? CameraUpdate.newLatLngBounds(_info3!.bounds, 150.0)
+                      : CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(currentLocation!.latitude!,
+                                currentLocation!.longitude!),
+                            zoom: 17.0,
+                          ),
+                        ),
+                );
+              },
+              child: Icon(Icons
+                  .center_focus_strong), // Change this to your preferred icon
+              backgroundColor:
+                  Colors.yellow[800], // Change this to your preferred color
+            ),
+          ),
+          if (_origin != null &&
+              _destination != null &&
+              _finalDestination != null &&
+              proceed == false)
+            Positioned(
+              top: 240,
+              left: 300,
+              child: FloatingActionButton(
+                onPressed: () {
+                  setState(() {
+                    _origin = null;
+                    _destination = null;
+                    _finalDestination = null;
+                    _info = null;
+                    _info2 = null;
 
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        HomePage(
-                                                          homePageIndex: 4,
-                                                          email: widget.email,
-                                                        )),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 10,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                    firstPinPoint.clear();
+                    secondPinPoint.clear();
+                    thirdPinPoint.clear();
+                  });
+                },
+                child:
+                    Icon(Icons.reset_tv), // Change this to your preferred icon
+                backgroundColor:
+                    Colors.red[900], // Change this to your preferred color
+              ),
+            ),
+          if (isStart == false)
+            Positioned(
+              top: 360.0,
+              left: 10.0,
+              right: 10.0,
+              child: Container(
+                height: 260,
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'FIRST PIN POINT: ${firstPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'SECOND PIN POINT:  ${secondPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'THIRD PIN POINT: ${thirdPinPoint.text}',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            fixedSize: const Size.fromHeight(60),
+                            maximumSize: const Size.fromWidth(350),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              side: BorderSide.none,
                             ),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Container(
-                                width: double.infinity,
-                                height: 300,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const TabBar(
-                                        indicatorColor: Colors.red,
-                                        labelColor: Colors.red,
-                                        unselectedLabelColor: Colors.grey,
-                                        tabs: [
-                                          Tab(
-                                            text: 'Routes',
-                                          ),
-                                          Tab(
-                                            text: 'Saved Routes',
-                                          ),
-                                        ]),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
-                                    SizedBox(
-                                      height: 220,
-                                      width: double.infinity,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            left: 10, right: 10),
-                                        child: TabBarView(children: [
-                                          SingleChildScrollView(
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    TextWidget(
-                                                      text:
-                                                          'Pin point your location!',
-                                                      fontSize: 12,
-                                                      fontFamily: 'Bold',
-                                                    ),
-                                                    ButtonWidget(
-                                                      color: second == '' ||
-                                                              drop == ''
-                                                          ? Colors.grey
-                                                          : Colors.red,
-                                                      fontSize: 12,
-                                                      width: 50,
-                                                      radius: 100,
-                                                      height: 35,
-                                                      label: 'Save route',
-                                                      onPressed: () {
-                                                        if (second != '' ||
-                                                            drop != '') {
-                                                          showsaverouteDialog();
-                                                        }
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    // searchPickup();
-                                                  },
-                                                  child: Container(
-                                                    height: 35,
-                                                    width: 300,
-                                                    decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10)),
-                                                    child: TextFormField(
-                                                      enabled: false,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        prefixIcon: const Icon(
-                                                          Icons
-                                                              .location_on_rounded,
-                                                          color: Colors.amber,
-                                                        ),
-                                                        fillColor: Colors.white,
-                                                        filled: true,
-                                                        enabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        disabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10100),
-                                                        ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .black),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        label: TextWidget(
-                                                          text:
-                                                              'Start point: $pickup',
-                                                          fontSize: 12,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        border:
-                                                            InputBorder.none,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {},
-                                                  child: Container(
-                                                    height: 35,
-                                                    width: 300,
-                                                    decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10)),
-                                                    child: TextFormField(
-                                                      enabled: false,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        prefixIcon: const Icon(
-                                                          Icons
-                                                              .location_on_rounded,
-                                                          color: Colors.amber,
-                                                        ),
-                                                        fillColor: Colors.white,
-                                                        filled: true,
-                                                        enabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        disabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10100),
-                                                        ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .black),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        label: TextWidget(
-                                                          text:
-                                                              '2nd point: $second',
-                                                          fontSize: 12,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        border:
-                                                            InputBorder.none,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 10,
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {},
-                                                  child: Container(
-                                                    height: 35,
-                                                    width: 300,
-                                                    decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10)),
-                                                    child: TextFormField(
-                                                      enabled: false,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        prefixIcon: const Icon(
-                                                          Icons
-                                                              .location_on_rounded,
-                                                          color: Colors.red,
-                                                        ),
-                                                        fillColor: Colors.white,
-                                                        filled: true,
-                                                        enabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        disabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .grey),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10100),
-                                                        ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              const BorderSide(
-                                                                  width: 1,
-                                                                  color: Colors
-                                                                      .black),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        label: TextWidget(
-                                                          text:
-                                                              'End point: $drop',
-                                                          fontSize: 12,
-                                                          color: Colors.grey,
-                                                        ),
-                                                        border:
-                                                            InputBorder.none,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(
-                                                  height: 30,
-                                                ),
-                                                second == '' || drop == ''
-                                                    ? const SizedBox()
-                                                    : ButtonWidget(
-                                                        color: Colors.red,
-                                                        fontSize: 18,
-                                                        width: 300,
-                                                        radius: 15,
-                                                        height: 50,
-                                                        label: 'Start',
-                                                        onPressed: () {
-                                                          if (second != '' &&
-                                                              drop != '') {
-                                                            _timer =
-                                                                Timer.periodic(
-                                                                    const Duration(
-                                                                        seconds:
-                                                                            1),
-                                                                    (timer) {
-                                                              if (_start == 0) {
-                                                                _timer.cancel();
-                                                              } else {
-                                                                setState(() {
-                                                                  _start++;
-                                                                });
-                                                              }
-                                                            });
-                                                            setState(() {
-                                                              isclicked = true;
-                                                            });
-                                                          }
-                                                        },
-                                                      ),
-                                              ],
-                                            ),
-                                          ),
-                                          // Saved routes tab
-                                          StreamBuilder<QuerySnapshot>(
-                                              stream: FirebaseFirestore.instance
-                                                  .collection('Favs')
-                                                  .where('userId',
-                                                      isEqualTo: FirebaseAuth
-                                                          .instance
-                                                          .currentUser!
-                                                          .uid)
-                                                  .where('type',
-                                                      isEqualTo: 'pedal')
-                                                  .snapshots(),
-                                              builder: (BuildContext context,
-                                                  AsyncSnapshot<QuerySnapshot>
-                                                      snapshot) {
-                                                if (snapshot.hasError) {
-                                                  print('error');
-                                                  return const Center(
-                                                      child: Text('Error'));
-                                                }
-                                                if (snapshot.connectionState ==
-                                                    ConnectionState.waiting) {
-                                                  return const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        top: 50),
-                                                    child: Center(
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                      color: Colors.black,
-                                                    )),
-                                                  );
-                                                }
-
-                                                final data =
-                                                    snapshot.requireData;
-                                                return SizedBox(
-                                                  height: 220,
-                                                  width: double.infinity,
-                                                  child: ListView.builder(
-                                                    itemCount: data.docs.length,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      return GestureDetector(
-                                                        onTap: () {
-                                                          setState(() {
-                                                            pickup =
-                                                                data.docs[index]
-                                                                    ['start'];
-                                                            second =
-                                                                data.docs[index]
-                                                                    ['end'];
-                                                            drop =
-                                                                data.docs[index]
-                                                                    ['end1'];
-
-                                                            pickUp = LatLng(
-                                                                data.docs[index]
-                                                                    [
-                                                                    'startLat'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'startLong']);
-
-                                                            secondLoc = LatLng(
-                                                                data.docs[index]
-                                                                    ['endLat'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'endLong']);
-                                                            dropOff = LatLng(
-                                                                data.docs[index]
-                                                                    ['endLat1'],
-                                                                data.docs[index]
-                                                                    [
-                                                                    'endLong1']);
-                                                          });
-                                                        },
-                                                        child: Row(
-                                                          crossAxisAlignment:
-                                                              CrossAxisAlignment
-                                                                  .center,
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: [
-                                                            Column(
-                                                              crossAxisAlignment:
-                                                                  CrossAxisAlignment
-                                                                      .start,
-                                                              mainAxisAlignment:
-                                                                  MainAxisAlignment
-                                                                      .center,
-                                                              children: [
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    const Icon(
-                                                                      Icons
-                                                                          .location_on_rounded,
-                                                                      color: Colors
-                                                                          .red,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      width: 20,
-                                                                    ),
-                                                                    TextWidget(
-                                                                      text: data
-                                                                              .docs[index]
-                                                                          [
-                                                                          'start'],
-                                                                      fontSize:
-                                                                          14,
-                                                                      fontFamily:
-                                                                          'Bold',
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    const Icon(
-                                                                      Icons
-                                                                          .location_on_rounded,
-                                                                      color: Colors
-                                                                          .red,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      width: 20,
-                                                                    ),
-                                                                    TextWidget(
-                                                                      text: data
-                                                                              .docs[index]
-                                                                          [
-                                                                          'end'],
-                                                                      fontSize:
-                                                                          14,
-                                                                      fontFamily:
-                                                                          'Bold',
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                                Row(
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    const Icon(
-                                                                      Icons
-                                                                          .location_on_rounded,
-                                                                      color: Colors
-                                                                          .red,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      width: 20,
-                                                                    ),
-                                                                    SizedBox(
-                                                                      width:
-                                                                          200,
-                                                                      child:
-                                                                          TextWidget(
-                                                                        text: data.docs[index]
-                                                                            [
-                                                                            'end1'],
-                                                                        fontSize:
-                                                                            14,
-                                                                        fontFamily:
-                                                                            'Bold',
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ],
-                                                            ),
-                                                            TextWidget(
-                                                              text:
-                                                                  '${calculateDistance(data.docs[index]['startLat'], data.docs[index]['startLong'], data.docs[index]['endLat'], data.docs[index]['endLong']).toStringAsFixed(2)}KM',
-                                                              fontSize: 18,
-                                                              fontFamily:
-                                                                  'Bold',
-                                                              color:
-                                                                  Colors.grey,
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                );
-                                              }),
-                                        ]),
+                            backgroundColor: Colors.red[900],
+                          ),
+                          onPressed: _info3 != null
+                              ? () {
+                                  setState(() {
+                                    isStart = true;
+                                    startTimer();
+                                    proceed = true;
+                                    finishedRide = true;
+                                    getCurrentLocation();
+                                  });
+                                }
+                              : () {
+                                  WidgetsBinding.instance
+                                      .addPostFrameCallback((_) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Please select all the pin points'),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                    );
+                                  });
+                                },
+                          child: Text(
+                            'Proceed',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
                             ),
                           ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 5,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (isStart == true)
+            Positioned(
+              top: 360.0,
+              left: 10.0,
+              right: 10.0,
+              child: Container(
+                height: 265,
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            'TIME: ',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            formatTimer(_start),
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            'AVGSPEED: ',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            '${locationService.averageSpeed!.toStringAsFixed(2)}  km/h',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    if (pin1topin2 == false)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              'TOTAL DISTANCE: Pin 1 to Pin 2',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              '${_info!.totalDistance}',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (pin1topin2 == true)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              'DISTANCE: Pin 2 to Pin 3',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.white),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Text(
+                              totalKm.toString() + ' km',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            'DISTANCE TRAVELED: ',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.white),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            locationService.totalDistanceTraveled
+                                    .toStringAsFixed(2) +
+                                ' km',
+                            style: TextStyle(color: Colors.white, fontSize: 15),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          fixedSize: const Size.fromHeight(50),
+                          maximumSize: const Size.fromWidth(350),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                            side: BorderSide.none,
+                          ),
+                          backgroundColor: hasShownSnackBar2 == true
+                              ? Colors.red[900]
+                              : Colors.grey[900],
+                        ),
+                        onPressed: hasShownSnackBar2 == true
+                            ? () async {
+                                setState(() {
+                                  _timer.cancel();
+                                  finishedRide = false;
+                                  locationService.stopTime();
+                                });
+
+                                googleMapController!.animateCamera(
+                                    CameraUpdate.newLatLngBounds(
+                                        _info3!.bounds, 80.0));
+                                Future.delayed(Duration(seconds: 2), () async {
+                                  RenderRepaintBoundary boundary = _globalKey
+                                          .currentContext!
+                                          .findRenderObject()
+                                      as RenderRepaintBoundary;
+                                  var image = await boundary.toImage();
+                                  ByteData? byteData = await image.toByteData(
+                                      format: ImageByteFormat.png);
+                                  if (byteData != null) {
+                                    Uint8List pngBytes =
+                                        byteData.buffer.asUint8List();
+
+                                    String dir =
+                                        (await getApplicationDocumentsDirectory())
+                                            .path;
+                                    String timestamp = DateTime.now()
+                                        .millisecondsSinceEpoch
+                                        .toString();
+                                    File file =
+                                        File('$dir/screenshot_$timestamp.png');
+
+                                    // Write the bytes to the file
+                                    await file.writeAsBytes(pngBytes);
+                                    // Now you can use pngBytes to save the image as a file, share it, etc.
+
+                                    final pedalHistoryId = FirebaseFirestore
+                                        .instance
+                                        .collection('pedalHistory')
+                                        .doc()
+                                        .id;
+                                    final storageRef = FirebaseStorage.instance
+                                        .ref()
+                                        .child('user_pedal_history')
+                                        .child('$pedalHistoryId.jpg');
+                                    await storageRef.putFile(file);
+                                    final imageUrl =
+                                        await storageRef.getDownloadURL();
+
+                                    await FirebaseFirestore.instance
+                                        .collection('pedalHistory')
+                                        .add({
+                                      'time': formatTimer(_start),
+                                      'averageSpeed': locationService
+                                          .averageSpeed!
+                                          .toStringAsFixed(2),
+                                      'totalDistance':
+                                          totalKm.toStringAsFixed(2) + ' km',
+                                      'id': FirebaseFirestore.instance
+                                          .collection('pedalHistory')
+                                          .doc()
+                                          .id,
+                                      'imageGoal': imageUrl,
+                                      'username': userController.user.username,
+                                      'dateDone': Timestamp.now(),
+                                    });
+                                  }
+                                }).then((value) {
+                                  Future.delayed(Duration(seconds: 3), () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => HomePage(
+                                          email: widget.email,
+                                          homePageIndex: 2,
+                                        ),
+                                      ),
+                                    );
+                                  });
+                                });
+                              }
+                            : () {},
+                        child: Text(
+                          'Finished',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20.0,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  showsaverouteDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: TextWidget(
-            text: 'You Want to Save your Route?',
-            fontSize: 18,
-            fontFamily: 'Bold',
-          ),
-          content: TextWidget(
-            text:
-                'Save this epic bike route to your favorites for quick access.',
-            fontSize: 12,
-            fontFamily: 'Medium',
-            color: Colors.grey,
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10),
-              child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      border: Border.all(color: Colors.red),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                      child: TextWidget(
-                        text: 'Cancel',
-                        fontSize: 14,
-                        fontFamily: 'Bold',
-                        color: Colors.red,
-                      ),
-                    ),
-                  )),
             ),
-            TextButton(
-                onPressed: () {
-                  addFav(
-                    pickUp.latitude,
-                    pickUp.longitude,
-                    pickup,
-                    secondLoc.latitude,
-                    secondLoc.latitude,
-                    second,
-                    'pedal',
-                    dropOff.latitude,
-                    dropOff.latitude,
-                    drop,
-                    0,
-                    0,
-                    '',
-                  );
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(100),
-                      color: Colors.red),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(25, 5, 25, 5),
-                    child: TextWidget(
-                      text: 'Save',
-                      fontSize: 14,
-                      fontFamily: 'Bold',
-                      color: Colors.white,
-                    ),
-                  ),
-                )),
-          ],
-        );
-      },
-    );
-  }
-
-  final Completer<GoogleMapController> _controller =
-      Completer<GoogleMapController>();
-
-  searchPickup() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Starting Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker1(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    setState(() {
-      pickup = detail.result.name;
-      pickUp = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-  }
-
-  searchSecond() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search 2nd Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker12(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    setState(() {
-      second = detail.result.name;
-
-      secondLoc = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        kGoogleApiKey,
-        PointLatLng(pickUp.latitude, pickUp.longitude),
-        PointLatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng));
-    if (result.points.isNotEmpty) {
-      polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
-    }
-    setState(() {
-      _poly = Polyline(
-          color: Colors.red,
-          polylineId: const PolylineId('route'),
-          points: polylineCoordinates,
-          width: 4);
-    });
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    double miny = (pickUp.latitude <= secondLoc.latitude)
-        ? pickUp.latitude
-        : secondLoc.latitude;
-    double minx = (pickUp.longitude <= secondLoc.longitude)
-        ? pickUp.longitude
-        : secondLoc.longitude;
-    double maxy = (pickUp.latitude <= secondLoc.latitude)
-        ? secondLoc.latitude
-        : pickUp.latitude;
-    double maxx = (pickUp.longitude <= secondLoc.longitude)
-        ? secondLoc.longitude
-        : pickUp.longitude;
-
-    double southWestLatitude = miny;
-    double southWestLongitude = minx;
-
-    double northEastLatitude = maxy;
-    double northEastLongitude = maxx;
-
-    // Accommodate the two locations within the
-    // camera view of the map
-    mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          northeast: LatLng(
-            northEastLatitude,
-            northEastLongitude,
-          ),
-          southwest: LatLng(
-            southWestLatitude,
-            southWestLongitude,
-          ),
-        ),
-        100.0,
-      ),
-    );
-  }
-
-  searchDropoff() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Ending Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker123(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    setState(() {
-      drop = detail.result.name;
-
-      dropOff = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      kGoogleApiKey,
-      PointLatLng(secondLoc.latitude, secondLoc.longitude),
-      PointLatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng),
-    );
-    if (result.points.isNotEmpty) {
-      polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
-    }
-    setState(() {
-      _poly2 = Polyline(
-          color: Colors.blue,
-          polylineId: const PolylineId('route1'),
-          points: polylineCoordinates,
-          width: 4);
-    });
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    double miny = (secondLoc.latitude <= dropOff.latitude)
-        ? secondLoc.latitude
-        : dropOff.latitude;
-    double minx = (secondLoc.longitude <= dropOff.longitude)
-        ? secondLoc.longitude
-        : dropOff.longitude;
-    double maxy = (secondLoc.latitude <= dropOff.latitude)
-        ? dropOff.latitude
-        : secondLoc.latitude;
-    double maxx = (secondLoc.longitude <= dropOff.longitude)
-        ? dropOff.longitude
-        : secondLoc.longitude;
-
-    double southWestLatitude = miny;
-    double southWestLongitude = minx;
-
-    double northEastLatitude = maxy;
-    double northEastLongitude = maxx;
-
-    // Accommodate the two locations within the
-    // camera view of the map
-    mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          northeast: LatLng(
-            northEastLatitude,
-            northEastLongitude,
-          ),
-          southwest: LatLng(
-            southWestLatitude,
-            southWestLongitude,
-          ),
-        ),
-        100.0,
+    //       if (isStart == true)
+    //         Positioned(
+    //           top: 1,
+    //           child: FloatingActionButton(
+    //             onPressed: () {
+    //                 Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => HomePage(
+    //     email: widget.email,
+    //     homePageIndex: 2,
+    //   )),
+    // );
+    //             },
+    //             child: Text(
+    //               'Reset',
+    //               style: TextStyle(color: Colors.white),
+    //             ), // Change this to your preferred icon
+    //             backgroundColor:
+    //                 Colors.red[800], // Change this to your preferred color
+    //           ),
+    //         )
+        ],
       ),
     );
   }

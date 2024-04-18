@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:tarides/Model/goal30AchievementsModel.dart';
 import 'package:tarides/Model/userModel.dart';
 
 
@@ -13,6 +14,49 @@ class UserController extends ChangeNotifier {
   late List<Users> users = <Users>[];
 
   late List<Users> members = <Users>[];
+
+  late Achievements achievement;
+
+    void getAchievement(String email) async {
+    isLoading = true;
+    notifyListeners();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('email', isEqualTo: email)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('User not found');
+    }
+
+    final documentSnapshot = querySnapshot.docs.first;
+    user = Users.fromDocument(documentSnapshot);
+
+    final achievementSnapshot = await FirebaseFirestore.instance
+        .collection('achievements')
+        .where('username', isEqualTo: user.username)
+        .get();
+
+    if (achievementSnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('Achievements not found');
+    }
+
+    final achievementDoc = achievementSnapshot.docs.first;
+    achievement = Achievements.fromDocument(achievementDoc);
+
+    isLoading = false;
+    notifyListeners();
+
+    print('User: ${user.username}');
+    print(' newbie: ${achievement.username}');
+    print('Achievement: ${achievement.legendary}');
+
+    print('hello3');
+  }
 
 
 
