@@ -1,28 +1,25 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:tarides/BottomNav/communityScreeen.dart';
 import 'package:tarides/CommunityTabs/viewMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
-import 'package:tarides/Model/postModel.dart';
-import 'package:tarides/Model/userModel.dart';
 import 'package:tarides/homePage.dart';
 
 class PostTab extends StatefulWidget {
+  const PostTab({
+    super.key,
+    required this.email,
+    required this.communityId,
+  });
   final String email;
   final String communityId;
-  const PostTab({super.key, required this.email, required this.communityId});
 
   @override
   State<PostTab> createState() => _PostTabState();
 }
 
 class _PostTabState extends State<PostTab> {
-  final bool _isHeartFilled = false;
-
   final postId = FirebaseFirestore.instance.collection('post').doc().id;
 
   UserController userController = UserController();
@@ -474,6 +471,20 @@ class _PostTabState extends State<PostTab> {
                                           child: CircularProgressIndicator(),
                                         );
                                       }
+                                      for (var x = 0;
+                                          x <
+                                              postController
+                                                  .posts[x].heart.length;
+                                          x++) {
+                                        if (userController.user.username ==
+                                            postController.posts[x].heart[x]) {
+                                          postController.posts[x].isHeart =
+                                              true;
+                                        } else {
+                                          postController.posts[x].isHeart =
+                                              false;
+                                        }
+                                      }
                                       return Column(
                                         children: [
                                           for (var i = 0;
@@ -577,7 +588,6 @@ class _PostTabState extends State<PostTab> {
                                                           const SizedBox(
                                                             width: 92,
                                                           ),
-                                                          
                                                           const SizedBox(
                                                             width: 10,
                                                           ),
@@ -612,10 +622,12 @@ class _PostTabState extends State<PostTab> {
                                                           ),
                                                           IconButton(
                                                             icon: Icon(postController
-                                                                        .posts[
-                                                                            i]
-                                                                        .isHeart ==
-                                                                    true
+                                                                    .posts[i]
+                                                                    .heart
+                                                                    .contains(
+                                                                        userController
+                                                                            .user
+                                                                            .username)
                                                                 ? Icons.favorite
                                                                 : Icons
                                                                     .favorite_border),
@@ -623,39 +635,31 @@ class _PostTabState extends State<PostTab> {
                                                             iconSize: 30,
                                                             onPressed:
                                                                 () async {
-                                                              setState(
-                                                                () {
-                                                                  if (postController
-                                                                          .posts[
-                                                                              i]
-                                                                          .isHeart ==
-                                                                      true) {
-                                                                    postController
-                                                                        .posts[
-                                                                            i]
-                                                                        .isHeart = false;
-                                                                    postController
-                                                                        .posts[
-                                                                            i]
-                                                                        .heart
-                                                                        .remove(userController
-                                                                            .user
-                                                                            .username);
-                                                                  } else {
-                                                                    postController
-                                                                        .posts[
-                                                                            i]
-                                                                        .isHeart = true;
-                                                                    postController
-                                                                        .posts[
-                                                                            i]
-                                                                        .heart
-                                                                        .add(userController
-                                                                            .user
-                                                                            .username);
-                                                                  }
-                                                                },
-                                                              );
+                                                              setState(() {
+                                                                if (postController
+                                                                    .posts[i]
+                                                                    .isHeart) {
+                                                                  postController
+                                                                      .posts[i]
+                                                                      .isHeart = false;
+                                                                  postController
+                                                                      .posts[i]
+                                                                      .heart
+                                                                      .remove(userController
+                                                                          .user
+                                                                          .username);
+                                                                } else {
+                                                                  postController
+                                                                      .posts[i]
+                                                                      .isHeart = true;
+                                                                  postController
+                                                                      .posts[i]
+                                                                      .heart
+                                                                      .add(userController
+                                                                          .user
+                                                                          .username);
+                                                                }
+                                                              });
 
                                                               try {
                                                                 final postDocumentSnapshot = await FirebaseFirestore
@@ -670,9 +674,10 @@ class _PostTabState extends State<PostTab> {
                                                                             .caption)
                                                                     .where(
                                                                         'usersName',
-                                                                        isEqualTo: userController
-                                                                            .user
-                                                                            .username)
+                                                                        isEqualTo: postController
+                                                                            .posts[
+                                                                                i]
+                                                                            .usersName)
                                                                     .where(
                                                                         'postId',
                                                                         isEqualTo: postController
@@ -695,17 +700,15 @@ class _PostTabState extends State<PostTab> {
                                                                       .first
                                                                       .reference
                                                                       .update({
+                                                                    'isHeart':
+                                                                        true,
                                                                     'heart':
                                                                         FieldValue
-                                                                            .arrayUnion(
-                                                                      [
-                                                                        userController
-                                                                            .user
-                                                                            .username,
-                                                                      ],
-                                                                    ),
-                                                                    'isHeart':
-                                                                        true
+                                                                            .arrayUnion([
+                                                                      userController
+                                                                          .user
+                                                                          .username
+                                                                    ])
                                                                   });
                                                                 } else {
                                                                   await postDocumentSnapshot
@@ -713,15 +716,15 @@ class _PostTabState extends State<PostTab> {
                                                                       .first
                                                                       .reference
                                                                       .update({
+                                                                    'isHeart':
+                                                                        false,
                                                                     'heart':
                                                                         FieldValue
                                                                             .arrayRemove([
                                                                       userController
                                                                           .user
                                                                           .username
-                                                                    ]),
-                                                                    'isHeart':
-                                                                        false
+                                                                    ])
                                                                   });
                                                                 }
                                                               } catch (e) {
@@ -748,78 +751,82 @@ class _PostTabState extends State<PostTab> {
                                                         ],
                                                       ),
                                                       Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .end,
-                                                            children: [
-                                                              if (postController
-                                                                      .posts[i]
-                                                                      .usersName ==
-                                                                  userController
-                                                                      .user
-                                                                      .username)
-                                                                IconButton(
-                                                                  icon: Icon(Icons
-                                                                      .delete), // Change this to your desired icon
-                                                                  color: Colors
-                                                                      .white,
-                                                                  onPressed:
-                                                                      () {
-                                                                    showDialog(
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (BuildContext
-                                                                              context) {
-                                                                        return AlertDialog(
-                                                                          title:
-                                                                              Text('Delete Post'), // Replace with your title
-                                                                          content:
-                                                                              SingleChildScrollView(
-                                                                            child:
-                                                                                ListBody(
-                                                                              children: [
-                                                                                Text('Do you wish to delete this post?'), // Replace with your body text
-                                                                              ],
-                                                                            ),
-                                                                          ),
-                                                                          actions: [
-                                                                            TextButton(
-                                                                              child: Text('Yes'), // Replace with your button text
-                                                                              // onPressed:(){
-                                                                              //   print('Y E S clicked');
-                                                                              // },
-                                                                              onPressed: () async {
-                                                                                // Replace 'postId' with the actual document ID of the post
-                                                                                final postDoc = await FirebaseFirestore.instance.collection('post').where('postId', isEqualTo: postController.posts[i].postId).get();
-
-                                                                                await postDoc.docs.first.reference.delete();
-
-                                                                                Navigator.push(
-                                                                                  context,
-                                                                                  MaterialPageRoute(
-                                                                                    builder: (context) => HomePage(
-                                                                                      email: widget.email,
-                                                                                      homePageIndex: 0,
-                                                                                    ),
-                                                                                  ),
-                                                                                );
-                                                                              },
-                                                                            ),
-                                                                            TextButton(
-                                                                              child: Text('No'), // Replace with your button text
-                                                                              onPressed: () {
-                                                                                Navigator.of(context).pop();
-                                                                              },
-                                                                            ),
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .end,
+                                                        children: [
+                                                          if (postController
+                                                                  .posts[i]
+                                                                  .usersName ==
+                                                              userController
+                                                                  .user
+                                                                  .username)
+                                                            IconButton(
+                                                              icon: Icon(Icons
+                                                                  .delete), // Change this to your desired icon
+                                                              color:
+                                                                  Colors.white,
+                                                              onPressed: () {
+                                                                showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (BuildContext
+                                                                          context) {
+                                                                    return AlertDialog(
+                                                                      title: Text(
+                                                                          'Delete Post'), // Replace with your title
+                                                                      content:
+                                                                          SingleChildScrollView(
+                                                                        child:
+                                                                            ListBody(
+                                                                          children: [
+                                                                            Text('Do you wish to delete this post?'), // Replace with your body text
                                                                           ],
-                                                                        );
-                                                                      },
+                                                                        ),
+                                                                      ),
+                                                                      actions: [
+                                                                        TextButton(
+                                                                          child:
+                                                                              Text('Yes'), // Replace with your button text
+                                                                          // onPressed:(){
+                                                                          //   print('Y E S clicked');
+                                                                          // },
+                                                                          onPressed:
+                                                                              () async {
+                                                                            // Replace 'postId' with the actual document ID of the post
+                                                                            final postDoc =
+                                                                                await FirebaseFirestore.instance.collection('post').where('postId', isEqualTo: postController.posts[i].postId).get();
+
+                                                                            await postDoc.docs.first.reference.delete();
+
+                                                                            Navigator.push(
+                                                                              context,
+                                                                              MaterialPageRoute(
+                                                                                builder: (context) => HomePage(
+                                                                                  email: widget.email,
+                                                                                  homePageIndex: 0,
+                                                                                ),
+                                                                              ),
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                        TextButton(
+                                                                          child:
+                                                                              Text('No'), // Replace with your button text
+                                                                          onPressed:
+                                                                              () {
+                                                                            Navigator.of(context).pop();
+                                                                          },
+                                                                        ),
+                                                                      ],
                                                                     );
                                                                   },
-                                                                ),
-                                                            ],
-                                                          ),
+                                                                );
+                                                              },
+                                                            ),
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
                                                 ),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:tarides/CommunityTabs/EventsTab.dart';
 import 'package:tarides/CommunityTabs/PostTab.dart';
 import 'package:tarides/CommunityTabs/SearchTab.dart';
 import 'package:tarides/CommunityTabs/memberRequest.dart';
-import 'package:tarides/CommunityTabs/viewMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
+import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
+  PostController postController = PostController();
   UserController userController = UserController();
   CommunityController communityController = CommunityController();
   @override
@@ -62,7 +64,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                             else
                               Row(
                                 children: [
-                              
                                   if (communityController
                                               .community!.communityAdmin ==
                                           userController.user.username &&
@@ -119,7 +120,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           email: widget.email,
                           communityId: userController.user.communityId,
                         ),
-                        const EventsTab(),
+                        EventsTab(),
                       ],
                     ),
                   ),
