@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tarides/BottomNav/NewRides/homePageRides.dart';
 import 'package:tarides/BottomNav/goal30Screen.dart';
 import 'package:tarides/BottomNav/pedalScreen.dart';
 import 'package:tarides/BottomNav/preridesScreen.dart';
@@ -79,7 +80,21 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (_selectedPageIndex == 1) {
-      activePage = PreRidesScreen();
+      activePage = AnimatedBuilder(
+        animation: userController,
+        builder: (context, snapshot) {
+          if (userController.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          return HomePageRides(
+            locationUser: _locationData!,
+            email: widget.email,
+            user: userController.user,
+          );
+        },
+      );
     }
 
     if (_selectedPageIndex == 2) {

@@ -120,7 +120,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           email: widget.email,
                           communityId: userController.user.communityId,
                         ),
-                        EventsTab(),
+                        EventsTab(
+                          user: userController.user,
+                        ),
                       ],
                     ),
                   ),
