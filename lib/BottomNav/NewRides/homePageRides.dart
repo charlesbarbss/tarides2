@@ -537,7 +537,7 @@ class _HomePageRidesState extends State<HomePageRides> {
                                                         GoogleMapsScreen(
                                                             locationUser: widget
                                                                 .locationUser,
-                                                            isHost: false,
+                                                            isHost: true,
                                                             ride:
                                                                 ridesController
                                                                     .rides[i]),
