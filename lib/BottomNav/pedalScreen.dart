@@ -464,8 +464,8 @@ class _PedalScreenState extends State<PedalScreen> {
             ),
           ),
           Positioned(
-            top: 300,
-            left: 300,
+            top: 390,
+            left: 350,
             child: FloatingActionButton(
               onPressed: () {
                 googleMapController!.animateCamera(
@@ -491,8 +491,8 @@ class _PedalScreenState extends State<PedalScreen> {
               _finalDestination != null &&
               proceed == false)
             Positioned(
-              top: 240,
-              left: 300,
+              top: 330,
+              left: 350,
               child: FloatingActionButton(
                 onPressed: () {
                   setState(() {
@@ -515,7 +515,7 @@ class _PedalScreenState extends State<PedalScreen> {
             ),
           if (isStart == false)
             Positioned(
-              top: 360.0,
+              top: 450.0,
               left: 10.0,
               right: 10.0,
               child: Container(
@@ -603,7 +603,7 @@ class _PedalScreenState extends State<PedalScreen> {
             ),
           if (isStart == true)
             Positioned(
-              top: 360.0,
+              top: 450.0,
               left: 10.0,
               right: 10.0,
               child: Container(

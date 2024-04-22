@@ -488,8 +488,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           Positioned(
-            top: 360,
-            left: 300,
+            top: 440,
+            left: 350,
             child: FloatingActionButton(
               onPressed: () {
                 googleMapController!.animateCamera(
@@ -515,8 +515,8 @@ class _MapScreenState extends State<MapScreen> {
               _finalDestination != null &&
               proceed == false)
             Positioned(
-              top: 300,
-              left: 300,
+              top: 380,
+              left: 350,
               child: FloatingActionButton(
                 onPressed: () {
                   setState(() {
@@ -539,7 +539,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           if (isStart == false)
             Positioned(
-              top: 420.0,
+              top: 510.0,
               left: 10.0,
               right: 10.0,
               child: Container(
@@ -643,7 +643,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           if (isStart == true)
             Positioned(
-              top: 420.0,
+              top: 500.0,
               left: 10.0,
               right: 10.0,
               child: Container(

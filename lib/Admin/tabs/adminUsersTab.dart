@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/Admin/adminHomePage.dart';
+import 'package:tarides/Admin/widgets/adminViewAccTab.dart';
 import 'package:tarides/Admin/widgets/adminViewAccount.dart';
 import 'package:tarides/Controller/userController.dart';
 
@@ -35,8 +36,10 @@ class _AdminUserTabState extends State<AdminUserTab> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => AdminViewAccount(
+                          builder: (context) => AdminViewAccTab(
                                 index: index,
+                                username: userController.users[index].username,
+                                email: userController.users[index].email,
                               )), // Replace with your screen
                     );
                   },
