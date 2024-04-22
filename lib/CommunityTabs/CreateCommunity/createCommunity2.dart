@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -7,16 +9,18 @@ import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/homePage.dart';
 
 class CreateCommunity2 extends StatefulWidget {
-  const CreateCommunity2(
+   CreateCommunity2(
       {super.key,
       required this.email,
       required this.communityName,
       required this.isPrivate,
-      required this.communityDescription});
+      required this.communityDescription,
+      required this.imageUrl});
   final String email;
   final String communityName;
   final bool isPrivate;
   final String communityDescription;
+  final String imageUrl;
   @override
   State<CreateCommunity2> createState() => _CreateCommunity2State();
 }
@@ -55,6 +59,15 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
         },
       );
     } else {
+
+       final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('community_image')
+            .child('$communityId.jpg');
+        await storageRef.putFile(File(widget.imageUrl));
+
+        // Get the download URL of the uploaded image
+        final imageUrl = await storageRef.getDownloadURL();
       await FirebaseFirestore.instance.collection('community').add({
         'communityName': widget.communityName,
         'communityId': communityId,
@@ -62,6 +75,7 @@ class _CreateCommunity2State extends State<CreateCommunity2> {
         'communityAdmin': userController.user.username,
         'communityMember': [userController.user.username],
         'communityDescription': widget.communityDescription,
+        'communityPic': imageUrl,
       });
 
       await FirebaseFirestore.instance

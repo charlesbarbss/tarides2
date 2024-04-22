@@ -1,24 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:tarides/CommunityTabs/memberViewMembers/otherMember.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/userController.dart';
-import 'package:tarides/Model/createCommunityModel.dart';
 import 'package:tarides/homePage.dart';
 
-class ViewMembers extends StatefulWidget {
-  const ViewMembers(
+class ViewOtherMembers extends StatefulWidget {
+  const ViewOtherMembers(
       {super.key,
+      required this.email,
       required this.communityId,
-      required this.admin,
-      required this.email});
+      required this.admin});
+  final String email;
   final String communityId;
   final String admin;
-  final String email;
+
   @override
-  State<ViewMembers> createState() => _ViewMembersState();
+  State<ViewOtherMembers> createState() => _ViewOtherMembersState();
 }
 
-class _ViewMembersState extends State<ViewMembers> {
+class _ViewOtherMembersState extends State<ViewOtherMembers> {
   UserController userController = UserController();
   CommunityController communityController = CommunityController();
 
@@ -62,107 +63,32 @@ class _ViewMembersState extends State<ViewMembers> {
                       children: [
                         for (var i = 0; i < userController.members.length; i++)
                           InkWell(
-                            onTap: communityController
-                                        .community!.communityAdmin !=
-                                    userController.members[i].username
-                                ? () {
+                            onTap: () {
                                     showDialog(
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title: Text('Member Options'),
                                         actions: <Widget>[
                                           TextButton(
-                                            child: Text('Promote Admin'),
-                                            onPressed: () async {
-                                              final userDoc =
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('community')
-                                                      .where('communityAdmin',
-                                                          isEqualTo:
-                                                              widget.admin)
-                                                      .get();
-
-                                              await userDoc.docs.first.reference
-                                                  .update({
-                                                'communityAdmin': userController
-                                                    .members[i].username,
-                                              }).then((value) {
-                                                Navigator.of(ctx).push(
-                                                  MaterialPageRoute(
+                                            child: Text('View Member Profile'),
+                                            onPressed: () {
+                                              Navigator.of(ctx).push(
+                                                MaterialPageRoute(
                                                     builder: (context) =>
-                                                        HomePage(
-                                                      email: widget.email,
-                                                      homePageIndex: 0,
-                                                    ),
-                                                  ),
-                                                );
-                                              });
-                                            },
-                                          ),
-                                          TextButton(
-                                            child: Text('Remove Member'),
-                                            onPressed: () async {
-                                              final userDoc =
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('user')
-                                                      .where('username',
-                                                          isEqualTo:
-                                                              userController
-                                                                  .members[i]
-                                                                  .username)
-                                                      .get();
-
-                                              await userDoc.docs.first.reference
-                                                  .update({
-                                                'communityId': '',
-                                                'isCommunity': false,
-                                              });
-                                            
-
-                                              final communityDoc =
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('community')
-                                                      .where('communityId',
-                                                          isEqualTo:
-                                                              communityController
-                                                                  .community!
-                                                                  .communityId)
-                                                      .where('communityMember',
-                                                          arrayContains:
-                                                              userController
-                                                                  .members[i]
-                                                                  .username)
-                                                      .get();
-
-                                              await communityDoc
-                                                  .docs.first.reference
-                                                  .update({
-                                                'communityMember':
-                                                    FieldValue.arrayRemove([
-                                                  userController
-                                                      .members[i].username
-                                                ]),
-                                              }).then((value) {
-                                                Navigator.of(ctx).push(
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        HomePage(
-                                                      email: widget.email,
-                                                      homePageIndex: 0,
-                                                    ),
-                                                  ),
-                                                );
-                                              });
+                                                        OtherMembers(
+                                                          email: userController
+                                                              .members[i].email,
+                                                          username: userController
+                                                              .members[i].username,
+                                                        )),
+                                              );
                                             },
                                           ),
                                         ],
                                       ),
                                     );
-                                  }
-                                : () {},
+                                  },
+                              
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Container(

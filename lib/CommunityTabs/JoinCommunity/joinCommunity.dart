@@ -296,74 +296,89 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                   );
                                 }
                               },
-                              child: Container(
-                                height: 170,
-                                width: 400,
-                                color: Color.fromARGB(31, 153, 150, 150),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      communityController
-                                          .communities[i].communityName,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  height: 200,
+                                  width: 350,
+                                  color: Colors.red[900],
+                                  child: Column(
+                                    children: [
+                                      SizedBox(
+                                        height: 10,
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                            8, 5, 8, 5),
-                                        child: Text(
-                                          communityController.communities[i]
-                                              .communityDescription,
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 15,
+                                      Center(
+                                        child: Container(
+                                          width: 350, // specify your width
+                                          height: 100, // specify your height
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: NetworkImage(
+                                                  communityController
+                                                      .communities[i]
+                                                      .communityPic), // replace with your image url
+                                              fit: BoxFit.fill,
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceAround,
-                                      children: [
-                                        Row(
-                                          children: <Widget>[
-                                            Icon(
-                                              communityController
-                                                      .communities[i].isPrivate
-                                                  ? Icons.lock
-                                                  : Icons.lock_open,
-                                              color: Colors.white,
-                                              size: 24.0,
-                                            ),
-                                            Text(
-                                              communityController.communities[i]
-                                                          .isPrivate ==
-                                                      true
-                                                  ? 'Private'
-                                                  : 'Public',
-                                              style: TextStyle(
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      Text(
+                                        communityController
+                                            .communities[i].communityName,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          Row(
+                                            children: <Widget>[
+                                              Icon(
+                                                communityController
+                                                        .communities[i]
+                                                        .isPrivate
+                                                    ? Icons.lock
+                                                    : Icons.lock_open,
                                                 color: Colors.white,
-                                                fontSize: 18,
+                                                size: 24.0,
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        Text(
-                                          'Memebers: ' +
-                                              communityController.communities[i]
-                                                  .communityMember.length
-                                                  .toString(),
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 18,
+                                              Text(
+                                                communityController
+                                                            .communities[i]
+                                                            .isPrivate ==
+                                                        true
+                                                    ? 'Private'
+                                                    : 'Public',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                          Text(
+                                            'Memebers: ' +
+                                                communityController
+                                                    .communities[i]
+                                                    .communityMember
+                                                    .length
+                                                    .toString(),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:tarides/CommunityTabs/CreateCommunity/createCommunity2.dart';
+import 'package:tarides/image_picker_rectangle.dart';
 
 class CreateCommunity extends StatefulWidget {
   const CreateCommunity({super.key, required this.email});
@@ -12,6 +15,7 @@ class CreateCommunity extends StatefulWidget {
 class _CreateCommunityState extends State<CreateCommunity> {
   final communityNameController = TextEditingController();
   final communityDescriptionController = TextEditingController();
+  File? selectCommunityImage;
   bool _isPrivate = false;
 
   void _submit() {
@@ -43,6 +47,7 @@ class _CreateCommunityState extends State<CreateCommunity> {
             communityName: communityNameController.text,
             isPrivate: _isPrivate,
             communityDescription: communityDescriptionController.text,
+            imageUrl: selectCommunityImage?.path ?? '',
           ),
         ),
       );
@@ -110,7 +115,7 @@ class _CreateCommunityState extends State<CreateCommunity> {
                     height: 10,
                   ),
                   Container(
-                    height: 200,
+                    height: 100,
                     padding: const EdgeInsets.all(8.0),
                     decoration: BoxDecoration(
                       color: Colors.black,
@@ -130,6 +135,16 @@ class _CreateCommunityState extends State<CreateCommunity> {
                         ),
                       ),
                     ),
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Center(
+                    child: PickerImageRec(onImagePick: (File pickedImage) {
+                      setState(() {
+                        selectCommunityImage = pickedImage;
+                      });
+                    }),
                   ),
                   const SizedBox(
                     height: 10,

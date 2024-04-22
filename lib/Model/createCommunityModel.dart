@@ -8,6 +8,7 @@ class Community {
       required this.communityDescription,
       required this.communityAdmin,
       required this.communityMember,
+      required this.communityPic
       });
 
   final String communityName;
@@ -16,6 +17,8 @@ class Community {
    final String communityDescription;
   final String communityAdmin;
   final List<String> communityMember;
+    final String communityPic;
+  
 
   
   factory Community.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
@@ -31,6 +34,7 @@ class Community {
      communityDescription: data['communityDescription'] as String,
     communityAdmin: data['communityAdmin'] as String? ?? '',
     communityMember: members,
+    communityPic: data['communityPic'] as String? ?? '',
    
   );
 }

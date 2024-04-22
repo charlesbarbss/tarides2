@@ -6,8 +6,8 @@ import 'package:tarides/Model/userModel.dart';
 class PostController extends ChangeNotifier {
   late final String email;
   bool isLoading = false;
-  late List<Post> posts;
-  late List<Users> user;
+  late List<Post> posts = <Post>[];
+  late List<Users> user = <Users>[];
   late List<Users> users = <Users>[];
 
   void setEmail(String email) {

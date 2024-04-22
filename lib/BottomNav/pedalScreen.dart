@@ -460,7 +460,7 @@ class _PedalScreenState extends State<PedalScreen> {
                   ),
                 ..._polylines,
               },
-              onLongPress: _addMarker,
+              onTap: _addMarker,
             ),
           ),
           Positioned(

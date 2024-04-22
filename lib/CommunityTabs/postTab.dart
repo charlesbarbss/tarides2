@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:tarides/CommunityTabs/viewMembers.dart';
+import 'package:tarides/CommunityTabs/adminViewMembers/viewMyMembers.dart';
+import 'package:tarides/CommunityTabs/memberViewMembers/viewOtherMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
@@ -110,7 +111,15 @@ class _PostTabState extends State<PostTab> {
                   'comment': [],
                   'timestamp': Timestamp.now(),
                   'isHeart': false,
-                }).then((value) => Navigator.pop(context));
+                }).then((value) {
+                  Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => HomePage(
+    email: widget.email,
+    homePageIndex: 0,
+  )),
+);
+                });
               },
               child: const Text(
                 'Post',
@@ -177,6 +186,19 @@ class _PostTabState extends State<PostTab> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Center(
+                              child: Container(
+                                width: 400, // specify your width
+                                height: 150, // specify your height
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                   communityController.community!.communityPic), // replace with your image url
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
                             Row(
                               children: [
                                 Text(
@@ -440,7 +462,7 @@ class _PostTabState extends State<PostTab> {
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    ViewMembers(
+                                                    ViewMyMembers(
                                                       email: widget.email,
                                                       communityId:
                                                           widget.communityId,
@@ -449,6 +471,34 @@ class _PostTabState extends State<PostTab> {
                                           );
                                         }
                                       }
+                                    },
+                                    child: Text('View My Members',
+                                        style: TextStyle(color: Colors.white)),
+                                  ),
+                                  if (communityController
+                                        .community!.communityAdmin !=
+                                    userController.user.username)
+                                  ElevatedButton(
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStateProperty.all<Color>(
+                                                Colors.black),
+                                        shape: MaterialStateProperty.all<
+                                                RoundedRectangleBorder>(
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20.0),
+                                                side: BorderSide(
+                                                    color: Colors.grey)))),
+                                    onPressed: () {
+                              Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ViewOtherMembers(
+        email: widget.email,
+        communityId: widget.communityId,
+        admin: widget.email,
+      )),
+    );
                                     },
                                     child: Text('View Members',
                                         style: TextStyle(color: Colors.white)),
@@ -471,20 +521,12 @@ class _PostTabState extends State<PostTab> {
                                           child: CircularProgressIndicator(),
                                         );
                                       }
-                                      for (var x = 0;
-                                          x <
-                                              postController
-                                                  .posts[x].heart.length;
-                                          x++) {
-                                        if (userController.user.username ==
-                                            postController.posts[x].heart[x]) {
-                                          postController.posts[x].isHeart =
-                                              true;
-                                        } else {
-                                          postController.posts[x].isHeart =
-                                              false;
-                                        }
+                                      if (postController.posts.isEmpty) {
+                                        return const Center(
+                                          child: Text('No posts available'),
+                                        );
                                       }
+
                                       return Column(
                                         children: [
                                           for (var i = 0;

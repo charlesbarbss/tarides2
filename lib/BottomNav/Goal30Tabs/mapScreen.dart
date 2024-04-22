@@ -484,7 +484,7 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ..._polylines,
               },
-              onLongPress: _addMarker,
+              onTap: _addMarker,
             ),
           ),
           Positioned(
