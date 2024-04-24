@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/CommunityTabs/adminViewMembers/viewMyMembers.dart';
+import 'package:tarides/CommunityTabs/inviteMembers.dart';
 import 'package:tarides/CommunityTabs/memberViewMembers/viewOtherMembers.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/homePage.dart';
+import 'package:tarides/image_picker_rectangle.dart';
 
 class PostTab extends StatefulWidget {
   const PostTab({
@@ -30,6 +35,8 @@ class _PostTabState extends State<PostTab> {
   final createPostController = TextEditingController();
 
   PostController postController = PostController();
+
+  File? selectPostImage;
 
   String _formatTimestamp(Timestamp timestamp) {
     final diff = DateTime.now().difference(timestamp.toDate());
@@ -91,9 +98,18 @@ class _PostTabState extends State<PostTab> {
             ),
           ),
           actions: [
+            Container(
+              child: Center(
+                child: PickerImageRec(onImagePick: (File postImage) {
+                  setState(() {
+                    selectPostImage = postImage;
+                  });
+                }),
+              ),
+            ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.red[900],
                 padding:
                     const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                 textStyle: const TextStyle(
@@ -102,24 +118,49 @@ class _PostTabState extends State<PostTab> {
                 ),
               ),
               onPressed: () async {
-                await FirebaseFirestore.instance.collection('post').add({
-                  'postId': postId, // Add this line
-                  'communityId': userController.user.communityId,
-                  'usersName': userController.user.username,
-                  'caption': createPostController.text,
-                  'heart': [],
-                  'comment': [],
-                  'timestamp': Timestamp.now(),
-                  'isHeart': false,
-                }).then((value) {
-                  Navigator.push(
-  context,
-  MaterialPageRoute(builder: (context) => HomePage(
-    email: widget.email,
-    homePageIndex: 0,
-  )),
-);
-                });
+                if (selectPostImage != null) {
+                  final storageRef = FirebaseStorage.instance
+                      .ref()
+                      .child('post_image')
+                      .child('$postId.jpg');
+                  await storageRef.putFile(File(selectPostImage!.path));
+
+                  // Get the download URL of the uploaded image
+                  final postImage = await storageRef.getDownloadURL();
+
+                  await FirebaseFirestore.instance.collection('post').add({
+                    'postId': postId, // Add this line
+                    'communityId': userController.user.communityId,
+                    'usersName': userController.user.username,
+                    'caption': createPostController.text,
+                    'heart': [],
+                    'comment': [],
+                    'timestamp': Timestamp.now(),
+                    'isHeart': false,
+                    'imagePost': postImage,
+                  });
+                } else {
+                  await FirebaseFirestore.instance.collection('post').add({
+                    'postId': postId, // Add this line
+                    'communityId': userController.user.communityId,
+                    'usersName': userController.user.username,
+                    'caption': createPostController.text,
+                    'heart': [],
+                    'comment': [],
+                    'timestamp': Timestamp.now(),
+                    'isHeart': false,
+                    'imagePost': '',
+                  });
+                }
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => HomePage(
+                            email: widget.email,
+                            homePageIndex: 0,
+                          )),
+                );
               },
               child: const Text(
                 'Post',
@@ -192,8 +233,9 @@ class _PostTabState extends State<PostTab> {
                                 height: 150, // specify your height
                                 decoration: BoxDecoration(
                                   image: DecorationImage(
-                                    image: NetworkImage(
-                                   communityController.community!.communityPic), // replace with your image url
+                                    image: NetworkImage(communityController
+                                        .community!
+                                        .communityPic), // replace with your image url
                                     fit: BoxFit.fill,
                                   ),
                                 ),
@@ -430,79 +472,124 @@ class _PostTabState extends State<PostTab> {
                             ),
                             Column(
                               children: [
-                                if (communityController
-                                        .community!.communityAdmin ==
-                                    userController.user.username)
-                                  ElevatedButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                                Colors.black),
-                                        shape: MaterialStateProperty.all<
-                                                RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20.0),
-                                                side: BorderSide(
-                                                    color: Colors.grey)))),
-                                    onPressed: () {
-                                      for (int x = 0;
-                                          x <
-                                              communityController.community!
-                                                  .communityMember.length;
-                                          x++) {
-                                        if (communityController.community!
-                                                .communityMember[x] ==
-                                            userController.user.username) {
-                                          String nonAdminMembers =
-                                              communityController.community!
-                                                  .communityMember[x];
-
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: [
+                                  
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Colors.black),
+                                            shape: MaterialStateProperty.all<
+                                                    RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20.0),
+                                                    side: BorderSide(
+                                                        color: Colors.grey)))),
+                                        onPressed: () {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                                 builder: (context) =>
-                                                    ViewMyMembers(
+                                                    InviteMembers(
+                                                      user: userController.user.username,
+                                                      communityId: widget.communityId,
+                                                      communityName: communityController.community!.communityName,
+                                                      email: widget.email,
+                                                    )), // replace NewPage with your page
+                                          );
+                                        },
+                                        child: Text('Invite Members',
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      ),
+                                
+                                    if (communityController
+                                            .community!.communityAdmin ==
+                                        userController.user.username)
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Colors.black),
+                                            shape: MaterialStateProperty.all<
+                                                    RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20.0),
+                                                    side: BorderSide(
+                                                        color: Colors.grey)))),
+                                        onPressed: () {
+                                          for (int x = 0;
+                                              x <
+                                                  communityController.community!
+                                                      .communityMember.length;
+                                              x++) {
+                                            if (communityController.community!
+                                                    .communityMember[x] ==
+                                                userController.user.username) {
+                                              String nonAdminMembers =
+                                                  communityController.community!
+                                                      .communityMember[x];
+
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ViewMyMembers(
+                                                          email: widget.email,
+                                                          communityId: widget
+                                                              .communityId,
+                                                          admin:
+                                                              nonAdminMembers,
+                                                        )),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        child: Text('View My Members',
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      ),
+                                    if (communityController
+                                            .community!.communityAdmin !=
+                                        userController.user.username)
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                MaterialStateProperty.all<
+                                                    Color>(Colors.black),
+                                            shape: MaterialStateProperty.all<
+                                                    RoundedRectangleBorder>(
+                                                RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20.0),
+                                                    side: BorderSide(
+                                                        color: Colors.grey)))),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewOtherMembers(
                                                       email: widget.email,
                                                       communityId:
                                                           widget.communityId,
-                                                      admin: nonAdminMembers,
+                                                      admin: widget.email,
                                                     )),
                                           );
-                                        }
-                                      }
-                                    },
-                                    child: Text('View My Members',
-                                        style: TextStyle(color: Colors.white)),
-                                  ),
-                                  if (communityController
-                                        .community!.communityAdmin !=
-                                    userController.user.username)
-                                  ElevatedButton(
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                                Colors.black),
-                                        shape: MaterialStateProperty.all<
-                                                RoundedRectangleBorder>(
-                                            RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20.0),
-                                                side: BorderSide(
-                                                    color: Colors.grey)))),
-                                    onPressed: () {
-                              Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => ViewOtherMembers(
-        email: widget.email,
-        communityId: widget.communityId,
-        admin: widget.email,
-      )),
-    );
-                                    },
-                                    child: Text('View Members',
-                                        style: TextStyle(color: Colors.white)),
-                                  ),
+                                        },
+                                        child: Text('View Members',
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      ),
+                                  ],
+                                ),
                                 const Text(
                                   'Group Post',
                                   style: TextStyle(
@@ -535,7 +622,7 @@ class _PostTabState extends State<PostTab> {
                                             Column(
                                               children: [
                                                 Container(
-                                                  height: 210,
+                                                  height: 310,
                                                   width: 400,
                                                   color: const Color.fromARGB(
                                                       31, 153, 150, 150),
@@ -652,6 +739,32 @@ class _PostTabState extends State<PostTab> {
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      Center(
+                                                        child: Container(
+                                                          width:
+                                                              350, // specify your width
+                                                          height:
+                                                              80, // specify your height
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            image:
+                                                                DecorationImage(
+                                                              image: NetworkImage(postController
+                                                                      .posts[i]
+                                                                      .imagePost
+                                                                      .isNotEmpty
+                                                                  ? postController
+                                                                      .posts[i]
+                                                                      .imagePost
+                                                                  : ''), // replace with your image url
+                                                              fit: BoxFit.fill,
+                                                            ),
+                                                          ),
                                                         ),
                                                       ),
                                                       Row(

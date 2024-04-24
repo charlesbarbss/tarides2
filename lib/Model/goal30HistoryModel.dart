@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Goal30History {
   Goal30History({
     required this.height,
-    required this.width,
+    required this.weight,
     required this.result,
     required this.bmiCategory,
     required this.time,
@@ -14,10 +14,11 @@ class Goal30History {
     required this.imageGoal,
     required this.user,
     required this.dateDone,
+    required this.caloriesBurn,
   });
 
   final String height;
-  final String width;
+  final String weight;
   final String result;
   final String bmiCategory;
   final String time;
@@ -28,6 +29,7 @@ class Goal30History {
   final String imageGoal;
   final String user;
   final Timestamp dateDone;
+  final String caloriesBurn;
 
   factory Goal30History.fromDocument(
       DocumentSnapshot<Map<String, dynamic>> document) {
@@ -35,7 +37,7 @@ class Goal30History {
 
     return Goal30History(
       height: data['height'] as String,
-      width: data['width'] as String,
+      weight: data['weight'] as String,
       result: data['result'] as String,
       bmiCategory: data['bmiCategory'] as String,
       time: data['time'] as String,
@@ -46,6 +48,7 @@ class Goal30History {
       imageGoal: data['imageGoal'] as String,
       user: data['user'] as String,
       dateDone: data['dateDone'] as Timestamp,
+      caloriesBurn: data['caloriesBurn'] as String,
     );
   }
 }

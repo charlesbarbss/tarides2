@@ -3,9 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:tarides/Model/goal30AchievementsModel.dart';
 import 'package:tarides/Model/userModel.dart';
 
-
 class UserController extends ChangeNotifier {
-  
   late final String email;
 
   late Users user;
@@ -13,11 +11,13 @@ class UserController extends ChangeNotifier {
 
   late List<Users> users = <Users>[];
 
+  late List<Users> usersWithNoCommunity = <Users>[];
+
   late List<Users> members = <Users>[];
 
   late Achievements achievement;
 
-    void getAchievement(String email) async {
+  void getAchievement(String email) async {
     isLoading = true;
     notifyListeners();
     final querySnapshot = await FirebaseFirestore.instance
@@ -57,10 +57,6 @@ class UserController extends ChangeNotifier {
 
     print('hello3');
   }
-
-
-
- 
 
   void getUser(String email) async {
     isLoading = true;
@@ -127,5 +123,27 @@ class UserController extends ChangeNotifier {
     notifyListeners();
   }
 
- 
+  void getAllUsersWithNoCommunity() async {
+    isLoading = true;
+    notifyListeners();
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('email', isNotEqualTo: 'super.admin@tarides.com')
+        .where('isCommunity', isEqualTo: false)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('Users not found');
+    }
+
+    usersWithNoCommunity = querySnapshot.docs.map((snapshot) {
+      return Users.fromDocument(snapshot);
+    }).toList();
+
+    isLoading = false;
+    notifyListeners();
+  }
 }

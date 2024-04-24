@@ -10,6 +10,7 @@ class Post {
     required this.heart,
     required this.isHeart,
     required this.timestamp,
+    required this.imagePost,
   });
   final String postId;
   final String communityId;
@@ -19,6 +20,7 @@ class Post {
   final List<String> commment;
   final Timestamp timestamp;
   late bool isHeart;
+  final String imagePost;
 
   factory Post.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() as Map<String, dynamic>;
@@ -39,6 +41,7 @@ class Post {
       heart: hearts,
       isHeart: data['isHeart'] is bool ? data['isHeart'] as bool : false,
       timestamp: data['timestamp'] as Timestamp,
+      imagePost: data['imagePost'] as String,
     );
   }
 }

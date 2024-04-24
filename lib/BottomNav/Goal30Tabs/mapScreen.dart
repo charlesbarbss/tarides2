@@ -28,7 +28,7 @@ class MapScreen extends StatefulWidget {
   const MapScreen(
       {super.key,
       required this.height,
-      required this.width,
+      required this.weight,
       required this.result,
       required this.bmiCategory,
       required this.goal30,
@@ -36,7 +36,7 @@ class MapScreen extends StatefulWidget {
       required this.email,
       required this.location});
   final String height;
-  final String width;
+  final String weight;
   final String result;
   final String bmiCategory;
   final Goal30 goal30;
@@ -160,6 +160,29 @@ class _MapScreenState extends State<MapScreen> {
     final remainingSeconds = seconds % 60;
 
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
+
+  late double met;
+  late double hours;
+  late double tee;
+  late double caloriesBurned;
+  void calculateCalories() {
+    setState(() {
+      // Get MET
+      if (locationService.averageSpeed! >= 16 &&
+          locationService.averageSpeed! <= 19) {
+        met = 6.0;
+      } else if (locationService.averageSpeed! > 19) {
+        met = 8.0;
+      } else {
+        met = 1.0;
+      }
+
+      // Calculate hours, tee, and caloriesBurned
+      hours = (_start / 3600).toDouble();
+      tee = met * double.parse(widget.weight) * hours;
+      caloriesBurned = tee;
+    });
   }
 
   @override
@@ -320,7 +343,7 @@ class _MapScreenState extends State<MapScreen> {
     if (_info != null && _info2 != null) {
       totalKm = double.parse(_info!.totalDistance.replaceAll('km', '').trim()) +
           double.parse(_info2!.totalDistance.replaceAll('km', '').trim());
-      print(totalKm);
+      print(totalKm.toStringAsFixed(1));
       print(widget.goal30.goalLength == 30
           ? goal30[widget.day - 1].kmGoal
           : widget.goal30.goalLength == 60
@@ -769,7 +792,7 @@ class _MapScreenState extends State<MapScreen> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Text(
-                              totalKm.toString() + ' km',
+                              totalKm.toStringAsFixed(2) + ' km',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 15),
                             ),
@@ -828,6 +851,7 @@ class _MapScreenState extends State<MapScreen> {
                             ? () async {
                                 setState(() {
                                   _timer.cancel();
+                                  calculateCalories();
                                   finishedRide = false;
                                   locationService.stopTime();
                                 });
@@ -860,6 +884,31 @@ class _MapScreenState extends State<MapScreen> {
                                     await file.writeAsBytes(pngBytes);
                                     // Now you can use pngBytes to save the image as a file, share it, etc.
 
+// F O M U L A  S A  P A G K U H A  N A K O  S A  C A L O R I E S  B U R N
+
+                                    // late double met;
+                                    // void getMet() {
+                                    //   if (locationService.averageSpeed! >= 16 &&
+                                    //       locationService.averageSpeed! <= 19) {
+                                    //     met = 6.0;
+                                    //   } else if (locationService.averageSpeed! >
+                                    //       19) {
+                                    //     met = 8.0;
+                                    //   } else {
+                                    //     met = 1.0;
+                                    //   }
+                                    // }
+
+                                    // late double hours =
+                                    //     (_start / 3600).toDouble();
+                                    // late double tee = met *
+                                    //     double.parse(widget.weight) *
+                                    //     hours;
+
+                                    // late double caloriesBurned = tee * 1;
+
+// K U T O B  R A  A R I
+
                                     final goal30HistoryId = FirebaseFirestore
                                         .instance
                                         .collection('goal30')
@@ -877,7 +926,7 @@ class _MapScreenState extends State<MapScreen> {
                                         .collection('goal30History')
                                         .add({
                                       'height': widget.height,
-                                      'width': widget.width,
+                                      'weight': widget.weight,
                                       'result': widget.result,
                                       'bmiCategory': widget.bmiCategory,
                                       'time': formatTimer(_start),
@@ -894,6 +943,9 @@ class _MapScreenState extends State<MapScreen> {
                                       'imageGoal': imageUrl,
                                       'user': userController.user.username,
                                       'dateDone': Timestamp.now(),
+                                      'caloriesBurn':
+                                          caloriesBurned.toStringAsFixed(2) +
+                                              ' kcal',
                                     });
                                   }
                                 });

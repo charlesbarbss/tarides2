@@ -52,6 +52,7 @@ dependencies:
   shared_preferences: ^2.0.8
   scrollable_positioned_list:
   syncfusion_flutter_charts: 
+  dotted_border: ^2.0.0+1
 
 
 

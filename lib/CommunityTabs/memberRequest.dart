@@ -239,7 +239,9 @@ class _MemberRequestState extends State<MemberRequest> {
                                             requestContoller.request
                                                 .removeAt(i);
 
-                                            Navigator.push(
+                                           
+                                          });
+                                           Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                   builder: (context) =>
@@ -248,7 +250,6 @@ class _MemberRequestState extends State<MemberRequest> {
                                                         homePageIndex: 0,
                                                       )),
                                             );
-                                          });
                                         },
                                       ),
                                     ),

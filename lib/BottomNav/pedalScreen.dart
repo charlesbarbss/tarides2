@@ -729,7 +729,7 @@ class _PedalScreenState extends State<PedalScreen> {
                               borderRadius: BorderRadius.circular(15),
                             ),
                             child: Text(
-                              totalKm.toString() + ' km',
+                              totalKm.toStringAsFixed(2) + ' km',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 15),
                             ),
@@ -879,27 +879,27 @@ class _PedalScreenState extends State<PedalScreen> {
                 ),
               ),
             ),
-    //       if (isStart == true)
-    //         Positioned(
-    //           top: 1,
-    //           child: FloatingActionButton(
-    //             onPressed: () {
-    //                 Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => HomePage(
-    //     email: widget.email,
-    //     homePageIndex: 2,
-    //   )),
-    // );
-    //             },
-    //             child: Text(
-    //               'Reset',
-    //               style: TextStyle(color: Colors.white),
-    //             ), // Change this to your preferred icon
-    //             backgroundColor:
-    //                 Colors.red[800], // Change this to your preferred color
-    //           ),
-    //         )
+          //       if (isStart == true)
+          //         Positioned(
+          //           top: 1,
+          //           child: FloatingActionButton(
+          //             onPressed: () {
+          //                 Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => HomePage(
+          //     email: widget.email,
+          //     homePageIndex: 2,
+          //   )),
+          // );
+          //             },
+          //             child: Text(
+          //               'Reset',
+          //               style: TextStyle(color: Colors.white),
+          //             ), // Change this to your preferred icon
+          //             backgroundColor:
+          //                 Colors.red[800], // Change this to your preferred color
+          //           ),
+          //         )
         ],
       ),
     );

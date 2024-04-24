@@ -18,7 +18,7 @@ class _Goal30HistoryState extends State<Goal30History> {
   late Users user;
   @override
   void initState() {
-    goal30HistoryController.getGoal30History(user.username);
+    goal30HistoryController.getGoal30History(widget.goal30.username);
     super.initState();
   }
 
@@ -154,6 +154,11 @@ class _Goal30HistoryState extends State<Goal30History> {
                             ),
                             Text(
                               'Duration: ${goal30HistoryController.historys[i]!.time}',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 20),
+                            ),
+                             Text(
+                              'Calories Burned: ${goal30HistoryController.historys[i]!.caloriesBurn}',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 20),
                             ),

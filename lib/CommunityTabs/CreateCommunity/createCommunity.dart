@@ -20,7 +20,7 @@ class _CreateCommunityState extends State<CreateCommunity> {
 
   void _submit() {
     if (communityNameController.text.isEmpty ||
-        communityDescriptionController.text.isEmpty) {
+        communityDescriptionController.text.isEmpty || selectCommunityImage == null) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
