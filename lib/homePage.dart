@@ -111,6 +111,7 @@ class _HomePageState extends State<HomePage> {
                 return PedalScreen(
                   email: widget.email,
                   location: _locationData!,
+                  username: userController.user.username,
                 );
               })
           : const Center(

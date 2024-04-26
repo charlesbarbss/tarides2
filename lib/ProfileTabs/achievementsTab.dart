@@ -57,7 +57,7 @@ class _AchievmentsTabState extends State<AchievmentsTab> {
                               return AlertDialog(
                                 title: Text('Personal Achievements'),
                                 content: Text(
-                                    'NEWBIE: is gained by creating an account.\n\nLEGENDARY: is gained by completing all Flawless Achivements'),
+                                    'NEWBIE: is gained by creating an account.\n\nLEGENDARY: is gained by gaining one Flawless Achivements'),
                                 actions: [],
                               );
                             },

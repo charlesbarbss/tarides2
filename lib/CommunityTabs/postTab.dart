@@ -4,8 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:tarides/CommunityTabs/adminViewMembers/viewMyMembers.dart';
+import 'package:tarides/CommunityTabs/comment.dart';
 import 'package:tarides/CommunityTabs/inviteMembers.dart';
 import 'package:tarides/CommunityTabs/memberViewMembers/viewOtherMembers.dart';
+import 'package:tarides/Controller/commentController.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/postController.dart';
 import 'package:tarides/Controller/userController.dart';
@@ -179,8 +181,13 @@ class _PostTabState extends State<PostTab> {
       floatingActionButton: FloatingActionButton(
         onPressed: _createPost,
         backgroundColor: Colors.red[900],
-        child: const Icon(Icons.add),
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        shape: CircleBorder(),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       backgroundColor: Colors.black,
       body: AnimatedBuilder(
         animation: userController,
@@ -473,40 +480,44 @@ class _PostTabState extends State<PostTab> {
                             Column(
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
-                                  
-                                      ElevatedButton(
-                                        style: ButtonStyle(
-                                            backgroundColor:
-                                                MaterialStateProperty.all<
-                                                    Color>(Colors.black),
-                                            shape: MaterialStateProperty.all<
-                                                    RoundedRectangleBorder>(
-                                                RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20.0),
-                                                    side: BorderSide(
-                                                        color: Colors.grey)))),
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) =>
-                                                    InviteMembers(
-                                                      user: userController.user.username,
-                                                      communityId: widget.communityId,
-                                                      communityName: communityController.community!.communityName,
-                                                      email: widget.email,
-                                                    )), // replace NewPage with your page
-                                          );
-                                        },
-                                        child: Text('Invite Members',
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      ),
-                                
+                                    ElevatedButton(
+                                      style: ButtonStyle(
+                                          backgroundColor:
+                                              MaterialStateProperty.all<Color>(
+                                                  Colors.black),
+                                          shape: MaterialStateProperty.all<
+                                                  RoundedRectangleBorder>(
+                                              RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          20.0),
+                                                  side: BorderSide(
+                                                      color: Colors.grey)))),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  InviteMembers(
+                                                    user: userController
+                                                        .user.username,
+                                                    communityId:
+                                                        widget.communityId,
+                                                    communityName:
+                                                        communityController
+                                                            .community!
+                                                            .communityName,
+                                                    email: widget.email,
+                                                  )), // replace NewPage with your page
+                                        );
+                                      },
+                                      child: Text('Invite Members',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
                                     if (communityController
                                             .community!.communityAdmin ==
                                         userController.user.username)
@@ -744,29 +755,40 @@ class _PostTabState extends State<PostTab> {
                                                       const SizedBox(
                                                         height: 10,
                                                       ),
-                                                      Center(
-                                                        child: Container(
-                                                          width:
-                                                              350, // specify your width
-                                                          height:
-                                                              80, // specify your height
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            image:
-                                                                DecorationImage(
-                                                              image: NetworkImage(postController
-                                                                      .posts[i]
-                                                                      .imagePost
-                                                                      .isNotEmpty
-                                                                  ? postController
-                                                                      .posts[i]
-                                                                      .imagePost
-                                                                  : ''), // replace with your image url
-                                                              fit: BoxFit.fill,
+                                                      if (postController
+                                                          .posts[i]
+                                                          .imagePost
+                                                          .isNotEmpty)
+                                                        Center(
+                                                          child: Container(
+                                                            width:
+                                                                350, // specify your width
+                                                            height:
+                                                                80, // specify your height
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              image:
+                                                                  DecorationImage(
+                                                                image: NetworkImage(
+                                                                    postController
+                                                                        .posts[
+                                                                            i]
+                                                                        .imagePost), // replace with your image url
+                                                                fit:
+                                                                    BoxFit.fill,
+                                                              ),
                                                             ),
                                                           ),
+                                                        )
+                                                      else
+                                                        Center(
+                                                          child: Container(
+                                                            width:
+                                                                350, // specify your width
+                                                            height:
+                                                                80, // specify your height
+                                                          ),
                                                         ),
-                                                      ),
                                                       Row(
                                                         mainAxisAlignment:
                                                             MainAxisAlignment
@@ -902,6 +924,29 @@ class _PostTabState extends State<PostTab> {
                                                                 color:
                                                                     Colors.grey,
                                                                 fontSize: 15),
+                                                          ),
+                                                          const SizedBox(
+                                                            width: 10,
+                                                          ),
+                                                          IconButton(
+                                                            icon: Icon(
+                                                              Icons.comment,
+                                                              color: Colors
+                                                                  .red[900],
+                                                            ), // Comment icon
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                    builder:
+                                                                        (context) =>
+                                                                            Comments(
+                                                                              postId: postController.posts[i].postId,
+                                                                              email: widget.email,
+                                                                              userImage: userController.user.imageUrl,
+                                                                            )),
+                                                              );
+                                                            },
                                                           ),
                                                         ],
                                                       ),

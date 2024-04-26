@@ -773,6 +773,7 @@ class _Goal30HomeState extends State<Goal30Home> {
                                         if (achiever.docs.isNotEmpty) {
                                           achiever.docs.first.reference.update({
                                             'flawlessGoal30': true,
+                                            'legendary': true,
                                           }).then((value) {
                                             showDialog(
                                               context: context,
@@ -1045,6 +1046,7 @@ class _Goal30HomeState extends State<Goal30Home> {
                                         if (achiever.docs.isNotEmpty) {
                                           achiever.docs.first.reference.update({
                                             'flawlessGoal60': true,
+                                            'legendary': true,
                                           }).then((value) {
                                             showDialog(
                                               context: context,
@@ -1317,6 +1319,7 @@ class _Goal30HomeState extends State<Goal30Home> {
                                         if (achiever.docs.isNotEmpty) {
                                           achiever.docs.first.reference.update({
                                             'flawlessGoal90': true,
+                                            'legendary': true,
                                           }).then((value) {
                                             showDialog(
                                               context: context,

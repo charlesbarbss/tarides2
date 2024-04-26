@@ -80,8 +80,8 @@ class _InvitationState extends State<Invitation> {
                                 inviteController.invite[index].inviter +
                                     ' has invited you to join ' +
                                     inviteController
-                                        .invite[index].communityName +
-                                    ' community',
+                                        .invite[index].communityName 
+                                    ,
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 20),
                               ),

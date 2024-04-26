@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,16 +15,19 @@ import 'package:location/location.dart';
 import 'package:location/location.dart' as cur;
 import 'package:tarides/BottomNav/Goal30Tabs/directionsRepository.dart';
 import 'package:tarides/BottomNav/Goal30Tabs/mapScreen.dart';
+import 'package:tarides/Controller/saveRouteController.dart';
 import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/Model/directionsModel.dart';
 import 'package:tarides/homePage.dart';
 import 'package:path_provider/path_provider.dart';
 
 class PedalScreen extends StatefulWidget {
-  const PedalScreen({super.key, required this.email, this.location});
+  const PedalScreen(
+      {super.key, required this.email, this.location, required this.username});
 
   final String email;
   final LocationData? location;
+  final String username;
 
   @override
   State<PedalScreen> createState() => _PedalScreenState();
@@ -31,6 +35,7 @@ class PedalScreen extends StatefulWidget {
 
 class _PedalScreenState extends State<PedalScreen> {
   UserController userController = UserController();
+  SaveRouteController saveRouteController = SaveRouteController();
   final firstPinPoint = TextEditingController();
   final secondPinPoint = TextEditingController();
   final thirdPinPoint = TextEditingController();
@@ -56,6 +61,8 @@ class _PedalScreenState extends State<PedalScreen> {
 
   bool pin1topin2 = false;
   bool pin2topin3 = false;
+
+  bool useOwn = false;
 
   bool finishedRide = false;
 
@@ -151,6 +158,8 @@ class _PedalScreenState extends State<PedalScreen> {
   @override
   void initState() {
     userController.getUser(widget.email);
+    saveRouteController.getSaveRoutes();
+    saveRouteController.selectedSave(widget.username);
     getCurrentLocation();
     // getCurrentLocation();
     googleMapController?.dispose();
@@ -159,73 +168,157 @@ class _PedalScreenState extends State<PedalScreen> {
   }
 
   void _addMarker(LatLng pos) async {
-    final placemarks =
-        await placemarkFromCoordinates(pos.latitude, pos.longitude);
-    final place = placemarks.first;
-    final String fullAddress =
-        '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
+    print('ONE');
+    setState(() async {
+      if (useOwn == true) {
+        final placemarks =
+            await placemarkFromCoordinates(pos.latitude, pos.longitude);
+        final place = placemarks.first;
+        final String fullAddress =
+            '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
 
-    if (_origin == null) {
-      setState(() {
-        _origin = Marker(
-          markerId: const MarkerId('origin'),
-          infoWindow: InfoWindow(title: place.name),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-          position: pos,
+        setState(() {
+          _origin = Marker(
+            markerId: const MarkerId('origin'),
+            infoWindow: InfoWindow(title: place.name),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen),
+            position: LatLng(saveRouteController.save.originLat,
+                saveRouteController.save.originLng),
+          );
+          firstPinPoint.text = saveRouteController.save.firstPinPoint;
+          _destination = null;
+          _info = null;
+        });
+
+        setState(() {
+          _destination = Marker(
+            markerId: const MarkerId('destination'),
+            infoWindow: InfoWindow(title: place.name),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            position: LatLng(saveRouteController.save.destinationLat,
+                saveRouteController.save.destinationLng),
+          );
+          secondPinPoint.text = saveRouteController.save.secondPinPoint;
+          _finalDestination = null;
+          _info2 = null;
+        });
+        final directions = await DirectionsRepository().getDirections(
+          origin: LatLng(saveRouteController.save.originLat,
+              saveRouteController.save.originLng),
+          destination: LatLng(saveRouteController.save.destinationLat,
+              saveRouteController.save.destinationLng),
         );
-        firstPinPoint.text = fullAddress;
-        _destination = null;
-        _info = null;
-      });
-    } else if (_destination == null) {
-      setState(() {
-        _destination = Marker(
-          markerId: const MarkerId('destination'),
-          infoWindow: InfoWindow(title: place.name),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          position: pos,
+        setState(() {
+          _info = directions;
+        });
+
+        setState(() {
+          _finalDestination = Marker(
+            markerId: const MarkerId('finalDestination'),
+            infoWindow: InfoWindow(title: place.name),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+            position: LatLng(saveRouteController.save.finalDestinationLat,
+                saveRouteController.save.finalDestinationLng),
+          );
+          thirdPinPoint.text = saveRouteController.save.thirdPinPoint;
+        });
+
+        final directions2 = await DirectionsRepository().getDirections(
+          origin: LatLng(saveRouteController.save.destinationLat,
+              saveRouteController.save.destinationLng),
+          destination: LatLng(saveRouteController.save.finalDestinationLat,
+              saveRouteController.save.finalDestinationLng),
         );
-        secondPinPoint.text = fullAddress;
-        _finalDestination = null;
-        _info2 = null;
-      });
-      final directions = await DirectionsRepository().getDirections(
-        origin: _origin!.position,
-        destination: pos,
-      );
-      setState(() {
-        _info = directions;
-      });
-    } else if (_finalDestination == null) {
-      setState(() {
-        _finalDestination = Marker(
-          markerId: const MarkerId('finalDestination'),
-          infoWindow: InfoWindow(title: place.name),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-          position: pos,
+
+        setState(() {
+          _info2 = directions2;
+        });
+
+        final directions3 = await DirectionsRepository().getDirections(
+          origin: LatLng(saveRouteController.save.originLat,
+              saveRouteController.save.originLng),
+          destination: LatLng(saveRouteController.save.finalDestinationLat,
+              saveRouteController.save.finalDestinationLng),
         );
-        thirdPinPoint.text = fullAddress;
-      });
-
-      final directions2 = await DirectionsRepository().getDirections(
-        origin: _destination!.position,
-        destination: _finalDestination!.position,
-      );
-
-      setState(() {
-        _info2 = directions2;
-      });
-
-      final directions3 = await DirectionsRepository().getDirections(
-        origin: _origin!.position,
-        destination: _finalDestination!.position,
-      );
-      _info3 = directions3;
-      setState(() {
         _info3 = directions3;
-      });
-    }
+        setState(() {
+          _info3 = directions3;
+        });
+      } else {
+        final placemarks =
+            await placemarkFromCoordinates(pos.latitude, pos.longitude);
+        final place = placemarks.first;
+        final String fullAddress =
+            '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
+
+        if (_origin == null) {
+          setState(() {
+            _origin = Marker(
+              markerId: const MarkerId('origin'),
+              infoWindow: InfoWindow(title: place.name),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
+              position: pos,
+            );
+            firstPinPoint.text = fullAddress;
+            _destination = null;
+            _info = null;
+          });
+        } else if (_destination == null) {
+          setState(() {
+            _destination = Marker(
+              markerId: const MarkerId('destination'),
+              infoWindow: InfoWindow(title: place.name),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueRed),
+              position: pos,
+            );
+            secondPinPoint.text = fullAddress;
+            _finalDestination = null;
+            _info2 = null;
+          });
+          final directions = await DirectionsRepository().getDirections(
+            origin: _origin!.position,
+            destination: pos,
+          );
+          setState(() {
+            _info = directions;
+          });
+        } else if (_finalDestination == null) {
+          setState(() {
+            _finalDestination = Marker(
+              markerId: const MarkerId('finalDestination'),
+              infoWindow: InfoWindow(title: place.name),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue),
+              position: pos,
+            );
+            thirdPinPoint.text = fullAddress;
+          });
+
+          final directions2 = await DirectionsRepository().getDirections(
+            origin: _destination!.position,
+            destination: _finalDestination!.position,
+          );
+
+          setState(() {
+            _info2 = directions2;
+          });
+
+          final directions3 = await DirectionsRepository().getDirections(
+            origin: _origin!.position,
+            destination: _finalDestination!.position,
+          );
+          _info3 = directions3;
+          setState(() {
+            _info3 = directions3;
+          });
+        }
+      }
+    });
   }
 
   bool hasShownSnackBar = false;
@@ -421,47 +514,56 @@ class _PedalScreenState extends State<PedalScreen> {
         children: [
           RepaintBoundary(
             key: _globalKey,
-            child: GoogleMap(
-              zoomControlsEnabled: true,
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                    widget.location!.latitude!, widget.location!.longitude!),
-                zoom: 13.5,
-              ),
-              onMapCreated: (mapController) {
-                googleMapController = mapController;
-                _controller.complete(mapController);
-              },
-              markers: {
-                if (_origin != null) _origin!,
-                if (_destination != null) _destination!,
-                if (_finalDestination != null) _finalDestination!,
-              },
-              polylines: {
-                if (_info != null)
-                  Polyline(
-                    polylineId: const PolylineId('overview_polyline'),
-                    color: Colors.red,
-                    width: 6,
-                    points: _info!.polylinePoints
-                        .map((e) => LatLng(e.latitude, e.longitude))
-                        .toList(),
-                  ),
-                if (_info2 != null)
-                  Polyline(
-                    polylineId: const PolylineId('overview_polyline_2'),
-                    color: Colors.red,
-                    width: 6,
-                    points: _info2!.polylinePoints
-                        .map((e) => LatLng(e.latitude, e.longitude))
-                        .toList(),
-                  ),
-                ..._polylines,
-              },
-              onTap: _addMarker,
-            ),
+            child: AnimatedBuilder(
+                animation: saveRouteController,
+                builder: (context, snapshot) {
+                  if (saveRouteController.isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  return GoogleMap(
+                    zoomControlsEnabled: true,
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(widget.location!.latitude!,
+                          widget.location!.longitude!),
+                      zoom: 13.5,
+                    ),
+                    onMapCreated: (mapController) {
+                      googleMapController = mapController;
+                      _controller.complete(mapController);
+                    },
+                    markers: {
+                      if (_origin != null) _origin!,
+                      if (_destination != null) _destination!,
+                      if (_finalDestination != null) _finalDestination!,
+                    },
+                    polylines: {
+                      if (_info != null)
+                        Polyline(
+                          polylineId: const PolylineId('overview_polyline'),
+                          color: Colors.red,
+                          width: 6,
+                          points: _info!.polylinePoints
+                              .map((e) => LatLng(e.latitude, e.longitude))
+                              .toList(),
+                        ),
+                      if (_info2 != null)
+                        Polyline(
+                          polylineId: const PolylineId('overview_polyline_2'),
+                          color: Colors.red,
+                          width: 6,
+                          points: _info2!.polylinePoints
+                              .map((e) => LatLng(e.latitude, e.longitude))
+                              .toList(),
+                        ),
+                      ..._polylines,
+                    },
+                    onTap: _addMarker,
+                  );
+                }),
           ),
           Positioned(
             top: 390,
@@ -491,11 +593,56 @@ class _PedalScreenState extends State<PedalScreen> {
               _finalDestination != null &&
               proceed == false)
             Positioned(
+              top: 10,
+              right: 10,
+              child: FloatingActionButton(
+                onPressed: () async {
+                  final routeId = FirebaseFirestore.instance
+                      .collection('saveRoute')
+                      .doc()
+                      .id;
+                  await FirebaseFirestore.instance.collection('saveRoute').add({
+                    'routeId': routeId,
+                    'username': userController.user.username,
+                    'originLat': _origin!.position.latitude,
+                    'originLng': _origin!.position.longitude,
+                    'destinationLat': _destination!.position.latitude,
+                    'destinationLng': _destination!.position.longitude,
+                    'finalDestinationLat': _finalDestination!.position.latitude,
+                    'finalDestinationLng':
+                        _finalDestination!.position.longitude,
+                    'firstPinPoint': firstPinPoint.text,
+                    'secondPinPoint': secondPinPoint.text,
+                    'thirdPinPoint': thirdPinPoint.text,
+                    'useClicked': true,
+                  }).then((value) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => HomePage(
+                                email: widget.email,
+                                homePageIndex: 2,
+                              )),
+                    );
+                  });
+                },
+                child: Center(
+                  child: Text('Save'),
+                ),
+                backgroundColor: Colors.green[900],
+              ),
+            ),
+
+          if (_origin != null &&
+              _destination != null &&
+              _finalDestination != null &&
+              proceed == false)
+            Positioned(
               top: 330,
               left: 350,
               child: FloatingActionButton(
                 onPressed: () {
-                  setState(() {
+                  setState(() async {
                     _origin = null;
                     _destination = null;
                     _finalDestination = null;
@@ -505,6 +652,8 @@ class _PedalScreenState extends State<PedalScreen> {
                     firstPinPoint.clear();
                     secondPinPoint.clear();
                     thirdPinPoint.clear();
+
+                    useOwn = false;
                   });
                 },
                 child:
@@ -518,83 +667,211 @@ class _PedalScreenState extends State<PedalScreen> {
               top: 450.0,
               left: 10.0,
               right: 10.0,
-              child: Container(
-                height: 260,
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.grey[900],
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: SingleChildScrollView(
+              child: DefaultTabController(
+                length: 2,
+                child: Container(
+                  height: 260,
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[900],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'FIRST PIN POINT: ${firstPinPoint.text}',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                      TabBar(
+                        tabs: [
+                          Tab(text: 'Route'),
+                          Tab(text: 'Saved Routes'),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'SECOND PIN POINT:  ${secondPinPoint.text}',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'THIRD PIN POINT: ${thirdPinPoint.text}',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            fixedSize: const Size.fromHeight(60),
-                            maximumSize: const Size.fromWidth(350),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                              side: BorderSide.none,
-                            ),
-                            backgroundColor: Colors.red[900],
-                          ),
-                          onPressed: _info3 != null
-                              ? () {
-                                  setState(() {
-                                    isStart = true;
-                                    startTimer();
-                                    proceed = true;
-                                    finishedRide = true;
-                                    getCurrentLocation();
-                                  });
-                                }
-                              : () {
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Please select all the pin points'),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
+                            SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'FIRST PIN POINT: ${firstPinPoint.text}',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'SECOND PIN POINT:  ${secondPinPoint.text}',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      'THIRD PIN POINT: ${thirdPinPoint.text}',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                  Center(
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        fixedSize: const Size.fromHeight(60),
+                                        maximumSize: const Size.fromWidth(350),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          side: BorderSide.none,
+                                        ),
+                                        backgroundColor: Colors.red[900],
                                       ),
-                                    );
-                                  });
-                                },
-                          child: Text(
-                            'Proceed',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0,
+                                      onPressed: _info3 != null
+                                          ? () {
+                                              setState(() {
+                                                isStart = true;
+                                                startTimer();
+                                                proceed = true;
+                                                finishedRide = true;
+                                                getCurrentLocation();
+                                              });
+                                            }
+                                          : () {
+                                              WidgetsBinding.instance
+                                                  .addPostFrameCallback((_) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                        'Please select all the pin points'),
+                                                  ),
+                                                );
+                                              });
+                                            },
+                                      child: Text(
+                                        'Proceed',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 5,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            SingleChildScrollView(
+                              child: AnimatedBuilder(
+                                  animation: saveRouteController,
+                                  builder: (context, snapshot) {
+                                    if (saveRouteController.isLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (saveRouteController.route.isEmpty) {
+                                      return Column(
+                                        children: [
+                                          Text('No saved routes',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ],
+                                      );
+                                    }
+                                    return Column(
+                                      children: [
+                                        for (var x = 0;
+                                            x <
+                                                saveRouteController
+                                                    .route.length;
+                                            x++)
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              // height: 100,
+                                              // width: 300,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[900],
+                                                border: Border.all(
+                                                    color: Colors.white,
+                                                    width: 1),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Pin Created by:' +
+                                                        saveRouteController
+                                                            .route[x]!.username,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                  Text(
+                                                    'First Pin Point: \n' +
+                                                        saveRouteController
+                                                            .route[x]!
+                                                            .firstPinPoint,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15),
+                                                  ),
+                                                  Text(
+                                                    'Second Pin Point: \n' +
+                                                        saveRouteController
+                                                            .route[x]!
+                                                            .secondPinPoint,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15),
+                                                  ),
+                                                  Text(
+                                                    'Third Pin Point: \n' +
+                                                        saveRouteController
+                                                            .route[x]!
+                                                            .thirdPinPoint,
+                                                    style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 15),
+                                                  ),
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.end,
+                                                    children: [
+                                                      FloatingActionButton(
+                                                        onPressed: () async {
+                                                          await useRoute(x);
+                                                        },
+                                                        child: Text(
+                                                          'Use',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        ), // Change this to your preferred icon
+                                                        backgroundColor: Colors
+                                                                .red[
+                                                            900], // Replace with your preferred color
+                                                      ),
+                                                    ],
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                      ],
+                                    );
+                                  }),
+                            ),
+                          ],
                         ),
-                      ),
-                      SizedBox(
-                        height: 5,
                       ),
                     ],
                   ),
@@ -903,5 +1180,28 @@ class _PedalScreenState extends State<PedalScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> useRoute(int x) async {
+    print('UNSAY NUMBER ${x}');
+     setState(() {
+        useOwn = true;
+        _addMarker(LatLng(saveRouteController.route[x]!.originLat,
+            saveRouteController.route[x]!.originLng));
+      });
+    final userDoc = await FirebaseFirestore.instance
+        .collection('saveRoute')
+        .where('routeId', isEqualTo: saveRouteController.route[x]!.routeId)
+        .get();
+
+    await userDoc.docs.first.reference.update({
+      'useClicked': true,
+    }).then((value) {
+      // setState(() {
+      //   useOwn = true;
+      //   _addMarker(LatLng(saveRouteController.route[x]!.originLat,
+      //       saveRouteController.route[x]!.originLng));
+      // });
+    });
   }
 }
