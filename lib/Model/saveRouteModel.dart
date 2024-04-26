@@ -19,16 +19,17 @@ class SaveRoute {
 
   final String routeId;
   final String username;
-  final double originLat;
-  final double originLng;
-  final double destinationLat;
-  final double destinationLng;
-  final double finalDestinationLat;
-  final double finalDestinationLng;
+   double originLat;
+   double originLng;
+   double destinationLat;
+   double destinationLng;
+   double finalDestinationLat;
+   double finalDestinationLng;
   final String firstPinPoint;
   final String secondPinPoint;
   final String thirdPinPoint;
   final bool useClicked;
+  
   //info
   //info2
  factory SaveRoute.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {

@@ -169,68 +169,138 @@ class _PedalScreenState extends State<PedalScreen> {
 
   void _addMarker(LatLng pos) async {
     print('ONE');
-    setState(() async {
-      if (useOwn == true) {
-        final placemarks =
-            await placemarkFromCoordinates(pos.latitude, pos.longitude);
-        final place = placemarks.first;
-        final String fullAddress =
-            '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
 
+    if (useOwn == true) {
+      final placemarks =
+          await placemarkFromCoordinates(pos.latitude, pos.longitude);
+      final place = placemarks.first;
+      final String fullAddress =
+          '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
+      print(fullAddress);
+      setState(() {
+        _origin = Marker(
+          markerId: const MarkerId('origin'),
+          infoWindow: InfoWindow(title: place.name),
+          icon:
+              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          position: LatLng(saveRouteController.save.originLat,
+              saveRouteController.save.originLng),
+        );
+
+        firstPinPoint.text = saveRouteController.save.firstPinPoint;
+        _destination = null;
+        _info = null;
+      });
+
+      setState(() {
+        _destination = Marker(
+          markerId: const MarkerId('destination'),
+          infoWindow: InfoWindow(title: place.name),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          position: LatLng(saveRouteController.save.destinationLat,
+              saveRouteController.save.destinationLng),
+        );
+        secondPinPoint.text = saveRouteController.save.secondPinPoint;
+        _finalDestination = null;
+        _info2 = null;
+      });
+      final directions = await DirectionsRepository().getDirections(
+        origin: LatLng(saveRouteController.save.originLat,
+            saveRouteController.save.originLng),
+        destination: LatLng(saveRouteController.save.destinationLat,
+            saveRouteController.save.destinationLng),
+      );
+      setState(() {
+        _info = directions;
+      });
+
+      setState(() {
+        _finalDestination = Marker(
+          markerId: const MarkerId('finalDestination'),
+          infoWindow: InfoWindow(title: place.name),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          position: LatLng(saveRouteController.save.finalDestinationLat,
+              saveRouteController.save.finalDestinationLng),
+        );
+        thirdPinPoint.text = saveRouteController.save.thirdPinPoint;
+      });
+
+      final directions2 = await DirectionsRepository().getDirections(
+        origin: LatLng(saveRouteController.save.destinationLat,
+            saveRouteController.save.destinationLng),
+        destination: LatLng(saveRouteController.save.finalDestinationLat,
+            saveRouteController.save.finalDestinationLng),
+      );
+
+      setState(() {
+        _info2 = directions2;
+      });
+
+      final directions3 = await DirectionsRepository().getDirections(
+        origin: LatLng(saveRouteController.save.originLat,
+            saveRouteController.save.originLng),
+        destination: LatLng(saveRouteController.save.finalDestinationLat,
+            saveRouteController.save.finalDestinationLng),
+      );
+      _info3 = directions3;
+      setState(() {
+        _info3 = directions3;
+      });
+    } else {
+      final placemarks =
+          await placemarkFromCoordinates(pos.latitude, pos.longitude);
+      final place = placemarks.first;
+      final String fullAddress =
+          '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
+
+      if (_origin == null) {
         setState(() {
           _origin = Marker(
             markerId: const MarkerId('origin'),
             infoWindow: InfoWindow(title: place.name),
             icon: BitmapDescriptor.defaultMarkerWithHue(
                 BitmapDescriptor.hueGreen),
-            position: LatLng(saveRouteController.save.originLat,
-                saveRouteController.save.originLng),
+            position: pos,
           );
-          firstPinPoint.text = saveRouteController.save.firstPinPoint;
+          firstPinPoint.text = fullAddress;
           _destination = null;
           _info = null;
         });
-
+      } else if (_destination == null) {
         setState(() {
           _destination = Marker(
             markerId: const MarkerId('destination'),
             infoWindow: InfoWindow(title: place.name),
             icon:
                 BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-            position: LatLng(saveRouteController.save.destinationLat,
-                saveRouteController.save.destinationLng),
+            position: pos,
           );
-          secondPinPoint.text = saveRouteController.save.secondPinPoint;
+          secondPinPoint.text = fullAddress;
           _finalDestination = null;
           _info2 = null;
         });
         final directions = await DirectionsRepository().getDirections(
-          origin: LatLng(saveRouteController.save.originLat,
-              saveRouteController.save.originLng),
-          destination: LatLng(saveRouteController.save.destinationLat,
-              saveRouteController.save.destinationLng),
+          origin: _origin!.position,
+          destination: pos,
         );
         setState(() {
           _info = directions;
         });
-
+      } else if (_finalDestination == null) {
         setState(() {
           _finalDestination = Marker(
             markerId: const MarkerId('finalDestination'),
             infoWindow: InfoWindow(title: place.name),
             icon:
                 BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-            position: LatLng(saveRouteController.save.finalDestinationLat,
-                saveRouteController.save.finalDestinationLng),
+            position: pos,
           );
-          thirdPinPoint.text = saveRouteController.save.thirdPinPoint;
+          thirdPinPoint.text = fullAddress;
         });
 
         final directions2 = await DirectionsRepository().getDirections(
-          origin: LatLng(saveRouteController.save.destinationLat,
-              saveRouteController.save.destinationLng),
-          destination: LatLng(saveRouteController.save.finalDestinationLat,
-              saveRouteController.save.finalDestinationLng),
+          origin: _destination!.position,
+          destination: _finalDestination!.position,
         );
 
         setState(() {
@@ -238,87 +308,15 @@ class _PedalScreenState extends State<PedalScreen> {
         });
 
         final directions3 = await DirectionsRepository().getDirections(
-          origin: LatLng(saveRouteController.save.originLat,
-              saveRouteController.save.originLng),
-          destination: LatLng(saveRouteController.save.finalDestinationLat,
-              saveRouteController.save.finalDestinationLng),
+          origin: _origin!.position,
+          destination: _finalDestination!.position,
         );
         _info3 = directions3;
         setState(() {
           _info3 = directions3;
         });
-      } else {
-        final placemarks =
-            await placemarkFromCoordinates(pos.latitude, pos.longitude);
-        final place = placemarks.first;
-        final String fullAddress =
-            '${place.street ?? ''}, ${place.subLocality ?? ''}, ${place.locality ?? ''}, ${place.administrativeArea ?? ''}, ${place.country ?? ''}';
-
-        if (_origin == null) {
-          setState(() {
-            _origin = Marker(
-              markerId: const MarkerId('origin'),
-              infoWindow: InfoWindow(title: place.name),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueGreen),
-              position: pos,
-            );
-            firstPinPoint.text = fullAddress;
-            _destination = null;
-            _info = null;
-          });
-        } else if (_destination == null) {
-          setState(() {
-            _destination = Marker(
-              markerId: const MarkerId('destination'),
-              infoWindow: InfoWindow(title: place.name),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueRed),
-              position: pos,
-            );
-            secondPinPoint.text = fullAddress;
-            _finalDestination = null;
-            _info2 = null;
-          });
-          final directions = await DirectionsRepository().getDirections(
-            origin: _origin!.position,
-            destination: pos,
-          );
-          setState(() {
-            _info = directions;
-          });
-        } else if (_finalDestination == null) {
-          setState(() {
-            _finalDestination = Marker(
-              markerId: const MarkerId('finalDestination'),
-              infoWindow: InfoWindow(title: place.name),
-              icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueBlue),
-              position: pos,
-            );
-            thirdPinPoint.text = fullAddress;
-          });
-
-          final directions2 = await DirectionsRepository().getDirections(
-            origin: _destination!.position,
-            destination: _finalDestination!.position,
-          );
-
-          setState(() {
-            _info2 = directions2;
-          });
-
-          final directions3 = await DirectionsRepository().getDirections(
-            origin: _origin!.position,
-            destination: _finalDestination!.position,
-          );
-          _info3 = directions3;
-          setState(() {
-            _info3 = directions3;
-          });
-        }
       }
-    });
+    }
   }
 
   bool hasShownSnackBar = false;
@@ -642,7 +640,7 @@ class _PedalScreenState extends State<PedalScreen> {
               left: 350,
               child: FloatingActionButton(
                 onPressed: () {
-                  setState(() async {
+                  setState(() {
                     _origin = null;
                     _destination = null;
                     _finalDestination = null;
@@ -1183,12 +1181,30 @@ class _PedalScreenState extends State<PedalScreen> {
   }
 
   Future<void> useRoute(int x) async {
+    saveRouteController.save.originLat =
+        saveRouteController.route[x]!.originLat;
+    saveRouteController.save.originLng =
+        saveRouteController.route[x]!.originLng;
+
+    saveRouteController.save.destinationLat =
+        saveRouteController.route[x]!.destinationLat;
+    saveRouteController.save.destinationLng =
+        saveRouteController.route[x]!.destinationLng;
+
+    saveRouteController.save.finalDestinationLat =
+        saveRouteController.route[x]!.finalDestinationLat;
+    saveRouteController.save.finalDestinationLng =
+        saveRouteController.route[x]!.finalDestinationLng;
+
     print('UNSAY NUMBER ${x}');
-     setState(() {
-        useOwn = true;
-        _addMarker(LatLng(saveRouteController.route[x]!.originLat,
-            saveRouteController.route[x]!.originLng));
-      });
+    print(saveRouteController.route[x]!.originLat.toString() +
+        ' ' +
+        saveRouteController.route[x]!.originLng.toString());
+    setState(() {
+      useOwn = true;
+      _addMarker(LatLng(saveRouteController.route[x]!.originLat,
+          saveRouteController.route[x]!.originLng));
+    });
     final userDoc = await FirebaseFirestore.instance
         .collection('saveRoute')
         .where('routeId', isEqualTo: saveRouteController.route[x]!.routeId)
