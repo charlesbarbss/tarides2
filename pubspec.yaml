@@ -47,6 +47,8 @@ dependencies:
   intl:
   image_picker:
   syncfusion_flutter_charts:
+  widget_to_marker:
+  custom_map_markers:
 
 
 

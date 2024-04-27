@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:custom_map_markers/custom_map_markers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
@@ -258,6 +259,48 @@ class _PedalScreeenState extends State<PedalScreeen> {
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
+  final Stream<DocumentSnapshot> userData = FirebaseFirestore.instance
+      .collection('user')
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .snapshots();
+
+  _customMarker(String symbol, Color color) {
+    return StreamBuilder<DocumentSnapshot>(
+        stream: userData,
+        builder: (context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+          if (!snapshot.hasData) {
+            return const SizedBox();
+          } else if (snapshot.hasError) {
+            return const Center(child: Text('Something went wrong'));
+          } else if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox();
+          }
+          dynamic data = snapshot.data;
+          return Stack(
+            children: [
+              Icon(
+                Icons.add_location,
+                color: color,
+                size: 50,
+              ),
+              Positioned(
+                left: 15,
+                top: 8,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                      image: DecorationImage(
+                          image: NetworkImage(data['imageUrl']),
+                          fit: BoxFit.cover),
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              )
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     CameraPosition kGooglePlex = CameraPosition(
@@ -306,75 +349,97 @@ class _PedalScreeenState extends State<PedalScreeen> {
               Expanded(
                 child: Stack(
                   children: [
-                    GoogleMap(
-                      onTap: (argument) async {
-                        if (second == '') {
-                          secondLoc = argument;
-                          second = await getAddressFromLatLng(
-                              argument.latitude, argument.longitude);
-
-                          addMyMarker12(argument.latitude, argument.longitude);
-
-                          setState(() {});
-                        } else if (drop == '') {
-                          dropOff = argument;
-                          drop = await getAddressFromLatLng(
-                              argument.latitude, argument.longitude);
-
-                          addMyMarker123(argument.latitude, argument.longitude);
-
-                          PolylineResult result =
-                              await polylinePoints.getRouteBetweenCoordinates(
-                                  kGoogleApiKey,
-                                  PointLatLng(
-                                      pickUp.latitude, pickUp.longitude),
-                                  PointLatLng(
-                                      secondLoc.latitude, secondLoc.longitude));
-                          if (result.points.isNotEmpty) {
-                            polylineCoordinates = result.points
-                                .map((point) =>
-                                    LatLng(point.latitude, point.longitude))
-                                .toList();
-                          }
-
-                          PolylineResult result1 =
-                              await polylinePoints.getRouteBetweenCoordinates(
-                            kGoogleApiKey,
-                            PointLatLng(
-                                secondLoc.latitude, secondLoc.longitude),
-                            PointLatLng(argument.latitude, argument.longitude),
-                          );
-                          if (result.points.isNotEmpty) {
-                            polylineCoordinates1 = result1.points
-                                .map((point) =>
-                                    LatLng(point.latitude, point.longitude))
-                                .toList();
-                          }
-
-                          setState(() {
-                            _poly = Polyline(
-                                color: Colors.red,
-                                polylineId: const PolylineId('route'),
-                                points: polylineCoordinates,
-                                width: 4);
-
-                            _poly2 = Polyline(
-                                color: Colors.blue,
-                                polylineId: const PolylineId('route1'),
-                                points: polylineCoordinates1,
-                                width: 4);
-                          });
+                    CustomGoogleMapMarkerBuilder(
+                      customMarkers: [
+                        MarkerData(
+                            marker: Marker(
+                              markerId: const MarkerId('id-1'),
+                              position: LatLng(
+                                lat,
+                                long,
+                              ),
+                            ),
+                            child: _customMarker('A', Colors.black)),
+                      ],
+                      builder: (BuildContext context, Set<Marker>? markers) {
+                        if (markers == null) {
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
-                      },
-                      polylines: {_poly, _poly2},
-                      markers: markers,
-                      zoomControlsEnabled: true,
-                      myLocationButtonEnabled: true,
-                      mapType: MapType.normal,
-                      initialCameraPosition: kGooglePlex,
-                      onMapCreated: (GoogleMapController controller) {
-                        mapController = controller;
-                        _controller.complete(controller);
+                        return GoogleMap(
+                          onTap: (argument) async {
+                            if (second == '') {
+                              secondLoc = argument;
+                              second = await getAddressFromLatLng(
+                                  argument.latitude, argument.longitude);
+
+                              addMyMarker12(
+                                  argument.latitude, argument.longitude);
+
+                              setState(() {});
+                            } else if (drop == '') {
+                              dropOff = argument;
+                              drop = await getAddressFromLatLng(
+                                  argument.latitude, argument.longitude);
+
+                              addMyMarker123(
+                                  argument.latitude, argument.longitude);
+
+                              PolylineResult result = await polylinePoints
+                                  .getRouteBetweenCoordinates(
+                                      kGoogleApiKey,
+                                      PointLatLng(
+                                          pickUp.latitude, pickUp.longitude),
+                                      PointLatLng(secondLoc.latitude,
+                                          secondLoc.longitude));
+                              if (result.points.isNotEmpty) {
+                                polylineCoordinates = result.points
+                                    .map((point) =>
+                                        LatLng(point.latitude, point.longitude))
+                                    .toList();
+                              }
+
+                              PolylineResult result1 = await polylinePoints
+                                  .getRouteBetweenCoordinates(
+                                kGoogleApiKey,
+                                PointLatLng(
+                                    secondLoc.latitude, secondLoc.longitude),
+                                PointLatLng(
+                                    argument.latitude, argument.longitude),
+                              );
+                              if (result.points.isNotEmpty) {
+                                polylineCoordinates1 = result1.points
+                                    .map((point) =>
+                                        LatLng(point.latitude, point.longitude))
+                                    .toList();
+                              }
+
+                              setState(() {
+                                _poly = Polyline(
+                                    color: Colors.red,
+                                    polylineId: const PolylineId('route'),
+                                    points: polylineCoordinates,
+                                    width: 4);
+
+                                _poly2 = Polyline(
+                                    color: Colors.blue,
+                                    polylineId: const PolylineId('route1'),
+                                    points: polylineCoordinates1,
+                                    width: 4);
+                              });
+                            }
+                          },
+                          polylines: {_poly, _poly2},
+                          markers: markers,
+                          zoomControlsEnabled: true,
+                          myLocationButtonEnabled: true,
+                          mapType: MapType.normal,
+                          initialCameraPosition: kGooglePlex,
+                          onMapCreated: (GoogleMapController controller) {
+                            mapController = controller;
+                            _controller.complete(controller);
+                          },
+                        );
                       },
                     ),
                     isclicked
@@ -1202,228 +1267,4 @@ class _PedalScreeenState extends State<PedalScreeen> {
 
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
-  searchPickup() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Starting Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker1(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    setState(() {
-      pickup = detail.result.name;
-      pickUp = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-  }
-
-  searchSecond() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search 2nd Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker12(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    setState(() {
-      second = detail.result.name;
-
-      secondLoc = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-        kGoogleApiKey,
-        PointLatLng(pickUp.latitude, pickUp.longitude),
-        PointLatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng));
-    if (result.points.isNotEmpty) {
-      polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
-    }
-    setState(() {
-      _poly = Polyline(
-          color: Colors.red,
-          polylineId: const PolylineId('route'),
-          points: polylineCoordinates,
-          width: 4);
-    });
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    double miny = (pickUp.latitude <= secondLoc.latitude)
-        ? pickUp.latitude
-        : secondLoc.latitude;
-    double minx = (pickUp.longitude <= secondLoc.longitude)
-        ? pickUp.longitude
-        : secondLoc.longitude;
-    double maxy = (pickUp.latitude <= secondLoc.latitude)
-        ? secondLoc.latitude
-        : pickUp.latitude;
-    double maxx = (pickUp.longitude <= secondLoc.longitude)
-        ? secondLoc.longitude
-        : pickUp.longitude;
-
-    double southWestLatitude = miny;
-    double southWestLongitude = minx;
-
-    double northEastLatitude = maxy;
-    double northEastLongitude = maxx;
-
-    // Accommodate the two locations within the
-    // camera view of the map
-    mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          northeast: LatLng(
-            northEastLatitude,
-            northEastLongitude,
-          ),
-          southwest: LatLng(
-            southWestLatitude,
-            southWestLongitude,
-          ),
-        ),
-        100.0,
-      ),
-    );
-  }
-
-  searchDropoff() async {
-    location.Prediction? p = await PlacesAutocomplete.show(
-        mode: Mode.overlay,
-        context: context,
-        apiKey: kGoogleApiKey,
-        language: 'en',
-        strictbounds: false,
-        types: [""],
-        decoration: InputDecoration(
-            hintText: 'Search Ending Location',
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: const BorderSide(color: Colors.white))),
-        components: [location.Component(location.Component.country, "ph")]);
-
-    location.GoogleMapsPlaces places = location.GoogleMapsPlaces(
-        apiKey: kGoogleApiKey,
-        apiHeaders: await const GoogleApiHeaders().getHeaders());
-
-    location.PlacesDetailsResponse detail =
-        await places.getDetailsByPlaceId(p!.placeId!);
-
-    addMyMarker123(detail.result.geometry!.location.lat,
-        detail.result.geometry!.location.lng);
-
-    setState(() {
-      drop = detail.result.name;
-
-      dropOff = LatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng);
-    });
-
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      kGoogleApiKey,
-      PointLatLng(secondLoc.latitude, secondLoc.longitude),
-      PointLatLng(detail.result.geometry!.location.lat,
-          detail.result.geometry!.location.lng),
-    );
-    if (result.points.isNotEmpty) {
-      polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
-    }
-    setState(() {
-      _poly2 = Polyline(
-          color: Colors.blue,
-          polylineId: const PolylineId('route1'),
-          points: polylineCoordinates,
-          width: 4);
-    });
-
-    mapController!.animateCamera(CameraUpdate.newLatLngZoom(
-        LatLng(detail.result.geometry!.location.lat,
-            detail.result.geometry!.location.lng),
-        18.0));
-
-    double miny = (secondLoc.latitude <= dropOff.latitude)
-        ? secondLoc.latitude
-        : dropOff.latitude;
-    double minx = (secondLoc.longitude <= dropOff.longitude)
-        ? secondLoc.longitude
-        : dropOff.longitude;
-    double maxy = (secondLoc.latitude <= dropOff.latitude)
-        ? dropOff.latitude
-        : secondLoc.latitude;
-    double maxx = (secondLoc.longitude <= dropOff.longitude)
-        ? dropOff.longitude
-        : secondLoc.longitude;
-
-    double southWestLatitude = miny;
-    double southWestLongitude = minx;
-
-    double northEastLatitude = maxy;
-    double northEastLongitude = maxx;
-
-    // Accommodate the two locations within the
-    // camera view of the map
-    mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          northeast: LatLng(
-            northEastLatitude,
-            northEastLongitude,
-          ),
-          southwest: LatLng(
-            southWestLatitude,
-            southWestLongitude,
-          ),
-        ),
-        100.0,
-      ),
-    );
-  }
 }
