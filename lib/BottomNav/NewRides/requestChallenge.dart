@@ -329,6 +329,10 @@ class _RequestChallengeState extends State<RequestChallenge> {
                   'challengeMessage': challengeMessageController.text,
                   'timeRequest': Timestamp.now(),
                   'isAllReady': false,
+                  'startText': '',
+                  'midText': '',
+                  'endText': '',
+                  'isPickingRoute': false,
                 }).then((value) {
                   Navigator.push(
                     context,

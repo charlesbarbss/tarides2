@@ -17,6 +17,8 @@ class UserController extends ChangeNotifier {
 
   late Achievements achievement;
 
+  late List<Users> usersWithCommunity = <Users>[];
+
   void getAchievement(String email) async {
     isLoading = true;
     notifyListeners();
@@ -140,6 +142,30 @@ class UserController extends ChangeNotifier {
     }
 
     usersWithNoCommunity = querySnapshot.docs.map((snapshot) {
+      return Users.fromDocument(snapshot);
+    }).toList();
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  void getUsersWithCommunity() async {
+    isLoading = true;
+    notifyListeners();
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('user')
+        .where('isCommunity', isEqualTo: true)
+        .where('email', isNotEqualTo: 'super.admin@tarides.com')
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      isLoading = false;
+      notifyListeners();
+      throw Exception('Users not found');
+    }
+
+    usersWithCommunity = querySnapshot.docs.map((snapshot) {
       return Users.fromDocument(snapshot);
     }).toList();
 

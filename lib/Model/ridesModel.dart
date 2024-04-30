@@ -34,6 +34,10 @@ class Rides {
     required this.isAllReady,
     required this.timeRequest,
     required this.hostCommunityName,
+    required this.startText,
+    required this.midText,
+    required this.endText,
+    required this.isPickingRoute,
   });
 
   final String id;
@@ -67,8 +71,11 @@ class Rides {
   final String meetupLocation;
   final String challengeMessage;
   final Timestamp timeRequest;
-
   final bool isAllReady;
+  final String startText;
+  final String midText;
+  final String endText;
+  final bool isPickingRoute;
 
   factory Rides.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() as Map<String, dynamic>;
@@ -104,6 +111,10 @@ class Rides {
         challengeMessage: data['challengeMessage'] as String? ?? '',
         isAllReady: data['isAllReady'] as bool? ?? false,
         timeRequest: data['timeRequest'] as Timestamp? ?? Timestamp.now(),
-        hostCommunityName: data['hostCommunityName'] as String? ?? '');
+        hostCommunityName: data['hostCommunityName'] as String? ?? '',
+        startText: data['startText'] as String? ?? '',
+        midText: data['midText'] as String? ?? '',
+        endText: data['endText'] as String? ?? '',
+        isPickingRoute: data['isPickingRoute'] as bool? ?? false);
   }
 }

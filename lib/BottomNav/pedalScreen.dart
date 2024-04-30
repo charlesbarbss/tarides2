@@ -161,7 +161,7 @@ class _PedalScreenState extends State<PedalScreen> {
     saveRouteController.getSaveRoutes();
     saveRouteController.selectedSave(widget.username);
     getCurrentLocation();
-    // getCurrentLocation();
+    
     googleMapController?.dispose();
 
     super.initState();
@@ -1154,27 +1154,7 @@ class _PedalScreenState extends State<PedalScreen> {
                 ),
               ),
             ),
-          //       if (isStart == true)
-          //         Positioned(
-          //           top: 1,
-          //           child: FloatingActionButton(
-          //             onPressed: () {
-          //                 Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => HomePage(
-          //     email: widget.email,
-          //     homePageIndex: 2,
-          //   )),
-          // );
-          //             },
-          //             child: Text(
-          //               'Reset',
-          //               style: TextStyle(color: Colors.white),
-          //             ), // Change this to your preferred icon
-          //             backgroundColor:
-          //                 Colors.red[800], // Change this to your preferred color
-          //           ),
-          //         )
+      
         ],
       ),
     );
@@ -1195,6 +1175,12 @@ class _PedalScreenState extends State<PedalScreen> {
         saveRouteController.route[x]!.finalDestinationLat;
     saveRouteController.save.finalDestinationLng =
         saveRouteController.route[x]!.finalDestinationLng;
+
+        saveRouteController.save.firstPinPoint = saveRouteController.route[x]!.firstPinPoint;
+        saveRouteController.save.secondPinPoint = saveRouteController.route[x]!.secondPinPoint;
+        saveRouteController.save.thirdPinPoint = saveRouteController.route[x]!.thirdPinPoint;
+
+  
 
     print('UNSAY NUMBER ${x}');
     print(saveRouteController.route[x]!.originLat.toString() +

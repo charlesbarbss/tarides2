@@ -25,9 +25,9 @@ class SaveRoute {
    double destinationLng;
    double finalDestinationLat;
    double finalDestinationLng;
-  final String firstPinPoint;
-  final String secondPinPoint;
-  final String thirdPinPoint;
+   String firstPinPoint;
+   String secondPinPoint;
+   String thirdPinPoint;
   final bool useClicked;
   
   //info

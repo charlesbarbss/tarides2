@@ -223,6 +223,7 @@ class _HomePageRidesState extends State<HomePageRides> {
                                           MaterialPageRoute(
                                             builder: (context) => SelectUser(
                                               email: widget.email,
+                                              user: widget.user,
                                             ),
                                           ),
                                         );
@@ -254,8 +255,8 @@ class _HomePageRidesState extends State<HomePageRides> {
                                                   children: [
                                                     TextWidget(
                                                       text:
-                                                          'Pick an Enemy Team',
-                                                      fontSize: 20,
+                                                          'Select a Challenger',
+                                                      fontSize: 24,
                                                       fontFamily: 'Bold',
                                                       color:
                                                           const Color.fromARGB(
@@ -535,12 +536,14 @@ class _HomePageRidesState extends State<HomePageRides> {
                                                   MaterialPageRoute(
                                                     builder: (context) =>
                                                         GoogleMapsScreen(
-                                                            locationUser: widget
-                                                                .locationUser,
-                                                            isHost: true,
-                                                            ride:
-                                                                ridesController
-                                                                    .rides[i]),
+                                                      locationUser:
+                                                          widget.locationUser,
+                                                      isHost: true,
+                                                      ride: ridesController
+                                                          .rides[i],
+                                                      totalDistance: '',
+                                                      totalDuration: '',
+                                                    ),
                                                   ),
                                                 );
                                               }

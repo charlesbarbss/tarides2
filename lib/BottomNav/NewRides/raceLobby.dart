@@ -272,6 +272,8 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                             locationUser: _locationData!,
                             isHost: false,
                             ride: widget.ride,
+                            totalDistance: '',
+                            totalDuration: '',
                           ),
                         ), // Replace 'YourNewScreen' with the name of your new screen
                       );
