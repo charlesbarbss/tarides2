@@ -317,7 +317,7 @@ class _JoinCommunityState extends State<JoinCommunity> {
                                                   communityController
                                                       .communities[i]
                                                       .communityPic), // replace with your image url
-                                              fit: BoxFit.fill,
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
                                         ),

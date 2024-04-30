@@ -243,7 +243,7 @@ class _PostTabState extends State<PostTab> {
                                     image: NetworkImage(communityController
                                         .community!
                                         .communityPic), // replace with your image url
-                                    fit: BoxFit.fill,
+                                    fit: BoxFit.fitWidth,
                                   ),
                                 ),
                               ),
@@ -633,7 +633,7 @@ class _PostTabState extends State<PostTab> {
                                             Column(
                                               children: [
                                                 Container(
-                                                  height: 310,
+                                                  height: 370,
                                                   width: 400,
                                                   color: const Color.fromARGB(
                                                       31, 153, 150, 150),
@@ -764,7 +764,7 @@ class _PostTabState extends State<PostTab> {
                                                             width:
                                                                 350, // specify your width
                                                             height:
-                                                                80, // specify your height
+                                                                150, // specify your height
                                                             decoration:
                                                                 BoxDecoration(
                                                               image:
@@ -775,7 +775,7 @@ class _PostTabState extends State<PostTab> {
                                                                             i]
                                                                         .imagePost), // replace with your image url
                                                                 fit:
-                                                                    BoxFit.fill,
+                                                                    BoxFit.cover,
                                                               ),
                                                             ),
                                                           ),
@@ -786,7 +786,7 @@ class _PostTabState extends State<PostTab> {
                                                             width:
                                                                 350, // specify your width
                                                             height:
-                                                                80, // specify your height
+                                                                150, // specify your height
                                                           ),
                                                         ),
                                                       Row(
