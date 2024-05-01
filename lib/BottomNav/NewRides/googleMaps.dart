@@ -61,10 +61,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   Directions? _info3;
   Directions? _enemyDirections;
   late Timer _timer;
-  Duration _duration = Duration();
+  Duration _duration = const Duration();
   bool isStartTime = false;
 
-  int _tapCounter = 0;
+  final int _tapCounter = 0;
   LatLng? _startPoint;
   LatLng? _midPoint;
   LatLng? _endPoint;
@@ -96,14 +96,12 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
             .where('idRides', isEqualTo: widget.ride.idRides)
             .get()
             .then((value) {
-          value.docs.forEach(
-            (element) {
-              element.reference.update({
-                'hostLat': currentLocation.latitude,
-                'hostLng': currentLocation.longitude,
-              });
-            },
-          );
+          for (var element in value.docs) {
+            element.reference.update({
+              'hostLat': currentLocation.latitude,
+              'hostLng': currentLocation.longitude,
+            });
+          }
         });
 
         _host = Marker(
@@ -122,14 +120,12 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
             .where('idRides', isEqualTo: widget.ride.idRides)
             .get()
             .then((value) {
-          value.docs.forEach(
-            (element) {
-              element.reference.update({
-                'enemyLat': enemyLocation.latitude,
-                'enemyLng': enemyLocation.longitude,
-              });
-            },
-          );
+          for (var element in value.docs) {
+            element.reference.update({
+              'enemyLat': enemyLocation.latitude,
+              'enemyLng': enemyLocation.longitude,
+            });
+          }
         });
 
         _enemy = Marker(
@@ -233,19 +229,17 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
         .where('idRides', isEqualTo: widget.ride.idRides)
         .get()
         .then((value) {
-      value.docs.forEach(
-        (element) {
-          element.reference.update({
-            'timer': timeString,
-          });
-        },
-      );
+      for (var element in value.docs) {
+        element.reference.update({
+          'timer': timeString,
+        });
+      }
     });
   }
 
   void startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      _duration += Duration(seconds: 1);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _duration += const Duration(seconds: 1);
 
       storeTimeInFirebase(_duration);
     });
@@ -647,7 +641,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                 } else {
                   String origin =
                       '${data['enemyLat']},${data['enemyLng']}'; // replace with the origin address
-                  ; // replace with the origin address
+// replace with the origin address
                   String destination =
                       '${data['endPointLat']},${data['endPointLng']}'; // replace with the destination address
 
@@ -702,13 +696,11 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                         .where('idRides', isEqualTo: widget.ride.idRides)
                         .get()
                         .then((value) {
-                      value.docs.forEach(
-                        (element) {
-                          element.reference.update({
-                            'enemyAvgSpeed': averageSpeed2,
-                          });
-                        },
-                      );
+                      for (var element in value.docs) {
+                        element.reference.update({
+                          'enemyAvgSpeed': averageSpeed2,
+                        });
+                      }
                     });
 
                     print('Distance: $distance2');
@@ -732,11 +724,11 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: Text('Congratulations!'),
-                      content: Text('You Won'),
+                      title: const Text('Congratulations!'),
+                      content: const Text('You Won'),
                       actions: <Widget>[
                         TextButton(
-                          child: Text('OK'),
+                          child: const Text('OK'),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -752,11 +744,11 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: Text('Congratulations!'),
-                      content: Text('You Won'),
+                      title: const Text('Congratulations!'),
+                      content: const Text('You Won'),
                       actions: <Widget>[
                         TextButton(
-                          child: Text('OK'),
+                          child: const Text('OK'),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -816,12 +808,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                             .where('idRides', isEqualTo: widget.ride.idRides)
                             .get()
                             .then((value) {
-                          value.docs.forEach(
-                            (element) {
-                              element.reference
-                                  .update({'hostAvgSpeed': averageSpeed});
-                            },
-                          );
+                          for (var element in value.docs) {
+                            element.reference
+                                .update({'hostAvgSpeed': averageSpeed});
+                          }
                         });
                       }
                     }
@@ -874,13 +864,21 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
               getDistance();
               late double totalKm;
               if (_info != null && _info2 != null) {
-                totalKm = double.parse(
-                        _info!.totalDistance.replaceAll('km', '').trim()) +
-                    double.parse(
-                        _info2!.totalDistance.replaceAll('km', '').trim());
-                print(totalKm);
-              }
+                print('Total Distance 1: ${_info!.totalDistance}');
+                print('Total Distance 2: ${_info2!.totalDistance}');
 
+                double? totalDistance1 = double.tryParse(
+                    _info!.totalDistance.replaceAll(RegExp(r'[^0-9.]'), ''));
+                double? totalDistance2 = double.tryParse(
+                    _info2!.totalDistance.replaceAll(RegExp(r'[^0-9.]'), ''));
+
+                if (totalDistance1 != null && totalDistance2 != null) {
+                  totalKm = totalDistance1 + totalDistance2;
+                  print(totalKm);
+                } else {
+                  print("Failed to parse total distance to double");
+                }
+              }
               return Stack(
                 children: [
                   GoogleMap(
@@ -1088,14 +1086,12 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                       widget.ride.idRides)
                                               .get()
                                               .then((value) {
-                                            value.docs.forEach(
-                                              (element) {
-                                                element.reference.update({
-                                                  'isPickingRoute': true,
-                                                  'isContinue': true,
-                                                });
-                                              },
-                                            );
+                                            for (var element in value.docs) {
+                                              element.reference.update({
+                                                'isPickingRoute': true,
+                                                'isContinue': true,
+                                              });
+                                            }
                                           });
 
                                           startTimer();
