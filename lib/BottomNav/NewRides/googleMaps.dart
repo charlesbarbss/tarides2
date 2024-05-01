@@ -1166,7 +1166,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1194,7 +1194,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1233,7 +1233,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1261,7 +1261,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1291,7 +1291,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                    .fromARGB(255, 255, 0,
+                                                .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
@@ -1362,7 +1362,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1390,7 +1390,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1426,7 +1426,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1454,7 +1454,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1484,7 +1484,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                    .fromARGB(255, 255, 0,
+                                                .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
