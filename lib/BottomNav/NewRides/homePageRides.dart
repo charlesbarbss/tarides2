@@ -82,7 +82,10 @@ class _HomePageRidesState extends State<HomePageRides> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const RaceLogs(),
+                              builder: (context) => RaceLogs(
+                                email: widget.email,
+                                username: userController.user.username,
+                              ),
                             ),
                           );
                         },
@@ -536,6 +539,7 @@ class _HomePageRidesState extends State<HomePageRides> {
                                                   MaterialPageRoute(
                                                     builder: (context) =>
                                                         GoogleMapsScreen(
+                                                      email: widget.email,
                                                       locationUser:
                                                           widget.locationUser,
                                                       isHost: true,

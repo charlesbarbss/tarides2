@@ -10,8 +10,10 @@ class RaceLobbyScreen extends StatefulWidget {
   const RaceLobbyScreen({
     super.key,
     required this.ride,
+    required this.email,
   });
   final Rides ride;
+  final String email;
 
   @override
   State<RaceLobbyScreen> createState() => _RaceLobbyScreenState();
@@ -325,6 +327,7 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => GoogleMapsScreen(
+                              email: widget.email,
                               locationUser: _locationData!,
                               isHost: false,
                               ride: ridesController.ride,

@@ -12,9 +12,11 @@ class EventsScreen extends StatefulWidget {
     super.key,
     required this.user,
     required this.ride,
+    required this.email,
   });
   final Users user;
   final Rides ride;
+  final String email;
 
   @override
   State<EventsScreen> createState() => _EventsScreenState();
@@ -271,6 +273,7 @@ class _EventsScreenState extends State<EventsScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => RaceLobbyScreen(
+                                          email: widget.email,
                                           ride: widget.ride,
                                         ),
                                       ),

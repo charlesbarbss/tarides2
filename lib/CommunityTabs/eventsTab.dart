@@ -9,8 +9,10 @@ class EventsTab extends StatefulWidget {
   const EventsTab({
     super.key,
     required this.user,
+    required this.email,
   });
   final Users user;
+  final String email;
 
   @override
   State<EventsTab> createState() => _EventsTabState();
@@ -62,6 +64,7 @@ class _EventsTabState extends State<EventsTab> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => EventsScreen(
+                          email: widget.email,
                           user: widget.user,
                           ride: ridesController.enemyRides[i],
                         ),

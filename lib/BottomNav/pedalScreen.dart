@@ -151,7 +151,7 @@ class _PedalScreenState extends State<PedalScreen> {
 
   @override
   void dispose() {
-    _timer.cancel();
+  
     super.dispose();
   }
 

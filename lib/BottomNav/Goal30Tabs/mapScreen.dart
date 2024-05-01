@@ -1040,6 +1040,9 @@ class _MapScreenState extends State<MapScreen> {
 }
 
 class LocationService {
+ 
+ 
+
   loc.Location location = loc.Location();
 
   double totalDistanceTraveled = 0.0;
@@ -1069,6 +1072,8 @@ class LocationService {
           averageSpeed =
               totalDistanceTraveled / durationInSeconds * 3600; // Speed in km/h
         }
+      
+       
       }
     });
   }

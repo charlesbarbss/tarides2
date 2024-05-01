@@ -16,6 +16,7 @@ import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/Model/directionsModel.dart';
 import 'package:tarides/Model/ridesModel.dart';
 import 'package:tarides/Model/userModel.dart';
+import 'package:tarides/homePage.dart';
 import 'package:tarides/widgets/text_widget.dart';
 
 import '../Goal30Tabs/mapScreen.dart';
@@ -27,13 +28,15 @@ class GoogleMapsScreen extends StatefulWidget {
       required this.isHost,
       required this.ride,
       required this.totalDistance,
-      required this.totalDuration});
+      required this.totalDuration,
+      required this.email});
   final LocationData locationUser;
 
   final bool isHost;
   final Rides ride;
   final String totalDistance;
   final String totalDuration;
+  final String email;
 
   @override
   State<GoogleMapsScreen> createState() => _GoogleMapsScreenState();
@@ -243,6 +246,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
       storeTimeInFirebase(_duration);
     });
+  }
+
+  void stopTimer() {
+    _timer.cancel();
   }
 
   @override
@@ -632,8 +639,19 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                     }
 
                     var legs = routes[0]['legs'];
-                    distance2 = legs[0]['distance']['text'];
 
+                    distance2 = legs[0]['distance']['text'];
+                    if (distance2.contains('m')) {
+                      String distanceInMeters = distance2.replaceAll('m', '');
+
+                      // Convert the string to a double and divide by 1000 to get kilometers
+                      double distanceInKilometers =
+                          double.parse(distanceInMeters) / 1000;
+
+                      // Update distance2 to hold the value in kilometers, formatted to 2 decimal places
+                      distance2 =
+                          '${distanceInKilometers.toStringAsFixed(2)} km';
+                    }
                     print('Distance: $distance2');
                   } else {
                     throw Exception('Failed to load distance');
@@ -677,6 +695,18 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
                     var legs = routes[0]['legs'];
                     distanceEnemy = legs[0]['distance']['text'];
+                    if (distanceEnemy.contains('m')) {
+                      String distanceInMeters =
+                          distanceEnemy.replaceAll('m', '');
+
+                      // Convert the string to a double and divide by 1000 to get kilometers
+                      double distanceInKilometers =
+                          double.parse(distanceInMeters) / 1000;
+
+                      // Update distanceEnemy to hold the value in kilometers, formatted to 2 decimal places
+                      distanceEnemy =
+                          '${distanceInKilometers.toStringAsFixed(2)} km';
+                    }
 
                     print('distanceChange2: $distanceEnemy');
                     double? distanceChange2 = double.tryParse(
@@ -730,111 +760,6 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                   double.tryParse(distance2.replaceAll(RegExp(r'[^0-9.]'), ''));
               double? remainingE = double.tryParse(
                   distanceEnemy.replaceAll(RegExp(r'[^0-9.]'), ''));
-
-              if (remaining == 0 && (remaining ?? 0) > 0.5) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Congratulations!'),
-                      content: const Text('You Won'),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('OK'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }
-
-              if (remainingE == 0 && (remainingE ?? 0) > 0.5) {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Congratulations!'),
-                      content: const Text('You Won'),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('OK'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }
-              void getASpeed() async {
-                loc.Location location = loc.Location();
-
-                double totalDistanceTraveled = 0.0;
-                double? averageSpeed;
-                loc.LocationData? lastLocation;
-                DateTime? startTime;
-
-                double calDis(
-                    double lat1, double lon1, double lat2, double lon2) {
-                  var p = 0.017453292519943295;
-                  var c = cos;
-                  var a = 0.5 -
-                      c((lat2 - lat1) * p) / 2 +
-                      c(lat1 * p) *
-                          c(lat2 * p) *
-                          (1 - c((lon2 - lon1) * p)) /
-                          2;
-                  return 12742 * asin(sqrt(a));
-                }
-
-                StreamSubscription<loc.LocationData>? locationSubscription;
-                LocationService() {
-                  locationSubscription = location.onLocationChanged
-                      .listen((loc.LocationData currentLocation) {
-                    if (lastLocation != null) {
-                      totalDistanceTraveled += calDis(
-                        lastLocation!.latitude!,
-                        lastLocation!.longitude!,
-                        currentLocation.latitude!,
-                        currentLocation.longitude!,
-                      );
-                    }
-                    lastLocation = currentLocation;
-
-                    if (startTime == null) {
-                      startTime = DateTime.now();
-                    } else {
-                      final durationInSeconds =
-                          DateTime.now().difference(startTime!).inSeconds;
-                      if (durationInSeconds > 0) {
-                        averageSpeed = totalDistanceTraveled /
-                            durationInSeconds *
-                            3600; // Speed in km/h
-
-                        FirebaseFirestore.instance
-                            .collection('rides')
-                            .where('idRides', isEqualTo: widget.ride.idRides)
-                            .get()
-                            .then((value) {
-                          for (var element in value.docs) {
-                            element.reference
-                                .update({'hostAvgSpeed': averageSpeed});
-                          }
-                        });
-                      }
-                    }
-                  });
-                }
-
-                void stopTime() {
-                  locationSubscription?.cancel();
-                  locationSubscription = null;
-                }
-              }
 
               // Future<void> getAvgSpeed() async {
               //   double currentLat = data['hostLat'];
@@ -1206,8 +1131,8 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
-                                                          text: data[
-                                                                  'hostAvgSpeed']
+                                                          text: locationService
+                                                              .averageSpeed!
                                                               .toStringAsFixed(
                                                                   2),
                                                           fontSize: 24,
@@ -1294,9 +1219,87 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                         height: 55.0,
                                         width: double.infinity,
                                         child: TextButton(
-                                          onPressed: () {
-                                            // Add your button press logic here
-                                          },
+                                          onPressed: (remaining ?? 0) > 0.0 &&
+                                                  (remaining ?? 0) <= 0.2
+                                              ? () {
+                                                  stopTimer();
+                                                  print('DAOG KA MAAYO KAY KA');
+                                                  showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'Congratulations!'),
+                                                        content: const Text(
+                                                            'You Won'),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'OK'),
+                                                            onPressed:
+                                                                () async {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'ridesHistory')
+                                                                  .add({
+                                                                'winner': widget
+                                                                    .ride
+                                                                    .hostUsername,
+                                                                'loser': widget
+                                                                    .ride
+                                                                    .enemyUsername,
+                                                                'id': widget
+                                                                    .ride
+                                                                    .idRides,
+                                                                //  'imageGoal':,
+                                                                'dateDone':
+                                                                    Timestamp
+                                                                        .now(),
+                                                              });
+                                                              FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'rides')
+                                                                  .where(
+                                                                      'idRides',
+                                                                      isEqualTo: widget
+                                                                          .ride
+                                                                          .idRides)
+                                                                  .get()
+                                                                  .then(
+                                                                      (querySnapshot) {
+                                                                querySnapshot
+                                                                    .docs
+                                                                    .forEach(
+                                                                        (document) {
+                                                                  document
+                                                                      .reference
+                                                                      .delete();
+                                                                });
+                                                              }).then((value) {
+                                                                Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                      builder:
+                                                                          (context) =>
+                                                                              HomePage(
+                                                                                email: widget.email,
+                                                                                homePageIndex: 1,
+                                                                              )),
+                                                                );
+                                                              });
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                              : () {
+                                                  print('DILI PA ZERO');
+                                                },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
                                                 .fromARGB(255, 255, 0,
@@ -1307,7 +1310,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                             ),
                                           ),
                                           child: TextWidget(
-                                            text: 'START',
+                                            text: 'FINISH',
                                             fontSize: 23,
                                             fontFamily: 'Bold',
                                             color: Colors.white,
@@ -1402,7 +1405,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
-                                                          text: '0.0',
+                                                          text: locationService
+                                                              .averageSpeed!
+                                                              .toStringAsFixed(
+                                                                  2),
                                                           fontSize: 24,
                                                           fontFamily: 'Bold',
                                                           color: Colors.white,
@@ -1487,9 +1493,86 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                         height: 55.0,
                                         width: double.infinity,
                                         child: TextButton(
-                                          onPressed: () {
-                                            // Add your button press logic here
-                                          },
+                                          onPressed: (remainingE ?? 0) > 0.0 &&
+                                                  (remainingE ?? 0) <= 0.2
+                                              ? () {
+                                                  stopTimer();
+                                                  showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return AlertDialog(
+                                                        title: const Text(
+                                                            'Congratulations!'),
+                                                        content: const Text(
+                                                            'You Won'),
+                                                        actions: <Widget>[
+                                                          TextButton(
+                                                            child: const Text(
+                                                                'OK'),
+                                                            onPressed:
+                                                                () async {
+                                                              await FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'ridesHistory')
+                                                                  .add({
+                                                                'winner': widget
+                                                                    .ride
+                                                                    .enemyUsername,
+                                                                'loser': widget
+                                                                    .ride
+                                                                    .hostUsername,
+                                                                'id': widget
+                                                                    .ride
+                                                                    .idRides,
+                                                                //  'imageGoal':,
+                                                                'dateDone':
+                                                                    Timestamp
+                                                                        .now(),
+                                                              });
+                                                              FirebaseFirestore
+                                                                  .instance
+                                                                  .collection(
+                                                                      'rides')
+                                                                  .where(
+                                                                      'idRides',
+                                                                      isEqualTo: widget
+                                                                          .ride
+                                                                          .idRides)
+                                                                  .get()
+                                                                  .then(
+                                                                      (querySnapshot) {
+                                                                querySnapshot
+                                                                    .docs
+                                                                    .forEach(
+                                                                        (document) {
+                                                                  document
+                                                                      .reference
+                                                                      .delete();
+                                                                });
+                                                              }).then((value) {
+                                                                Navigator.push(
+                                                                  context,
+                                                                  MaterialPageRoute(
+                                                                      builder:
+                                                                          (context) =>
+                                                                              HomePage(
+                                                                                email: widget.email,
+                                                                                homePageIndex: 1,
+                                                                              )),
+                                                                );
+                                                              });
+                                                            },
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                              : () {
+                                                  print('DILI PA ZERO');
+                                                },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
                                                 .fromARGB(255, 255, 0,
@@ -1500,7 +1583,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                             ),
                                           ),
                                           child: TextWidget(
-                                            text: 'START',
+                                            text: 'FINISH',
                                             fontSize: 23,
                                             fontFamily: 'Bold',
                                             color: Colors.white,
