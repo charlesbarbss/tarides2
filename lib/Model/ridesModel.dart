@@ -38,6 +38,11 @@ class Rides {
     required this.midText,
     required this.endText,
     required this.isPickingRoute,
+    required this.isContinue,
+    required this.timer,
+    required this.hostAvgSpeed,
+    required this.enemyAvgSpeed,
+    required this.isFinished,
   });
 
   final String id;
@@ -75,7 +80,12 @@ class Rides {
   final String startText;
   final String midText;
   final String endText;
-  final bool isPickingRoute;
+  late bool isPickingRoute;
+  final bool isContinue;
+  final String timer;
+  final double hostAvgSpeed;
+  final double enemyAvgSpeed;
+  final bool isFinished;
 
   factory Rides.fromDocument(DocumentSnapshot<Map<String, dynamic>> document) {
     final data = document.data() as Map<String, dynamic>;
@@ -115,6 +125,11 @@ class Rides {
         startText: data['startText'] as String? ?? '',
         midText: data['midText'] as String? ?? '',
         endText: data['endText'] as String? ?? '',
-        isPickingRoute: data['isPickingRoute'] as bool? ?? false);
+        isPickingRoute: data['isPickingRoute'] as bool? ?? false,
+        isContinue: data['isContinue'] as bool? ?? false,
+        timer: data['timer'] as String? ?? '',
+        hostAvgSpeed: (data['hostAvgSpeed'] as num? ?? 0).toDouble(),
+        enemyAvgSpeed: (data['enemyAvgSpeed'] as num? ?? 0).toDouble(),
+        isFinished: data['isFinished'] as bool? ?? false);
   }
 }

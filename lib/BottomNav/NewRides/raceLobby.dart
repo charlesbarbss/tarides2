@@ -59,7 +59,7 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
     double? latitude = _locationData?.latitude;
     double? longitude = _locationData?.longitude;
 
-    print('widget.ride.idRides: ${widget.ride.idRides}');
+    print('ridesController.ride.idRides: ${ridesController.ride.idRides}');
 
     final communityDoc = await FirebaseFirestore.instance
         .collection('rides')
@@ -120,11 +120,26 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: TextWidget(
-                  text: 'Enemy',
-                  fontSize: 14,
-                  fontFamily: 'Regular',
-                  color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextWidget(
+                      text: 'Enemy',
+                      fontSize: 14,
+                      fontFamily: 'Regular',
+                      color: Colors.white,
+                    ),
+                    const SizedBox(
+                        height: 10), // Add some spacing between the texts
+                    TextWidget(
+                      text: ridesController.ride.isPickingRoute == false
+                          ? 'NOTE: Hold on tight! the HOST is picking the routes.'
+                          : 'NOTE: The HOST is done setting the route.',
+                      fontSize: 14,
+                      fontFamily: 'Regular',
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -140,7 +155,7 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                   child: Column(
                     children: [
                       TextWidget(
-                        text: ' ${widget.ride.hostCommunityName}',
+                        text: ' ${ridesController.ride.hostCommunityName}',
                         fontSize: 24,
                         fontFamily: 'Bold',
                         color: Colors.white,
@@ -165,13 +180,13 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                               children: [
                                 TextWidget(
                                   text:
-                                      '${widget.ride.hostFirstName} ${widget.ride.hostLastName}',
+                                      '${ridesController.ride.hostFirstName} ${ridesController.ride.hostLastName}',
                                   fontSize: 20,
                                   fontFamily: 'bold',
                                   color: Colors.white,
                                 ),
                                 TextWidget(
-                                  text: '@${widget.ride.hostUsername}',
+                                  text: '@${ridesController.ride.hostUsername}',
                                   fontSize: 14,
                                   fontFamily: 'Regular',
                                   color:
@@ -209,7 +224,7 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                   child: Column(
                     children: [
                       TextWidget(
-                        text: ' ${widget.ride.enemyCommunityName}',
+                        text: ' ${ridesController.ride.enemyCommunityName}',
                         fontSize: 24,
                         fontFamily: 'Bold',
                         color: Colors.white,
@@ -221,7 +236,7 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                         children: [
                           CircleAvatar(
                             radius: 50.0,
-                            backgroundImage: NetworkImage(widget.ride
+                            backgroundImage: NetworkImage(ridesController.ride
                                 .enemyImage), // Replace with your image URL
                           ),
                           const SizedBox(
@@ -234,13 +249,14 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                               children: [
                                 TextWidget(
                                   text:
-                                      '${widget.ride.enemyFirstName} ${widget.ride.enemyLastName}',
+                                      '${ridesController.ride.enemyFirstName} ${ridesController.ride.enemyLastName}',
                                   fontSize: 20,
                                   fontFamily: 'bold',
                                   color: Colors.white,
                                 ),
                                 TextWidget(
-                                  text: '@${widget.ride.enemyUsername}',
+                                  text:
+                                      '@${ridesController.ride.enemyUsername}',
                                   fontSize: 14,
                                   fontFamily: 'Regular',
                                   color:
@@ -260,26 +276,70 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: SizedBox(
+                    // width: double.infinity,
+                    height: 50,
+                    child: TextButton(
+                      onPressed: () {
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) => RaceLobbyScreen(
+                        //             ride: ridesController.ride,
+                        //           )),
+                        // );
+                        setState(() {
+                          ridesController.getRideId(widget.ride.idRides);
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 255, 0, 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                      ),
+                      child: TextWidget(
+                        text: 'Refresh',
+                        fontSize: 18,
+                        fontFamily: 'Bold',
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => GoogleMapsScreen(
-                            locationUser: _locationData!,
-                            isHost: false,
-                            ride: widget.ride,
-                            totalDistance: '',
-                            totalDuration: '',
-                          ),
-                        ), // Replace 'YourNewScreen' with the name of your new screen
-                      );
+                      if (ridesController.ride.isPickingRoute == true) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GoogleMapsScreen(
+                              locationUser: _locationData!,
+                              isHost: false,
+                              ride: ridesController.ride,
+                              totalDistance: '',
+                              totalDuration: '',
+                            ),
+                          ), // Replace 'YourNewScreen' with the name of your new screen
+                        );
+                      } else {}
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 232, 155, 5),
+                      backgroundColor:
+                          ridesController.ride.isPickingRoute == false
+                              ? Colors.grey
+                              : const Color.fromARGB(255, 232, 155, 5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),

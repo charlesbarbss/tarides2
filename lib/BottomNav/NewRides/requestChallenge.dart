@@ -333,6 +333,11 @@ class _RequestChallengeState extends State<RequestChallenge> {
                   'midText': '',
                   'endText': '',
                   'isPickingRoute': false,
+                  'isContinue': false,
+                  'timer': '',
+                  'hostAvgSpeed': 0.0,
+                  'enemyAvgSpeed': 0.0,
+                  'isFinished': false,
                 }).then((value) {
                   Navigator.push(
                     context,
