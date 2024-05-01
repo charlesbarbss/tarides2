@@ -678,8 +678,13 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                     var legs = routes[0]['legs'];
                     distanceEnemy = legs[0]['distance']['text'];
 
-                    double distanceChange2 =
-                        double.parse(distanceEnemy.replaceAll(' km', ''));
+                    print('distanceChange2: $distanceEnemy');
+                    double? distanceChange2 = double.tryParse(
+                        distanceEnemy.replaceAll(RegExp(r'[^0-9.]'), ''));
+
+                    if (distanceChange2 == null) {
+                      print("Failed to parse distanceEnemy to double");
+                    }
 
                     List<String> timeParts = data['timer'].split(':');
                     int hours = int.parse(timeParts[0]);
@@ -689,7 +694,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                     int timerValue = hours * 3600 + minutes * 60 + seconds;
                     print('DistanceTime: $timerValue');
                     double averageSpeed2 =
-                        distanceChange2 / timerValue.toDouble();
+                        distanceChange2 ?? 0 / timerValue.toDouble();
                     print('AverageSpeed2: $averageSpeed2');
                     FirebaseFirestore.instance
                         .collection('rides')
@@ -715,11 +720,18 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
               ///
               ///
               ///
-              double remaining = double.parse(distance2.replaceAll(' km', ''));
-              double remainingE =
-                  double.parse(distanceEnemy.replaceAll(' km', ''));
+              ///
+              ///
 
-              if (remaining == 0 && remaining > 0.5) {
+              print('Distance2: $distance2');
+              print('DistanceEnemy: $distanceEnemy');
+
+              double? remaining =
+                  double.tryParse(distance2.replaceAll(RegExp(r'[^0-9.]'), ''));
+              double? remainingE = double.tryParse(
+                  distanceEnemy.replaceAll(RegExp(r'[^0-9.]'), ''));
+
+              if (remaining == 0 && (remaining ?? 0) > 0.5) {
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
@@ -739,7 +751,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                 );
               }
 
-              if (remainingE == 0 && remainingE > 0.5) {
+              if (remainingE == 0 && (remainingE ?? 0) > 0.5) {
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
