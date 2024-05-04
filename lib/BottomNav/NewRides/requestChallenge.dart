@@ -338,6 +338,8 @@ class _RequestChallengeState extends State<RequestChallenge> {
                   'hostAvgSpeed': 0.0,
                   'enemyAvgSpeed': 0.0,
                   'isFinished': false,
+                  'isHostWinner': false,
+                  'isEnemyWinner': false,
                 }).then((value) {
                   Navigator.push(
                     context,

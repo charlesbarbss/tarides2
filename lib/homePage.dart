@@ -80,21 +80,23 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (_selectedPageIndex == 1) {
-      activePage = AnimatedBuilder(
-        animation: userController,
-        builder: (context, snapshot) {
-          if (userController.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          return HomePageRides(
-            locationUser: _locationData!,
-            email: widget.email,
-            user: userController.user,
-          );
-        },
-      );
+      activePage = _locationData != null
+          ? activePage = AnimatedBuilder(
+              animation: userController,
+              builder: (context, snapshot) {
+                if (userController.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                return HomePageRides(
+                  locationUser: _locationData!,
+                  email: widget.email,
+                  user: userController.user,
+                );
+              },
+            )
+          : const Center(child: CircularProgressIndicator());
     }
 
     if (_selectedPageIndex == 2) {

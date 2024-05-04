@@ -18,7 +18,7 @@ import 'package:tarides/Model/ridesModel.dart';
 import 'package:tarides/Model/userModel.dart';
 import 'package:tarides/homePage.dart';
 import 'package:tarides/widgets/text_widget.dart';
-
+import 'package:location/location.dart' as cur;
 import '../Goal30Tabs/mapScreen.dart';
 
 class GoogleMapsScreen extends StatefulWidget {
@@ -84,9 +84,12 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
   bool polyline = false;
   bool isContinue = false;
+  bool focusLocation = false;
+  bool focusLocationTap = false;
 
   var select = 1;
   loc.Location location = loc.Location();
+
   @override
   void initState() {
     super.initState();
@@ -140,12 +143,17 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   }
 
   final LocationService locationService = LocationService();
+  GoogleMapController? googleMapController;
 
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
+
+  LocationData? currentLocation;
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
 
   // This function calculates the distance between two points specified by latitude and longitude
   double calculateDistance1(
@@ -816,6 +824,101 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                   print("Failed to parse total distance to double");
                 }
               }
+              if (data['isHostWinner'] == true && widget.isHost == false) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Race Over'),
+                        content: Text('You Lost'),
+                      );
+                    },
+                  ).then((_) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(
+                          email: widget.email,
+                          homePageIndex: 1,
+                        ),
+                      ),
+                    );
+                  });
+                });
+              }
+              if (data['isEnemyWinner'] == true && widget.isHost == true) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Race Over'),
+                        content: Text('You Lost'),
+                      );
+                    },
+                  ).then((_) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(
+                          email: widget.email,
+                          homePageIndex: 1,
+                        ),
+                      ),
+                    );
+                  });
+                });
+              }
+
+              Future<void> getFocusLocation() async {
+                print('jonah cordova');
+                GoogleMapController googleMapController =
+                    await _controller.future;
+                if (widget.isHost == true) {
+                  location.onLocationChanged.listen(
+                    (LocationData currentLocation) {
+                      googleMapController.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                            target: LatLng(
+                              currentLocation.latitude!,
+                              currentLocation.longitude!,
+                            ),
+                            zoom: 10.0,
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              }
+
+              Future<void> updateCameraPosition(
+                  LocationData currentLocation) async {
+                GoogleMapController googleMapController =
+                    await _controller.future;
+                googleMapController.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                      target: LatLng(
+                        currentLocation.latitude!,
+                        currentLocation.longitude!,
+                      ),
+                      zoom: 10.0,
+                    ),
+                  ),
+                );
+              }
+
+              if (widget.isHost == true && data['isContinue'] == true) {
+                location.onLocationChanged.listen(
+                  (LocationData currentLocation) {
+                    updateCameraPosition(currentLocation);
+                  },
+                );
+              }
+
               return Stack(
                 children: [
                   GoogleMap(
@@ -830,6 +933,17 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                       ),
                       zoom: 14.4746,
                     ),
+                    onMapCreated: (mapController) {
+                      googleMapController = mapController;
+                      _controller.complete(mapController);
+                      if (widget.isHost == true && data['isContinue'] == true) {
+                        location.onLocationChanged.listen(
+                          (LocationData currentLocation) {
+                            updateCameraPosition(currentLocation);
+                          },
+                        );
+                      }
+                    },
                     markers: {
                       if (_host != null) _host!,
                       if (_enemy != null) _enemy!,
@@ -868,6 +982,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                       //   ),
                     },
                   ),
+
                   if (data['isContinue'] == false)
                     if (widget.isHost == true)
                       Positioned(
@@ -1032,6 +1147,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           });
 
                                           startTimer();
+                                          getFocusLocation();
                                         },
                                         style: TextButton.styleFrom(
                                           backgroundColor: const Color.fromARGB(
@@ -1099,7 +1215,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1127,7 +1243,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1166,7 +1282,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1194,7 +1310,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1222,6 +1338,15 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           onPressed: (remaining ?? 0) > 0.0 &&
                                                   (remaining ?? 0) <= 0.2
                                               ? () {
+                                                  focusLocation = false;
+                                                  FirebaseFirestore.instance
+                                                      .collection('rides')
+                                                      .doc(widget.ride.id)
+                                                      .update(
+                                                    {
+                                                      'isHostWinner': true,
+                                                    },
+                                                  );
                                                   stopTimer();
                                                   print('DAOG KA MAAYO KAY KA');
                                                   showDialog(
@@ -1257,27 +1382,6 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                                 'dateDone':
                                                                     Timestamp
                                                                         .now(),
-                                                              });
-                                                              FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                      'rides')
-                                                                  .where(
-                                                                      'idRides',
-                                                                      isEqualTo: widget
-                                                                          .ride
-                                                                          .idRides)
-                                                                  .get()
-                                                                  .then(
-                                                                      (querySnapshot) {
-                                                                querySnapshot
-                                                                    .docs
-                                                                    .forEach(
-                                                                        (document) {
-                                                                  document
-                                                                      .reference
-                                                                      .delete();
-                                                                });
                                                               }).then((value) {
                                                                 Navigator.push(
                                                                   context,
@@ -1289,6 +1393,28 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                                                 homePageIndex: 1,
                                                                               )),
                                                                 );
+                                                              }).then((value) {
+                                                                FirebaseFirestore
+                                                                    .instance
+                                                                    .collection(
+                                                                        'rides')
+                                                                    .where(
+                                                                        'idRides',
+                                                                        isEqualTo: widget
+                                                                            .ride
+                                                                            .idRides)
+                                                                    .get()
+                                                                    .then(
+                                                                        (querySnapshot) {
+                                                                  querySnapshot
+                                                                      .docs
+                                                                      .forEach(
+                                                                          (document) {
+                                                                    document
+                                                                        .reference
+                                                                        .delete();
+                                                                  });
+                                                                });
                                                               });
                                                             },
                                                           ),
@@ -1302,7 +1428,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                 },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                .fromARGB(255, 255, 0,
+                                                    .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
@@ -1373,7 +1499,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1401,7 +1527,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1440,7 +1566,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1468,7 +1594,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                              .fromARGB(255,
+                                                                  .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1496,6 +1622,15 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           onPressed: (remainingE ?? 0) > 0.0 &&
                                                   (remainingE ?? 0) <= 0.2
                                               ? () {
+                                                  focusLocation = false;
+                                                  FirebaseFirestore.instance
+                                                      .collection('rides')
+                                                      .doc(widget.ride.id)
+                                                      .update(
+                                                    {
+                                                      'isEnemyWinner': true,
+                                                    },
+                                                  );
                                                   stopTimer();
                                                   showDialog(
                                                     context: context,
@@ -1575,7 +1710,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                 },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                .fromARGB(255, 255, 0,
+                                                    .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(

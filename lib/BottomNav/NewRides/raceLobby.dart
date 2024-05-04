@@ -323,19 +323,22 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                   child: TextButton(
                     onPressed: () {
                       if (ridesController.ride.isPickingRoute == true) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GoogleMapsScreen(
-                              email: widget.email,
-                              locationUser: _locationData!,
-                              isHost: false,
-                              ride: ridesController.ride,
-                              totalDistance: '',
-                              totalDuration: '',
-                            ),
-                          ), // Replace 'YourNewScreen' with the name of your new screen
-                        );
+                        _locationData != null
+                            ? Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => GoogleMapsScreen(
+                                    email: widget.email,
+                                    locationUser: _locationData!,
+                                    isHost: false,
+                                    ride: ridesController.ride,
+                                    totalDistance: '',
+                                    totalDuration: '',
+                                  ),
+                                ), // Replace 'YourNewScreen' with the name of your new screen
+                              )
+                            : const Center(
+                                child: CircularProgressIndicator()); //
                       } else {}
                     },
                     style: TextButton.styleFrom(
