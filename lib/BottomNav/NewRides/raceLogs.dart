@@ -82,6 +82,53 @@ class _RaceLogsState extends State<RaceLogs> {
                                 ),
                               ],
                             ),
+                            SizedBox(
+                              height: 5,
+                            ),
+                              InkWell(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      content: Image.network(
+                                          ridesHistoryController
+                                              .historys[i]!.imageGoal
+                                             ),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: const Text('Close'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Center(
+                                child: Container(
+                                  height: 150,
+                                  width: 300,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.rectangle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 3.5,
+                                    ),
+                                  ),
+                                  child: Image.network(
+                                    ridesHistoryController
+                                        .historys[i]!.imageGoal
+                                        .toString(),
+                                    height: 130,
+                                    width: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
                             SizedBox(height: 5),
                             Text(
                               'WINNER',

@@ -1,9 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
+import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,7 +25,7 @@ import 'package:tarides/Model/ridesModel.dart';
 import 'package:tarides/Model/userModel.dart';
 import 'package:tarides/homePage.dart';
 import 'package:tarides/widgets/text_widget.dart';
-import 'package:location/location.dart' as cur;
+
 import '../Goal30Tabs/mapScreen.dart';
 
 class GoogleMapsScreen extends StatefulWidget {
@@ -47,6 +54,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   CommunityController communityController = CommunityController();
   UserController getUsersWithCommunity = UserController();
   List<Users> usersWithCommunity = [];
+  final GlobalKey _globalKey = GlobalKey();
 
   final firstPinPoint = TextEditingController();
   final secondPinPoint = TextEditingController();
@@ -86,6 +94,8 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   bool isContinue = false;
   bool focusLocation = false;
   bool focusLocationTap = false;
+
+  loc.Location _locationController = new loc.Location();
 
   var select = 1;
   loc.Location location = loc.Location();
@@ -894,93 +904,138 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                 }
               }
 
-              Future<void> updateCameraPosition(
-                  LocationData currentLocation) async {
-                GoogleMapController googleMapController =
-                    await _controller.future;
-                googleMapController.animateCamera(
-                  CameraUpdate.newCameraPosition(
-                    CameraPosition(
-                      target: LatLng(
-                        currentLocation.latitude!,
-                        currentLocation.longitude!,
-                      ),
-                      zoom: 10.0,
-                    ),
-                  ),
-                );
+              Future<void> getLocationUpdates() async {
+                bool _serviceEnabled;
+                PermissionStatus _permissionGranted;
+
+                _serviceEnabled = await _locationController.serviceEnabled();
+                if (_serviceEnabled) {
+                  _serviceEnabled = await _locationController.requestService();
+                } else {
+                  return;
+                }
+                _permissionGranted = await _locationController.hasPermission();
+                if (_permissionGranted == PermissionStatus.denied) {
+                  _permissionGranted =
+                      await _locationController.requestPermission();
+                  if (_permissionGranted != PermissionStatus.granted) {
+                    return;
+                  }
+                }
+
+                _locationController.onLocationChanged.listen((currentLocation) {
+                  if (currentLocation.latitude != null &&
+                      currentLocation.longitude != null) {
+                    Future.delayed(const Duration(seconds: 1), () {
+                      googleMapController?.animateCamera(
+                        CameraUpdate.newCameraPosition(
+                          CameraPosition(
+                              target: LatLng(currentLocation.latitude!,
+                                  currentLocation.longitude!),
+                              zoom: 14.5),
+                        ),
+                      );
+                    });
+                  }
+                });
               }
 
-              if (widget.isHost == true && data['isContinue'] == true) {
-                location.onLocationChanged.listen(
-                  (LocationData currentLocation) {
-                    updateCameraPosition(currentLocation);
-                  },
-                );
-              }
+              getLocationUpdates();
+              // Future<void> updateCameraPosition(double lat, double lng) async {
+              //   print('sssssssss');
+              //   GoogleMapController googleMapController =
+              //       await _controller.future;
+              //   googleMapController.animateCamera(
+              //     CameraUpdate.newCameraPosition(
+              //       CameraPosition(
+              //         target: LatLng(lat, lng),
+              //         zoom: 14.0,
+              //       ),
+              //     ),
+              //   );
+
+              //   location.onLocationChanged
+              //       .listen((LocationData currentLocation) async {
+              //     await updateCameraPosition(
+              //         currentLocation.latitude!, currentLocation.longitude!);
+              //   });
+              // }
+
+              // if (widget.isHost == true && data['isContinue'] == true) {
+              //   print('aaaaaaaaaa');
+              //   location.onLocationChanged.listen(
+              //     (LocationData currentLocation) {
+              //       updateCameraPosition(data['hostLat'], data['hostLng']);
+              //     },
+              //   );
+              // }
+              // if (widget.isHost == true && data['isContinue'] == true) {
+              //   print('aaaaaaaaaa');
+              //   location.onLocationChanged.listen(
+              //     (LocationData currentLocation) {
+              //       updateCameraPosition(data['hostLat'], data['hostLng']);
+              //     },
+              //   );
+              // }
 
               return Stack(
                 children: [
-                  GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(
-                        widget.isHost == true
-                            ? (data['hostLat'] ?? 0.0)
-                            : (data['enemyLat'] ?? 0.0),
-                        widget.isHost == true
-                            ? (data['hostLng'] ?? 0.0)
-                            : (data['enemyLng'] ?? 0.0),
+                  RepaintBoundary(
+                    key: _globalKey,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(
+                          widget.isHost == true
+                              ? (data['hostLat'] ?? 0.0)
+                              : (data['enemyLat'] ?? 0.0),
+                          widget.isHost == true
+                              ? (data['hostLng'] ?? 0.0)
+                              : (data['enemyLng'] ?? 0.0),
+                        ),
+                        zoom: 14.4746,
                       ),
-                      zoom: 14.4746,
+                      onMapCreated: (GoogleMapController mapController) {
+                        googleMapController = mapController;
+                        _controller.complete(mapController);
+                      },
+                      markers: {
+                        if (_host != null) _host!,
+                        if (_enemy != null) _enemy!,
+                        if (_origin != null) _origin!,
+                        if (_destination != null) _destination!,
+                        if (_finalDestination != null) _finalDestination!,
+                      },
+                      onTap: addMarker,
+                      polylines: {
+                        if (_info != null)
+                          Polyline(
+                            polylineId: const PolylineId('overview_polyline_1'),
+                            color: Colors.red,
+                            width: 5,
+                            points: _info!.polylinePoints
+                                .map((e) => LatLng(e.latitude, e.longitude))
+                                .toList(),
+                          ),
+                        if (_info2 != null)
+                          Polyline(
+                            polylineId: const PolylineId('overview_polyline_2'),
+                            color: Colors.green,
+                            width: 5,
+                            points: _info2!.polylinePoints
+                                .map((e) => LatLng(e.latitude, e.longitude))
+                                .toList(),
+                          ),
+                        // if (_enemyDirections != null)
+                        //   Polyline(
+                        //     polylineId: const PolylineId('overview_polyline_enemy'),
+                        //     color: Colors.blue, // Choose a color for enemy's route
+                        //     width: 5,
+                        //     points: _enemyDirections!.polylinePoints
+                        //         .map((e) => LatLng(e.latitude, e.longitude))
+                        //         .toList(),
+                        //   ),
+                      },
                     ),
-                    onMapCreated: (mapController) {
-                      googleMapController = mapController;
-                      _controller.complete(mapController);
-                      if (widget.isHost == true && data['isContinue'] == true) {
-                        location.onLocationChanged.listen(
-                          (LocationData currentLocation) {
-                            updateCameraPosition(currentLocation);
-                          },
-                        );
-                      }
-                    },
-                    markers: {
-                      if (_host != null) _host!,
-                      if (_enemy != null) _enemy!,
-                      if (_origin != null) _origin!,
-                      if (_destination != null) _destination!,
-                      if (_finalDestination != null) _finalDestination!,
-                    },
-                    onTap: addMarker,
-                    polylines: {
-                      if (_info != null)
-                        Polyline(
-                          polylineId: const PolylineId('overview_polyline_1'),
-                          color: Colors.red,
-                          width: 5,
-                          points: _info!.polylinePoints
-                              .map((e) => LatLng(e.latitude, e.longitude))
-                              .toList(),
-                        ),
-                      if (_info2 != null)
-                        Polyline(
-                          polylineId: const PolylineId('overview_polyline_2'),
-                          color: Colors.green,
-                          width: 5,
-                          points: _info2!.polylinePoints
-                              .map((e) => LatLng(e.latitude, e.longitude))
-                              .toList(),
-                        ),
-                      // if (_enemyDirections != null)
-                      //   Polyline(
-                      //     polylineId: const PolylineId('overview_polyline_enemy'),
-                      //     color: Colors.blue, // Choose a color for enemy's route
-                      //     width: 5,
-                      //     points: _enemyDirections!.polylinePoints
-                      //         .map((e) => LatLng(e.latitude, e.longitude))
-                      //         .toList(),
-                      //   ),
-                    },
                   ),
 
                   if (data['isContinue'] == false)
@@ -1148,6 +1203,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
                                           startTimer();
                                           getFocusLocation();
+                                          getLocationUpdates();
                                         },
                                         style: TextButton.styleFrom(
                                           backgroundColor: const Color.fromARGB(
@@ -1215,7 +1271,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1243,7 +1299,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1282,7 +1338,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1310,7 +1366,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1364,55 +1420,140 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                                 'OK'),
                                                             onPressed:
                                                                 () async {
-                                                              await FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                      'ridesHistory')
-                                                                  .add({
-                                                                'winner': widget
-                                                                    .ride
-                                                                    .hostUsername,
-                                                                'loser': widget
-                                                                    .ride
-                                                                    .enemyUsername,
-                                                                'id': widget
-                                                                    .ride
-                                                                    .idRides,
-                                                                //  'imageGoal':,
-                                                                'dateDone':
-                                                                    Timestamp
-                                                                        .now(),
+                                                              // googleMapController!
+                                                              //     .animateCamera(
+                                                              //         CameraUpdate.newLatLngBounds(
+                                                              //             _info3!
+                                                              //                 .bounds,
+                                                              //             80.0));
+                                                              Future.delayed(
+                                                                  Duration(
+                                                                      seconds:
+                                                                          1),
+                                                                  () async {
+                                                                RenderRepaintBoundary
+                                                                    boundary =
+                                                                    _globalKey
+                                                                            .currentContext!
+                                                                            .findRenderObject()
+                                                                        as RenderRepaintBoundary;
+                                                                var image =
+                                                                    await boundary
+                                                                        .toImage();
+                                                                ByteData?
+                                                                    byteData =
+                                                                    await image.toByteData(
+                                                                        format:
+                                                                            ImageByteFormat.png);
+                                                                if (byteData !=
+                                                                    null) {
+                                                                  Uint8List
+                                                                      pngBytes =
+                                                                      byteData
+                                                                          .buffer
+                                                                          .asUint8List();
+
+                                                                  String dir =
+                                                                      (await getApplicationDocumentsDirectory())
+                                                                          .path;
+                                                                  String
+                                                                      timestamp =
+                                                                      DateTime.now()
+                                                                          .millisecondsSinceEpoch
+                                                                          .toString();
+                                                                  File file = File(
+                                                                      '$dir/screenshot_$timestamp.png');
+
+                                                                  // Write the bytes to the file
+                                                                  await file
+                                                                      .writeAsBytes(
+                                                                          pngBytes);
+                                                                  // Now you can use pngBytes to save the image as a file, share it, etc.
+
+                                                                  final ridesHistoryId = FirebaseFirestore
+                                                                      .instance
+                                                                      .collection(
+                                                                          'ridesHistory')
+                                                                      .doc()
+                                                                      .id;
+                                                                  final storageRef = FirebaseStorage
+                                                                      .instance
+                                                                      .ref()
+                                                                      .child(
+                                                                          'user_rides_history')
+                                                                      .child(
+                                                                          '$ridesHistoryId.jpg');
+                                                                  await storageRef
+                                                                      .putFile(
+                                                                          file);
+                                                                  final imageUrl =
+                                                                      await storageRef
+                                                                          .getDownloadURL();
+
+                                                                  await FirebaseFirestore
+                                                                      .instance
+                                                                      .collection(
+                                                                          'ridesHistory')
+                                                                      .add({
+                                                                    'winner': widget
+                                                                        .ride
+                                                                        .hostUsername,
+                                                                    'loser': widget
+                                                                        .ride
+                                                                        .enemyUsername,
+                                                                    'id': widget
+                                                                        .ride
+                                                                        .idRides,
+                                                                    //  'imageGoal':,
+                                                                    'dateDone':
+                                                                        Timestamp
+                                                                            .now(),
+                                                                    'imageGoal':
+                                                                        imageUrl,
+                                                                  });
+                                                                }
                                                               }).then((value) {
-                                                                Navigator.push(
-                                                                  context,
-                                                                  MaterialPageRoute(
+                                                                Future.delayed(
+                                                                    Duration(
+                                                                        seconds:
+                                                                            3),
+                                                                    () {
+                                                                  Navigator
+                                                                      .push(
+                                                                    context,
+                                                                    MaterialPageRoute(
                                                                       builder:
                                                                           (context) =>
                                                                               HomePage(
-                                                                                email: widget.email,
-                                                                                homePageIndex: 1,
-                                                                              )),
-                                                                );
-                                                              }).then((value) {
-                                                                FirebaseFirestore
-                                                                    .instance
-                                                                    .collection(
-                                                                        'rides')
-                                                                    .where(
-                                                                        'idRides',
-                                                                        isEqualTo: widget
-                                                                            .ride
-                                                                            .idRides)
-                                                                    .get()
-                                                                    .then(
-                                                                        (querySnapshot) {
-                                                                  querySnapshot
-                                                                      .docs
-                                                                      .forEach(
-                                                                          (document) {
-                                                                    document
-                                                                        .reference
-                                                                        .delete();
+                                                                        email: widget
+                                                                            .email,
+                                                                        homePageIndex:
+                                                                            1,
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                }).then(
+                                                                    (value) {
+                                                                  FirebaseFirestore
+                                                                      .instance
+                                                                      .collection(
+                                                                          'rides')
+                                                                      .where(
+                                                                          'idRides',
+                                                                          isEqualTo: widget
+                                                                              .ride
+                                                                              .idRides)
+                                                                      .get()
+                                                                      .then(
+                                                                          (querySnapshot) {
+                                                                    querySnapshot
+                                                                        .docs
+                                                                        .forEach(
+                                                                            (document) {
+                                                                      document
+                                                                          .reference
+                                                                          .delete();
+                                                                    });
                                                                   });
                                                                 });
                                                               });
@@ -1428,7 +1569,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                 },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                    .fromARGB(255, 255, 0,
+                                                .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
@@ -1499,7 +1640,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1527,7 +1668,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1566,7 +1707,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1594,7 +1735,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                           fontSize: 12,
                                                           fontFamily: 'Medium',
                                                           color: const Color
-                                                                  .fromARGB(255,
+                                                              .fromARGB(255,
                                                               232, 170, 10),
                                                         ),
                                                         TextWidget(
@@ -1619,98 +1760,177 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                         height: 55.0,
                                         width: double.infinity,
                                         child: TextButton(
-                                          onPressed: (remainingE ?? 0) > 0.0 &&
-                                                  (remainingE ?? 0) <= 0.2
-                                              ? () {
-                                                  focusLocation = false;
-                                                  FirebaseFirestore.instance
-                                                      .collection('rides')
-                                                      .doc(widget.ride.id)
-                                                      .update(
-                                                    {
-                                                      'isEnemyWinner': true,
-                                                    },
-                                                  );
-                                                  stopTimer();
-                                                  showDialog(
-                                                    context: context,
-                                                    builder:
-                                                        (BuildContext context) {
-                                                      return AlertDialog(
-                                                        title: const Text(
-                                                            'Congratulations!'),
-                                                        content: const Text(
-                                                            'You Won'),
-                                                        actions: <Widget>[
-                                                          TextButton(
-                                                            child: const Text(
-                                                                'OK'),
-                                                            onPressed:
-                                                                () async {
-                                                              await FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                      'ridesHistory')
-                                                                  .add({
-                                                                'winner': widget
-                                                                    .ride
-                                                                    .enemyUsername,
-                                                                'loser': widget
-                                                                    .ride
-                                                                    .hostUsername,
-                                                                'id': widget
-                                                                    .ride
-                                                                    .idRides,
-                                                                //  'imageGoal':,
-                                                                'dateDone':
-                                                                    Timestamp
-                                                                        .now(),
-                                                              });
-                                                              FirebaseFirestore
-                                                                  .instance
-                                                                  .collection(
-                                                                      'rides')
-                                                                  .where(
-                                                                      'idRides',
-                                                                      isEqualTo: widget
-                                                                          .ride
-                                                                          .idRides)
-                                                                  .get()
-                                                                  .then(
-                                                                      (querySnapshot) {
-                                                                querySnapshot
-                                                                    .docs
-                                                                    .forEach(
-                                                                        (document) {
-                                                                  document
-                                                                      .reference
-                                                                      .delete();
-                                                                });
-                                                              }).then((value) {
-                                                                Navigator.push(
-                                                                  context,
-                                                                  MaterialPageRoute(
-                                                                      builder:
-                                                                          (context) =>
-                                                                              HomePage(
-                                                                                email: widget.email,
-                                                                                homePageIndex: 1,
-                                                                              )),
-                                                                );
-                                                              });
-                                                            },
-                                                          ),
-                                                        ],
+                                          onPressed:
+                                              (remainingE ?? 0) > 0.0 &&
+                                                      (remainingE ?? 0) <= 0.2
+                                                  ? () {
+                                                      focusLocation = false;
+                                                      FirebaseFirestore.instance
+                                                          .collection('rides')
+                                                          .doc(widget.ride.id)
+                                                          .update(
+                                                        {
+                                                          'isEnemyWinner': true,
+                                                        },
                                                       );
+                                                      stopTimer();
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return AlertDialog(
+                                                            title: const Text(
+                                                                'Congratulations!'),
+                                                            content: const Text(
+                                                                'You Won'),
+                                                            actions: <Widget>[
+                                                              TextButton(
+                                                                child:
+                                                                    const Text(
+                                                                        'OK'),
+                                                                onPressed:
+                                                                    () async {
+                                                                  Future.delayed(
+                                                                      Duration(
+                                                                          seconds:
+                                                                              1),
+                                                                      () async {
+                                                                    RenderRepaintBoundary
+                                                                        boundary =
+                                                                        _globalKey
+                                                                            .currentContext!
+                                                                            .findRenderObject() as RenderRepaintBoundary;
+                                                                    var image =
+                                                                        await boundary
+                                                                            .toImage();
+                                                                    ByteData?
+                                                                        byteData =
+                                                                        await image.toByteData(
+                                                                            format:
+                                                                                ImageByteFormat.png);
+                                                                    if (byteData !=
+                                                                        null) {
+                                                                      Uint8List
+                                                                          pngBytes =
+                                                                          byteData
+                                                                              .buffer
+                                                                              .asUint8List();
+
+                                                                      String
+                                                                          dir =
+                                                                          (await getApplicationDocumentsDirectory())
+                                                                              .path;
+                                                                      String
+                                                                          timestamp =
+                                                                          DateTime.now()
+                                                                              .millisecondsSinceEpoch
+                                                                              .toString();
+                                                                      File
+                                                                          file =
+                                                                          File(
+                                                                              '$dir/screenshot_$timestamp.png');
+
+                                                                      // Write the bytes to the file
+                                                                      await file
+                                                                          .writeAsBytes(
+                                                                              pngBytes);
+                                                                      // Now you can use pngBytes to save the image as a file, share it, etc.
+
+                                                                      final ridesHistoryId = FirebaseFirestore
+                                                                          .instance
+                                                                          .collection(
+                                                                              'ridesHistory')
+                                                                          .doc()
+                                                                          .id;
+                                                                      final storageRef = FirebaseStorage
+                                                                          .instance
+                                                                          .ref()
+                                                                          .child(
+                                                                              'user_rides_history')
+                                                                          .child(
+                                                                              '$ridesHistoryId.jpg');
+                                                                      await storageRef
+                                                                          .putFile(
+                                                                              file);
+                                                                      final imageUrl =
+                                                                          await storageRef
+                                                                              .getDownloadURL();
+
+                                                                      await FirebaseFirestore
+                                                                          .instance
+                                                                          .collection(
+                                                                              'ridesHistory')
+                                                                          .add({
+                                                                        'winner': widget
+                                                                            .ride
+                                                                            .enemyUsername,
+                                                                        'loser': widget
+                                                                            .ride
+                                                                            .hostUsername,
+                                                                        'id': widget
+                                                                            .ride
+                                                                            .idRides,
+                                                                        //  'imageGoal':,
+                                                                        'dateDone':
+                                                                            Timestamp.now(),
+                                                                        'imageGoal':
+                                                                            imageUrl,
+                                                                      });
+                                                                    }
+                                                                  }).then(
+                                                                      (value) {
+                                                                    Future.delayed(
+                                                                        Duration(
+                                                                            seconds:
+                                                                                3),
+                                                                        () {
+                                                                      Navigator
+                                                                          .push(
+                                                                        context,
+                                                                        MaterialPageRoute(
+                                                                          builder: (context) =>
+                                                                              HomePage(
+                                                                            email:
+                                                                                widget.email,
+                                                                            homePageIndex:
+                                                                                1,
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    }).then(
+                                                                        (value) {
+                                                                      FirebaseFirestore
+                                                                          .instance
+                                                                          .collection(
+                                                                              'rides')
+                                                                          .where(
+                                                                              'idRides',
+                                                                              isEqualTo: widget.ride.idRides)
+                                                                          .get()
+                                                                          .then((querySnapshot) {
+                                                                        querySnapshot
+                                                                            .docs
+                                                                            .forEach((document) {
+                                                                          document
+                                                                              .reference
+                                                                              .delete();
+                                                                        });
+                                                                      });
+                                                                    });
+                                                                  });
+                                                                },
+                                                              ),
+                                                            ],
+                                                          );
+                                                        },
+                                                      );
+                                                    }
+                                                  : () {
+                                                      print('DILI PA ZERO');
                                                     },
-                                                  );
-                                                }
-                                              : () {
-                                                  print('DILI PA ZERO');
-                                                },
                                           style: TextButton.styleFrom(
                                             backgroundColor: const Color
-                                                    .fromARGB(255, 255, 0,
+                                                .fromARGB(255, 255, 0,
                                                 0), // Add this if you want to change the background color of the button
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(
