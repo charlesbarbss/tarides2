@@ -1,5 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'package:tarides/BottomNav/NewRides/googleMaps.dart';
 import 'package:tarides/Controller/ridesController.dart';
@@ -25,6 +29,23 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
   late bool _serviceEnabled;
   Location location = Location();
   late PermissionStatus _permissionGranted;
+
+  Future<Uint8List> _loadImage(String url) async {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final Uint8List originalBytes = response.bodyBytes;
+      final List<int> resizedBytes =
+          await FlutterImageCompress.compressWithList(
+        originalBytes,
+        minHeight: 100,
+        minWidth: 100,
+        quality: 100,
+      );
+      return Uint8List.fromList(resizedBytes);
+    } else {
+      throw Exception('Failed to load image');
+    }
+  }
 
   @override
   void initState() {
@@ -133,14 +154,14 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                     ),
                     const SizedBox(
                         height: 10), // Add some spacing between the texts
-                    TextWidget(
-                      text: ridesController.ride.isPickingRoute == false
-                          ? 'NOTE: Hold on tight! the HOST is picking the routes.'
-                          : 'NOTE: The HOST is done setting the route.',
-                      fontSize: 14,
-                      fontFamily: 'Regular',
-                      color: Colors.white,
-                    ),
+                    // TextWidget(
+                    //   text: ridesController.ride.isPickingRoute == false
+                    //       ? 'NOTE: Hold on tight! the HOST is picking the routes.'
+                    //       : 'NOTE: The HOST is done setting the route.',
+                    //   fontSize: 14,
+                    //   fontFamily: 'Regular',
+                    //   color: Colors.white,
+                    // ),
                   ],
                 ),
               ),
@@ -276,76 +297,76 @@ class _RaceLobbyScreenState extends State<RaceLobbyScreen> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: SizedBox(
-                    // width: double.infinity,
-                    height: 50,
-                    child: TextButton(
-                      onPressed: () {
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //       builder: (context) => RaceLobbyScreen(
-                        //             ride: ridesController.ride,
-                        //           )),
-                        // );
-                        setState(() {
-                          ridesController.getRideId(widget.ride.idRides);
-                        });
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 255, 0, 0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                      ),
-                      child: TextWidget(
-                        text: 'Refresh',
-                        fontSize: 18,
-                        fontFamily: 'Bold',
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 30,
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+              //   child: Align(
+              //     alignment: Alignment.centerRight,
+              //     child: SizedBox(
+              //       // width: double.infinity,
+              //       height: 50,
+              //       child: TextButton(
+              //         onPressed: () {
+              //           // Navigator.push(
+              //           //   context,
+              //           //   MaterialPageRoute(
+              //           //       builder: (context) => RaceLobbyScreen(
+              //           //             ride: ridesController.ride,
+              //           //           )),
+              //           // );
+              //           setState(() {
+              //             ridesController.getRideId(widget.ride.idRides);
+              //           });
+              //         },
+              //         style: TextButton.styleFrom(
+              //           backgroundColor: const Color.fromARGB(255, 255, 0, 0),
+              //           shape: RoundedRectangleBorder(
+              //             borderRadius: BorderRadius.circular(15.0),
+              //           ),
+              //         ),
+              //         child: TextWidget(
+              //           text: 'Refresh',
+              //           fontSize: 18,
+              //           fontFamily: 'Bold',
+              //           color: Colors.white,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(
+              //   height: 30,
+              // ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: TextButton(
-                    onPressed: () {
-                      if (ridesController.ride.isPickingRoute == true) {
-                        _locationData != null
-                            ? Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => GoogleMapsScreen(
-                                    email: widget.email,
-                                    locationUser: _locationData!,
-                                    isHost: false,
-                                    ride: ridesController.ride,
-                                    totalDistance: '',
-                                    totalDuration: '',
-                                  ),
-                                ), // Replace 'YourNewScreen' with the name of your new screen
-                              )
-                            : const Center(
-                                child: CircularProgressIndicator()); //
-                      } else {}
+                    onPressed: () async {
+                      final Uint8List hostIcon =
+                          await _loadImage(widget.ride.hostImage);
+                      final Uint8List enemyIcon =
+                          await _loadImage(widget.ride.enemyImage);
+                      _locationData != null
+                          ? Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => GoogleMapsScreen(
+                                  email: widget.email,
+                                  locationUser: _locationData!,
+                                  isHost: false,
+                                  ride: ridesController.ride,
+                                  totalDistance: '',
+                                  totalDuration: '',
+                                  hostImage: hostIcon,
+                                  enemyImage: enemyIcon,
+                                ),
+                              ), // Replace 'YourNewScreen' with the name of your new screen
+                            )
+                          : const Center(child: CircularProgressIndicator()); //
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor:
-                          ridesController.ride.isPickingRoute == false
-                              ? Colors.grey
-                              : const Color.fromARGB(255, 232, 155, 5),
+                      backgroundColor: const Color.fromARGB(255, 232, 155, 5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),

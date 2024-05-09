@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
-import 'package:flutter/widgets.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -17,6 +15,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart' as loc;
 import 'package:location/location.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:tarides/BottomNav/Goal30Tabs/directionsRepository.dart';
 import 'package:tarides/Controller/communityController.dart';
 import 'package:tarides/Controller/userController.dart';
@@ -36,7 +35,9 @@ class GoogleMapsScreen extends StatefulWidget {
       required this.ride,
       required this.totalDistance,
       required this.totalDuration,
-      required this.email});
+      required this.email,
+      required this.hostImage,
+      required this.enemyImage});
   final LocationData locationUser;
 
   final bool isHost;
@@ -44,6 +45,8 @@ class GoogleMapsScreen extends StatefulWidget {
   final String totalDistance;
   final String totalDuration;
   final String email;
+  final Uint8List hostImage;
+  final Uint8List enemyImage;
 
   @override
   State<GoogleMapsScreen> createState() => _GoogleMapsScreenState();
@@ -95,7 +98,8 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
   bool focusLocation = false;
   bool focusLocationTap = false;
 
-  loc.Location _locationController = new loc.Location();
+  bool hasDialogBeenShown = false;
+  final loc.Location _locationController = loc.Location();
 
   var select = 1;
   loc.Location location = loc.Location();
@@ -331,22 +335,18 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
 
               if (data['hostLat'] != null && data['hostLng'] != null) {
                 _host = Marker(
-                  markerId: const MarkerId('host'),
-                  position: LatLng(data['hostLat'], data['hostLng']),
-                  infoWindow: const InfoWindow(title: 'You'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueBlue,
-                  ),
-                );
+                    markerId: const MarkerId('host'),
+                    position: LatLng(data['hostLat'], data['hostLng']),
+                    infoWindow: const InfoWindow(title: 'You'),
+                    icon: BitmapDescriptor.fromBytes(widget.hostImage));
               }
+
               if (data['enemyLat'] != null && data['enemyLng'] != null) {
                 _enemy = Marker(
-                  markerId: const MarkerId('enemy'),
-                  position: LatLng(data['enemyLat'], data['enemyLng']),
-                  infoWindow: const InfoWindow(title: 'Enemy'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueGreen),
-                );
+                    markerId: const MarkerId('enemy'),
+                    position: LatLng(data['enemyLat'], data['enemyLng']),
+                    infoWindow: const InfoWindow(title: 'Enemy'),
+                    icon: BitmapDescriptor.fromBytes(widget.enemyImage));
               }
               if (data['startPointLat'] != null &&
                   data['startPointLng'] != null) {
@@ -377,7 +377,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
               }
 
               void addMarker(LatLng pos) async {
-                if (widget.isHost == true) {
+                if (widget.isHost == true && data['isContinue'] == false) {
                   final placemarks = await placemarkFromCoordinates(
                       pos.latitude, pos.longitude);
                   final place = placemarks.first;
@@ -940,7 +940,10 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                 });
               }
 
-              getLocationUpdates();
+              if (data['isContinue'] == true) {
+                getLocationUpdates();
+              }
+
               // Future<void> updateCameraPosition(double lat, double lng) async {
               //   print('sssssssss');
               //   GoogleMapController googleMapController =
@@ -978,6 +981,23 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
               //   );
               // }
 
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (widget.isHost == false &&
+                    data['isPickingRoute'] == false &&
+                    data['isContinue'] == false &&
+                    !hasDialogBeenShown) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text('Please Wait'),
+                        content: Text('Host is picking a route.'),
+                      );
+                    },
+                  );
+                  hasDialogBeenShown = true;
+                }
+              });
               return Stack(
                 children: [
                   RepaintBoundary(
@@ -1763,6 +1783,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                           onPressed: (remainingE ?? 0) > 0.0 &&
                                                   (remainingE ?? 0) <= 0.2
                                               ? () {
+                                                print('ENEMY WINNER NA');
                                                   focusLocation = false;
                                                   FirebaseFirestore.instance
                                                       .collection('rides')
@@ -1772,7 +1793,7 @@ class _GoogleMapsScreenState extends State<GoogleMapsScreen> {
                                                       'isEnemyWinner': true,
                                                     },
                                                   );
-                                                  stopTimer();
+                                                  // stopTimer();
                                                   print('DAOG KA MAAYO KAY KA');
                                                   showDialog(
                                                     context: context,
