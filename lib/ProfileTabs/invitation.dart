@@ -7,8 +7,9 @@ import 'package:tarides/Controller/userController.dart';
 import 'package:tarides/homePage.dart';
 
 class Invitation extends StatefulWidget {
-  const Invitation({super.key, required this.email});
+  const Invitation({super.key, required this.email, required this.username});
   final String email;
+  final String username;
 
   @override
   State<Invitation> createState() => _InvitationState();
@@ -20,7 +21,7 @@ class _InvitationState extends State<Invitation> {
   UserController userController = UserController();
   @override
   void initState() {
-    inviteController.getInvite();
+    inviteController.getInvite(widget.username);
     super.initState();
   }
 
@@ -80,8 +81,7 @@ class _InvitationState extends State<Invitation> {
                                 inviteController.invite[index].inviter +
                                     ' has invited you to join ' +
                                     inviteController
-                                        .invite[index].communityName 
-                                    ,
+                                        .invite[index].communityName,
                                 style: TextStyle(
                                     color: Colors.white, fontSize: 20),
                               ),

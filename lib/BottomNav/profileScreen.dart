@@ -54,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => Invitation(
+                              username: widget.user.username,
                               email: widget.email,
                             ),
                           ),

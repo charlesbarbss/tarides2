@@ -9,13 +9,13 @@ class InviteController extends ChangeNotifier {
   late List<Users> user;
   late List<Users> users = <Users>[];
 
-  void getInvite() async {
+  void getInvite(String username) async {
     isLoading = true;
     notifyListeners();
 
     final inviteQuerySnapshot = await FirebaseFirestore.instance
         .collection('invite')
-     
+        .where('invitee', isEqualTo: username)
         .get();
 
     if (inviteQuerySnapshot.docs.isEmpty) {
@@ -33,11 +33,11 @@ class InviteController extends ChangeNotifier {
         .get();
 
     if (userQuerySnapshot.docs.isEmpty) {
-       isLoading = false;
+      isLoading = false;
       notifyListeners();
       throw Exception('No users1 found');
     }
-   user = userQuerySnapshot.docs.map((usersDocumentSnapshot) {
+    user = userQuerySnapshot.docs.map((usersDocumentSnapshot) {
       return Users.fromDocument(usersDocumentSnapshot);
     }).toList();
     isLoading = false;
