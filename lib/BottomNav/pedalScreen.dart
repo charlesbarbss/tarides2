@@ -159,9 +159,8 @@ class _PedalScreenState extends State<PedalScreen> {
   void initState() {
     userController.getUser(widget.email);
     saveRouteController.getSaveRoutes();
-    saveRouteController.selectedSave(widget.username);
+    saveRouteController.selectedSave();
     getCurrentLocation();
-    
     googleMapController?.dispose();
 
     super.initState();

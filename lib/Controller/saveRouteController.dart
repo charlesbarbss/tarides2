@@ -32,14 +32,14 @@ class SaveRouteController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectedSave(String username) async {
+  void selectedSave() async {
     isLoading = true;
     notifyListeners();
 
     final pedalHistoryQuerySnapshot = await FirebaseFirestore.instance
         .collection('saveRoute')
         .where('useClicked', isEqualTo: true)
-        .where('username', isEqualTo: username)
+       
         .get();
     print('1');
     if (pedalHistoryQuerySnapshot.docs.isEmpty) {
